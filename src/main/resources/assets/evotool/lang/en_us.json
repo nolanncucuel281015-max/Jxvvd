@@ -83,5 +83,7 @@
   "stage.evotool.17": "Prismatic",
   "stage.evotool.18": "Stellar",
   "stage.evotool.19": "Divine",
-  "stage.evotool.20": "Ultimate"
+  "stage.evotool.20": "Ultimate",
+  "command.evotool.upgrade.done": "%s set to level %s (form: %s)",
+  "command.evotool.upgrade.given": "%s given at level %s (form: %s)"
 }

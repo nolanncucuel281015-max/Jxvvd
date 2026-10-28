@@ -70,6 +70,19 @@ La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, 
 
 Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 60 par évolium, 3 par culture mûre, 1 par bloc labouré.
 
+## Commande /upgrade
+
+```
+/upgrade <outil> <niveau>
+```
+
+- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `mace` (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `masse`)
+- `<niveau>` : de 0 à 100
+
+Exemple : `/upgrade pickaxe 50`. La commande règle l'outil tenu en main (ou le premier trouvé dans l'inventaire) ;
+si tu n'en as pas, elle t'en donne un neuf au niveau demandé. Elle peut aussi faire redescendre de niveau.
+Il faut être opérateur (comme pour `/give`).
+
 ## Nouveaux minerais
 
 | Minerai | Où | Outil requis | Drop |

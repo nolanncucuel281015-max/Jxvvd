@@ -83,5 +83,7 @@
   "stage.evotool.17": "Prisme",
   "stage.evotool.18": "Stellaire",
   "stage.evotool.19": "Divin",
-  "stage.evotool.20": "Ultime"
+  "stage.evotool.20": "Ultime",
+  "command.evotool.upgrade.done": "%s passée au niveau %s (forme : %s)",
+  "command.evotool.upgrade.given": "%s donnée au niveau %s (forme : %s)"
 }

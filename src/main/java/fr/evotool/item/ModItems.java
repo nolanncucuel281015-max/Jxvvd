@@ -61,6 +61,17 @@ public final class ModItems {
 	private ModItems() {
 	}
 
+	public static Item itemFor(EvoKind kind) {
+		return switch (kind) {
+			case PICKAXE -> EVOLVING_PICKAXE;
+			case SHOVEL -> EVOLVING_SHOVEL;
+			case AXE -> EVOLVING_AXE;
+			case HOE -> EVOLVING_HOE;
+			case SWORD -> EVOLVING_SWORD;
+			case MACE -> EVOLIUM_MACE;
+		};
+	}
+
 	/** Réglages communs : incassable, résiste à la lave, données d'évolution. */
 	private static Item.Settings evolving() {
 		return new Item.Settings()

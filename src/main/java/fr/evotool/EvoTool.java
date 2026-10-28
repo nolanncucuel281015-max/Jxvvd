@@ -1,6 +1,7 @@
 package fr.evotool;
 
 import fr.evotool.block.ModBlocks;
+import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
@@ -31,6 +32,7 @@ public class EvoTool implements ModInitializer {
 		ModItemGroup.init();
 		ModWorldGen.init();
 		ModNetworking.init();
+		UpgradeCommand.init();
 		EvoMiningHandler.init();
 		FarmingHandler.init();
 		CombatHandler.init();

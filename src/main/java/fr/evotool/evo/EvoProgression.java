@@ -182,6 +182,15 @@ public final class EvoProgression {
 
 	/** Recalcule ce qui dépend du niveau : enchantements, bonus de vitesse / dégâts et forme du modèle. */
 	public static void refresh(ItemStack stack, RegistryWrapper.WrapperLookup registries) {
+		refresh(stack, registries, false);
+	}
+
+	/**
+	 * @param exact si vrai, les enchantements d'évolution sont mis exactement au niveau prévu
+	 *              (utilisé par /upgrade pour pouvoir redescendre). Sinon ils ne font qu'augmenter,
+	 *              pour ne pas écraser un enchantement plus fort mis à l'enclume.
+	 */
+	public static void refresh(ItemStack stack, RegistryWrapper.WrapperLookup registries, boolean exact) {
 		EvoKind kind = kindOf(stack);
 		if (kind == null) {
 			return;
@@ -192,11 +201,13 @@ public final class EvoProgression {
 		RegistryWrapper.Impl<Enchantment> enchantments = registries.getOrThrow(RegistryKeys.ENCHANTMENT);
 		for (EvoProfile.EnchantStep step : profile.enchants()) {
 			int wanted = step.levelAt(level);
-			if (wanted <= 0) {
+			if (wanted <= 0 && !exact) {
 				continue;
 			}
 			RegistryEntry<Enchantment> entry = enchantments.getOrThrow(step.enchantment());
-			if (EnchantmentHelper.getLevel(entry, stack) < wanted) {
+			int current = EnchantmentHelper.getLevel(entry, stack);
+			if (exact ? current != wanted : current < wanted) {
+				// Un niveau 0 retire l'enchantement.
 				EnchantmentHelper.apply(stack, builder -> builder.set(entry, wanted));
 			}
 		}
