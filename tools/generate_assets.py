@@ -4,6 +4,7 @@
 Usage : python3 tools/generate_assets.py
 Les fichiers sont écrits dans src/main/resources/. Le script est déterministe (graine fixe).
 """
+import colorsys
 import json
 import math
 import os
@@ -209,13 +210,41 @@ def gem_sprite(palette):
 
 # --------------------------------------------------------------------------- textures de la pioche
 
+def gem_palette(mid_hex):
+    mid = hexc(mid_hex)
+    return [shade(mid, 0.35), mid, shade(mid, 1.35), shade(mid, 1.7), hexc("ffffff")]
+
+
+# Une forme tous les 5 niveaux : 21 formes (niv. 0, 5, 10, ..., 100).
+# Les noms sont dans les fichiers de langue (stage.evotool.<n>).
+STAGE_THEMES = [
+    # nom (pour référence)  manche     cuir       métal      gemme      options
+    ("Fer brut",          "6b4423", "5a2e17", "a9b2bd", "6a1fc4", {}),
+    ("Fer forgé",         "6b4423", "4a2a14", "c8cfd8", "7a2fd4", {}),
+    ("Braises",           "4a2e1a", "3a1a0e", "7d7570", "ff6a00", {}),
+    ("Doré",              "5a3a1e", "7a1426", "e8b830", "e8324d", {}),
+    ("Diamant",           "3b2417", "2a3f6b", "6fd6d0", "4fe3ff", {}),
+    ("Émeraude",          "3b2417", "1e4a2a", "9fb8a8", "2fd16a", {}),
+    ("Améthyste",         "2e2238", "4a2a6b", "b8a0d8", "a64dff", {}),
+    ("Prismarine",        "2a3a3a", "1f4a4a", "6fa89a", "7ff0d8", {}),
+    ("Netherite",         "241b1b", "3a1a1a", "4a4245", "ffc23a", {}),
+    ("Blaze",             "3a1a0a", "8a2a0a", "d97a1a", "ffd23a", {}),
+    ("Évolium",           "241b33", "1b2a6b", "4a3f5c", "6a1fc4", {}),
+    ("Givre",             "c8d8e8", "5a7aa8", "d8f0ff", "9cf0ff", {}),
+    ("Sculk",             "0f1f24", "0a3a40", "1f4a52", "2fe8e8", {"stars": True}),
+    ("Magma",             "1a1010", "4a0a0a", "2a2224", "ff4a0a", {"cracks": True}),
+    ("End",               "6b4a7a", "d8d0a0", "e0dca8", "c84dff", {}),
+    ("Céleste",           "f0f0ff", "6aa0ff", "cfe4ff", "7fd0ff", {}),
+    ("Néant",             "0a0a12", "2a0a3a", "1a1424", "9a2aff", {"stars": True}),
+    ("Prisme",            "3a3a4a", "ff4ad8", "e0e0ff", "4affd0", {"rainbow": True}),
+    ("Stellaire",         "0a1030", "1a2a6b", "2a3a7a", "ffe080", {"stars": True}),
+    ("Divin",             "f5f0e0", "ffffff", "ffe48a", "ffd84a", {}),
+    ("Ultime",            "efe6d0", "f5f0ff", "f2c14e", "d94dff", {"rainbow": True}),
+]
+
 STAGES = [
-    # handle, grip, metal, gem   (4 paliers : niv. 0, 20, 50, 100)
-    {"wood": hexc("6b4423"), "grip": hexc("5a2e17"), "metal": hexc("a9b2bd"), "gem": GEMS["evolium"]},
-    {"wood": hexc("3b2417"), "grip": hexc("7a1426"), "metal": hexc("6fd6d0"), "gem": GEMS["evolium"]},
-    {"wood": hexc("241b33"), "grip": hexc("1b2a6b"), "metal": hexc("4a3f5c"), "gem": GEMS["evolium"]},
-    {"wood": hexc("efe6d0"), "grip": hexc("f5f0ff"), "metal": hexc("f2c14e"),
-     "gem": [hexc("6a0f8a"), hexc("d94dff"), hexc("ff9cf5"), hexc("ffffff"), hexc("ffffff")]},
+    {"wood": hexc(w), "grip": hexc(g), "metal": hexc(m), "gem": gem_palette(c), **opts}
+    for (_, w, g, m, c, opts) in STAGE_THEMES
 ]
 
 
@@ -243,7 +272,8 @@ def grip_texture(base, seed):
     return img
 
 
-def metal_texture(base, seed):
+def metal_texture(st, seed):
+    base = st["metal"]
     img = Image.new("RGBA", (16, 16))
     r = random.Random(seed)
     for y in range(16):
@@ -255,13 +285,23 @@ def metal_texture(base, seed):
             elif y == 15 or x == 15:
                 f = 0.65
             img.putpixel((x, y), shade(base, f))
+    if st.get("cracks"):
+        # fissures de lave
+        x, y = 3, 1
+        for _ in range(22):
+            img.putpixel((x % 16, y % 16), st["gem"][2])
+            x += r.choice((1, 1, 0, -1))
+            y += r.choice((1, 1, 0))
+    if st.get("stars"):
+        for _ in range(7):
+            img.putpixel((r.randrange(1, 15), r.randrange(1, 15)), st["gem"][3])
     img.putpixel((2, 2), shade(base, 1.6))
     img.putpixel((3, 2), shade(base, 1.4))
     return img
 
 
-def gem_texture(palette, seed):
-    dark, mid, light, bright, spark = palette
+def gem_texture(st, seed):
+    dark, mid, light, bright, spark = st["gem"]
     img = Image.new("RGBA", (16, 16))
     r = random.Random(seed)
     for y in range(16):
@@ -271,7 +311,12 @@ def gem_texture(palette, seed):
             c = (bright, light, mid, dark)[facet]
             if abs(abs(u) - abs(v)) < 0.6:
                 c = lerp(c, light, 0.5)
-            img.putpixel((x, y), lerp(c, mid, r.uniform(0, 0.15)))
+            c = lerp(c, mid, r.uniform(0, 0.15))
+            if st.get("rainbow"):
+                h = ((x + y) / 30.0) % 1.0
+                rr, gg, bb = colorsys.hsv_to_rgb(h, 0.6, 1.0)
+                c = lerp(c, (int(rr * 255), int(gg * 255), int(bb * 255)), 0.55)
+            img.putpixel((x, y), c)
     for p in ((2, 2), (10, 10), (10, 2)):
         img.putpixel(p, spark)
     return img
@@ -325,41 +370,78 @@ def pickaxe_elements(stage):
 
     # --- Tête
     add([6, 11, 6.5], [10, 15.5, 9.5], "metal")                        # douille
-    add([6.5, 11.75, 6], [9.5, 14.75, 10], "gem")                      # coeur d'évolium
+    if stage >= 20:
+        add([6.25, 11.5, 5.75], [9.75, 15, 10.25], "gem")              # coeur surchargé
+    else:
+        add([6.5, 11.75, 6], [9.5, 14.75, 10], "gem")                  # coeur d'évolium
     add([2, 12.25, 7], [6, 14.75, 9], "metal")                         # bras gauche
     add([10, 12.25, 7], [14, 14.75, 9], "metal")                       # bras droit
     # lames recourbées : segment puis pointe
     add([-1.5, 11.75, 7.2], [2.5, 13.75, 8.8], "metal", ["z", 22.5, [2, 12.75, 8]])
     add([13.5, 11.75, 7.2], [17.5, 13.75, 8.8], "metal", ["z", -22.5, [14, 12.75, 8]])
-    tip = 4.0 if stage < 2 else 5.5
+    tip = 4.0 if stage < 8 else 5.5
     add([-0.5 - tip, 10.6, 7.55], [-0.5, 11.9, 8.45], "metal", ["z", 45, [-0.5, 11.3, 8]])
     add([16.5, 10.6, 7.55], [16.5 + tip, 11.9, 8.45], "metal", ["z", -45, [16.5, 11.3, 8]])
-    # arêtes de renfort sur le dessus des bras
-    add([3, 14.75, 7.5], [6, 15.25, 8.5], "metal")
-    add([10, 14.75, 7.5], [13, 15.25, 8.5], "metal")
 
-    if stage >= 1:
-        # incrustations de gemmes + couronne
+    # Chaque forme (tous les 5 niveaux) ajoute de nouvelles pièces aux précédentes.
+    if stage >= 1:   # niv. 5 : arêtes de renfort sur les bras
+        add([3, 14.75, 7.5], [6, 15.25, 8.5], "metal")
+        add([10, 14.75, 7.5], [13, 15.25, 8.5], "metal")
+    if stage >= 2:   # niv. 10 : anneau de braise sur la virole (auto-smelt)
+        add([6.6, 9.75, 6.6], [9.4, 10.5, 9.4], "gem")
+    if stage >= 3:   # niv. 15 : incrustations de gemmes (Fortune)
         add([3, 12.75, 6.75], [5, 14.25, 9.25], "gem")
         add([11, 12.75, 6.75], [13, 14.25, 9.25], "gem")
+    if stage >= 4:   # niv. 20 : couronne
         add([7, 15.5, 7], [9, 17, 9], "gem")
-        add([6.6, 9.75, 6.6], [9.4, 10.5, 9.4], "gem")                 # anneau sur la virole
-
-    if stage >= 2:
-        # pointe arrière en losange, ailerons et pommeau en gemme
-        add([7.25, 16.5, 7.25], [8.75, 19.5, 8.75], "gem", ["y", 45, [8, 18, 8]])
+    if stage >= 5:   # niv. 25 : clous de gemme devant / derrière la douille
+        add([7.25, 12.5, 5.5], [8.75, 14, 6], "gem")
+        add([7.25, 12.5, 10], [8.75, 14, 10.5], "gem")
+    if stage >= 6:   # niv. 30 : ailerons
         add([4.75, 10.5, 7.5], [6, 13, 8.5], "metal", ["z", -22.5, [6, 11, 8]])
         add([10, 10.5, 7.5], [11.25, 13, 8.5], "metal", ["z", 22.5, [10, 11, 8]])
+    if stage >= 7:   # niv. 35 : pommeau en gemme
         add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
+    # niv. 40 : lames plus longues (voir "tip" plus haut)
+    if stage >= 9:   # niv. 45 : garde au milieu du manche
         add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
-
-    if stage >= 3:
-        # cristaux flottants en halo autour de la tête (forme finale, niveau 100)
-        for (cx, cy) in ((1.5, 17.5), (14.5, 17.5), (8, 21.5), (-2.5, 15), (18.5, 15)):
-            add([cx - 0.6, cy - 1.1, 7.4], [cx + 0.6, cy + 1.1, 8.6], "gem", ["y", 45, [cx, cy, 8]])
+    if stage >= 10:  # niv. 50 : pointe en losange au sommet
+        add([7.25, 16.5, 7.25], [8.75, 19.5, 8.75], "gem", ["y", 45, [8, 18, 8]])
+    if stage >= 11:  # niv. 55 : barbes sous les bras
+        add([3.5, 10.75, 7.6], [4.5, 12.25, 8.4], "metal", ["z", 45, [4, 12.25, 8]])
+        add([11.5, 10.75, 7.6], [12.5, 12.25, 8.4], "metal", ["z", -45, [12, 12.25, 8]])
+    if stage >= 12:  # niv. 60 : runes lumineuses sur le manche
+        for y in (6.75, 8.25):
+            add([7.75, y, 7.0], [8.25, y + 0.75, 7.25], "gem")
+            add([7.75, y, 8.75], [8.25, y + 0.75, 9.0], "gem")
+    if stage >= 13:  # niv. 65 : épines sur le dessus des bras
+        add([1.75, 14.25, 7.6], [2.75, 16.25, 8.4], "metal", ["z", 22.5, [2.25, 14.25, 8]])
+        add([13.25, 14.25, 7.6], [14.25, 16.25, 8.4], "metal", ["z", -22.5, [13.75, 14.25, 8]])
+    if stage >= 14:  # niv. 70 : deux premiers cristaux flottants
+        crystal(add, 1.5, 17.5)
+        crystal(add, 14.5, 17.5)
+    if stage >= 15:  # niv. 75 : ailes au-dessus de la tête
+        add([4, 15, 7.7], [6, 18.5, 8.3], "metal", ["z", 22.5, [6, 15, 8]])
+        add([10, 15, 7.7], [12, 18.5, 8.3], "metal", ["z", -22.5, [10, 15, 8]])
+    if stage >= 16:  # niv. 80 : cristal au zénith
+        crystal(add, 8, 21.5)
+    if stage >= 17:  # niv. 85 : cristaux latéraux
+        crystal(add, -2.5, 15)
+        crystal(add, 18.5, 15)
+    if stage >= 18:  # niv. 90 : cristal sous le pommeau
         add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
+    if stage >= 19:  # niv. 95 : diadème et gemmes sur la virole
         add([5.5, 15.25, 7.75], [10.5, 15.75, 8.25], "metal")
+        add([6.4, 10, 7.5], [6.75, 10.75, 8.5], "gem")
+        add([9.25, 10, 7.5], [9.6, 10.75, 8.5], "gem")
+    if stage >= 20:  # niv. 100 : halo complet
+        crystal(add, -3.5, 9.5)
+        crystal(add, 19.5, 9.5)
     return E
+
+
+def crystal(add, cx, cy):
+    add([cx - 0.6, cy - 1.1, 7.4], [cx + 0.6, cy + 1.1, 8.6], "gem", ["y", 45, [cx, cy, 8]])
 
 
 def pickaxe_model(stage):
@@ -392,7 +474,7 @@ def pickaxe_model(stage):
 
 def mod_icon():
     """Icône 128x128 : sprite de pioche dessiné en pixel art, agrandi."""
-    st = STAGES[2]
+    st = STAGES[10]
     img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
     wood, metal, gem = st["wood"], hexc("8f86a8"), GEMS["evolium"]
     for i in range(4, 22):                                   # manche diagonal
@@ -432,8 +514,8 @@ def gen_textures():
     for i, st in enumerate(STAGES):
         save_png(wood_texture(st["wood"], i), "item", "pickaxe", f"stage{i}_handle")
         save_png(grip_texture(st["grip"], i), "item", "pickaxe", f"stage{i}_grip")
-        save_png(metal_texture(st["metal"], i), "item", "pickaxe", f"stage{i}_metal")
-        save_png(gem_texture(st["gem"], i), "item", "pickaxe", f"stage{i}_gem")
+        save_png(metal_texture(st, i), "item", "pickaxe", f"stage{i}_metal")
+        save_png(gem_texture(st, i), "item", "pickaxe", f"stage{i}_gem")
     mod_icon().save(os.path.join(ASSETS, "icon.png"))
 
 

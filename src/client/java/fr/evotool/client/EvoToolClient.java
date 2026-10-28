@@ -44,6 +44,8 @@ public class EvoToolClient implements ClientModInitializer {
 			int level = data.level();
 			lines.add(1, Text.translatable("tooltip.evotool.level", level, EvoProgression.MAX_LEVEL).formatted(Formatting.LIGHT_PURPLE));
 			int index = 2;
+			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),
+					EvoProgression.stage(level), EvoProgression.MAX_STAGE).formatted(Formatting.YELLOW));
 			if (level < EvoProgression.MAX_LEVEL) {
 				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), EvoProgression.xpToNext(level)).formatted(Formatting.GRAY));
 			}

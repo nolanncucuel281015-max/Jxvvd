@@ -8,13 +8,15 @@ Une pioche qui **évolue** : plus tu casses de blocs, plus elle gagne de l'XP et
 |-------:|-----------|
 | 10  | Auto-smelt (activable / désactivable dans le menu) |
 | 15  | Fortune I |
-| 20  | Fortune II + minage **3x3** + nouvelle apparence |
+| 20  | Fortune II + minage **3x3** |
 | 25  | Fortune III |
 | 30  | Fortune IV + minage **3x3x3** |
 | 35  | Fortune V |
 | 40  | Fortune VI + minage **5x5** |
-| 50  | minage **5x5x5** + nouvelle apparence |
-| 100 | **Minage instantané** de tout (ardoise, minerais, obsidienne…) + forme finale dorée |
+| 50  | minage **5x5x5** |
+| 100 | **Minage instantané** de tout (ardoise, minerais, obsidienne…) |
+
+En plus, **tous les 5 niveaux la pioche prend une nouvelle forme** (voir plus bas).
 
 La vitesse de minage augmente aussi un peu à chaque niveau.
 
@@ -50,10 +52,24 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 [    Bâton     ]
 ```
 
-## Modèle 3D
+## Modèle 3D — 21 formes
 
-La pioche a un vrai modèle 3D (pas une simple texture) avec 4 apparences qui changent selon le niveau :
-acier (0–19), cyan (20–49), sombre avec pointes de cristal (50–99), et forme finale dorée avec un halo de cristaux flottants (100).
+La pioche a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux elle change de forme** :
+nouvelles couleurs et nouvelles pièces qui s'ajoutent aux précédentes.
+
+| Niv. | Forme | Ajout | Niv. | Forme | Ajout |
+|----:|-------|-------|----:|-------|-------|
+| 0  | Fer brut   | modèle de base            | 55  | Givre     | barbes sous les bras |
+| 5  | Fer forgé  | arêtes de renfort         | 60  | Sculk     | runes lumineuses sur le manche |
+| 10 | Braises    | anneau de braise          | 65  | Magma     | épines sur les bras |
+| 15 | Doré       | gemmes incrustées         | 70  | End       | 2 cristaux flottants |
+| 20 | Diamant    | couronne                  | 75  | Céleste   | ailes |
+| 25 | Émeraude   | clous de gemme            | 80  | Néant     | cristal au zénith |
+| 30 | Améthyste  | ailerons                  | 85  | Prisme    | cristaux latéraux (gemme arc-en-ciel) |
+| 35 | Prismarine | pommeau en gemme          | 90  | Stellaire | cristal sous le pommeau |
+| 40 | Netherite  | lames plus longues        | 95  | Divin     | diadème |
+| 45 | Blaze      | garde sur le manche       | 100 | Ultime    | halo complet, cœur surchargé |
+| 50 | Évolium    | pointe de cristal         |     |           | |
 
 Les textures et modèles sont générés par `tools/generate_assets.py` (Python 3 + Pillow) :
 

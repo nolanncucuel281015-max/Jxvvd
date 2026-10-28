@@ -33,6 +33,7 @@ import net.minecraft.world.World;
  * Règles d'évolution de la pioche.
  *
  * <ul>
+ *   <li>Tous les 5 niveaux : nouvelle forme du modèle 3D (21 formes)</li>
  *   <li>Niveau 10 : auto-smelt</li>
  *   <li>Niveaux 15 / 20 / 25 / 30 / 35 / 40 : Fortune I à VI</li>
  *   <li>Niveaux 20 / 30 / 40 / 50 : 3x3, 3x3x3, 5x5, 5x5x5</li>
@@ -46,8 +47,9 @@ public final class EvoProgression {
 	public static final int MAX_LEVEL = 100;
 	public static final int AUTOSMELT_LEVEL = 10;
 	public static final int[] FORTUNE_LEVELS = {15, 20, 25, 30, 35, 40};
-	/** Paliers d'apparence du modèle 3D. */
-	public static final int[] STAGE_LEVELS = {20, 50, 100};
+	/** Le modèle 3D change de forme tous les 5 niveaux : 21 formes (0 à 20). */
+	public static final int LEVELS_PER_STAGE = 5;
+	public static final int MAX_STAGE = MAX_LEVEL / LEVELS_PER_STAGE;
 
 	private static final Identifier SPEED_MODIFIER_ID = EvoTool.id("evolution_speed");
 
@@ -76,13 +78,11 @@ public final class EvoProgression {
 	}
 
 	public static int stage(int level) {
-		int stage = 0;
-		for (int threshold : STAGE_LEVELS) {
-			if (level >= threshold) {
-				stage++;
-			}
-		}
-		return stage;
+		return Math.min(level, MAX_LEVEL) / LEVELS_PER_STAGE;
+	}
+
+	public static Text stageName(int level) {
+		return Text.translatable("stage.evotool." + stage(level));
 	}
 
 	/** Bonus d'efficacité de minage. Au niveau 100 il suffit à casser l'obsidienne instantanément. */
@@ -144,6 +144,10 @@ public final class EvoProgression {
 	}
 
 	private static void announceUnlocks(PlayerEntity player, int level) {
+		if (level % LEVELS_PER_STAGE == 0) {
+			player.sendMessage(Text.translatable("message.evotool.new_form", stageName(level), stage(level), MAX_STAGE)
+					.formatted(Formatting.AQUA, Formatting.BOLD), false);
+		}
 		if (level == AUTOSMELT_LEVEL) {
 			unlock(player, Text.translatable("message.evotool.unlock.autosmelt"));
 		}

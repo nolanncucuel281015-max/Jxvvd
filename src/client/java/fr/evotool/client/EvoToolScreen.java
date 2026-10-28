@@ -108,7 +108,8 @@ public class EvoToolScreen extends Screen {
 		int center = width / 2;
 		context.drawCenteredTextWithShadow(textRenderer, title, center, top + 8, 0xFFE0B0FF);
 		context.drawCenteredTextWithShadow(textRenderer,
-				Text.translatable("screen.evotool.level", level, EvoProgression.MAX_LEVEL), center, top + 22, 0xFFFFFFFF);
+				Text.translatable("screen.evotool.level_form", level, EvoProgression.MAX_LEVEL, EvoProgression.stageName(level)),
+				center, top + 22, 0xFFFFFFFF);
 
 		// Barre d'XP
 		int barLeft = left + 20;

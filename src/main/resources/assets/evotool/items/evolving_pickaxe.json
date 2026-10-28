@@ -35,6 +35,125 @@
           "type": "minecraft:model",
           "model": "evotool:item/evolving_pickaxe_stage3"
         }
+      },
+      {
+        "threshold": 4,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage4"
+        }
+      },
+      {
+        "threshold": 5,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage5"
+        }
+      },
+      {
+        "threshold": 6,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage6"
+        }
+      },
+      {
+        "threshold": 7,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage7"
+        }
+      },
+      {
+        "threshold": 8,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage8"
+        }
+      },
+      {
+        "threshold": 9,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage9"
+        }
+      },
+      {
+        "threshold": 10,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage10"
+        }
+      },
+      {
+        "threshold": 11,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage11"
+        }
+      },
+      {
+        "threshold": 12,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage12"
+        }
+      },
+      {
+        "threshold": 13,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage13"
+        }
+      },
+      {
+        "threshold": 14,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage14"
+        }
+      },
+      {
+        "threshold": 15,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage15"
+        }
+      },
+      {
+        "threshold": 16,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage16"
+        }
+      },
+      {
+        "threshold": 17,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage17"
+        }
+      },
+      {
+        "threshold": 18,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage18"
+        }
+      },
+      {
+        "threshold": 19,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage19"
+        }
+      },
+      {
+        "threshold": 20,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_pickaxe_stage20"
+        }
       }
     ]
   }
