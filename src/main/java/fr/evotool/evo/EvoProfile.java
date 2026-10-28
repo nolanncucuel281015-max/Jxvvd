@@ -75,7 +75,7 @@ public final class EvoProfile {
 		return this;
 	}
 
-	EvoProfile areaMining() {
+	EvoProfile withAreaMining() {
 		areaMining = true;
 		return this;
 	}

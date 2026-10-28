@@ -10,14 +10,14 @@ import net.minecraft.entity.EquipmentSlot;
 public enum EvoKind {
 	/** Mine : auto-smelt, Fortune I à VI, 3x3 → 5x5x5, minage instantané. */
 	PICKAXE(new EvoProfile()
-			.blockXp().areaMining()
+			.blockXp().withAreaMining()
 			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 30).mode(EvoMode.AREA_5X5, 40).mode(EvoMode.CUBE_5X5X5, 50)
 			.power(Power.AUTOSMELT, 10).power(Power.INSTAMINE, 100)
 			.enchant(Enchantments.FORTUNE, "fortune", 15, 20, 25, 30, 35, 40)),
 
 	/** Comme la pioche, mais pour la terre, le sable, le gravier… (sable → verre avec l'auto-smelt). */
 	SHOVEL(new EvoProfile()
-			.blockXp().areaMining()
+			.blockXp().withAreaMining()
 			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 30).mode(EvoMode.AREA_5X5, 40).mode(EvoMode.CUBE_5X5X5, 50)
 			.power(Power.AUTOSMELT, 10).power(Power.INSTAMINE, 100)
 			.enchant(Enchantments.FORTUNE, "fortune", 15, 20, 25, 30, 35, 40)),

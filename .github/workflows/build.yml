@@ -28,3 +28,14 @@ jobs:
           path: |
             build/libs/*.jar
             !build/libs/*-sources.jar
+
+      # Diagnostic : si la compilation échoue, affiche les API Minecraft utiles (noms Yarn).
+      - name: Show Minecraft API on failure
+        if: failure()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name 'minecraft-*.jar' ! -name '*sources*' 2>/dev/null | grep -i yarn | head -1)
+          echo "JAR=$JAR"
+          unzip -l "$JAR" | grep -i -E 'permission' | head -40 || true
+          for c in net.minecraft.server.command.ServerCommandSource net.minecraft.server.command.CommandManager; do
+            echo "== $c"; javap -cp "$JAR" "$c" | grep -i -E 'perm|level' || true
+          done
