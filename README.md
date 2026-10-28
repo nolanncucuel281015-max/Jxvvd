@@ -190,5 +190,9 @@ Java 21 requis.
 ./gradlew build
 ```
 
-Le `.jar` se trouve dans `build/libs/`. À mettre dans le dossier `mods/` avec Fabric Loader et Fabric API pour 1.21.11.
+Le `.jar` se trouve dans `build/libs/`.
+
+Sans rien installer : à chaque push, GitHub Actions compile le mod. Ouvre l'onglet **Actions** du dépôt,
+clique sur la dernière exécution « Build » réussie, puis télécharge **evotool-mod** dans la section *Artifacts*
+(un .zip qui contient le .jar). À mettre dans le dossier `mods/` avec Fabric Loader et Fabric API pour 1.21.11.
 Si une version de dépendance n'est plus disponible, mets à jour `gradle.properties` avec les versions de https://fabricmc.net/develop.
