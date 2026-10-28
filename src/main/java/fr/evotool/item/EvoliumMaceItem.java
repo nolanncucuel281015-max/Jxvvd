@@ -7,8 +7,8 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.MaceItem;
 
 /**
- * Mace en évolium : garde l'attaque écrasante de la mace vanilla (dégâts bonus en chute),
- * avec plus de dégâts de base et bien plus de durabilité.
+ * Masse en évolium : garde l'attaque écrasante de la mace vanilla (dégâts bonus en chute)
+ * et évolue en tuant des monstres (voir {@link fr.evotool.weapon.MaceProgression}).
  */
 public class EvoliumMaceItem extends MaceItem {
 	public EvoliumMaceItem(Settings settings) {

@@ -62,18 +62,37 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 [    Bâton     ]
 ```
 
-La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal),
-avec 8 de dégâts de base, 2 500 de durabilité (réparable avec de l'évolium), résiste à la lave
-et accepte Densité, Brèche et Charge de vent. Elle a aussi son modèle 3D.
+La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
+Elle est incassable, résiste à la lave et **évolue en tuant des monstres** (voir plus bas).
+
+## Évolution de la masse (en tuant des monstres)
+
+XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
+Environ 400 XP pour le niveau 20, environ 1,1 million pour le niveau 100.
+Chaque niveau donne aussi +0,1 dégât (+10 au niveau 100).
+
+| Niveau | Déblocage |
+|-------:|-----------|
+| 10  | Vol de vie (10 % des dégâts infligés) |
+| 15 / 25 / 35 / 45 / 55 | Densité I à V |
+| 20 / 30 / 40 / 50 | Brèche I à IV |
+| 30  | **Onde de choc** : les monstres à 3 blocs prennent la moitié des dégâts |
+| 50  | **Foudre** : 20 % de chance de foudroyer la cible |
+| 60 / 70 / 80 | Charge de vent I à III |
+| 75  | Onde de choc élargie (5 blocs) |
+| 100 | **Exécution** : tue en un coup tout monstre qui n'est pas un boss |
+
+- **Touche Y** avec la masse en main : niveau, XP, bonus actifs, et activer/couper l'onde de choc et la foudre.
+- Comme la pioche, la masse change de forme **tous les 5 niveaux** (21 formes, mêmes thèmes que la pioche).
 
 ## Modèle 3D — 21 formes
 
-La pioche a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux elle change de forme** :
+La pioche et la masse ont un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux elle change de forme** :
 nouvelles couleurs et nouvelles pièces qui s'ajoutent aux précédentes.
 
 | Niv. | Forme | Ajout | Niv. | Forme | Ajout |
 |----:|-------|-------|----:|-------|-------|
-| 0  | Fer brut   | modèle de base            | 55  | Givre     | barbes sous les bras |
+| 0  | Fer brut   | modèle de base (pioche)   | 55  | Givre     | barbes sous les bras |
 | 5  | Fer forgé  | arêtes de renfort         | 60  | Sculk     | runes lumineuses sur le manche |
 | 10 | Braises    | anneau de braise          | 65  | Magma     | épines sur les bras |
 | 15 | Doré       | gemmes incrustées         | 70  | End       | 2 cristaux flottants |

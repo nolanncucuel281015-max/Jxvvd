@@ -2,6 +2,7 @@ package fr.evotool.item;
 
 import fr.evotool.EvoTool;
 import fr.evotool.component.EvoData;
+import fr.evotool.component.MaceData;
 import fr.evotool.component.ModComponents;
 import java.util.function.Function;
 import net.minecraft.block.Block;
@@ -46,12 +47,15 @@ public final class ModItems {
 	public static final Item EVOLIUM_MACE = register("evolium_mace", EvoliumMaceItem::new,
 			new Item.Settings()
 					.maxDamage(2500)
+					.component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+					.component(ModComponents.MACE_DATA, MaceData.DEFAULT)
 					.component(DataComponentTypes.TOOL, MaceItem.createToolComponent())
 					.attributeModifiers(EvoliumMaceItem.createEvoliumAttributeModifiers())
 					.repairable(EVOLIUM_REPAIR)
 					.enchantable(20)
 					.fireproof()
-					.rarity(Rarity.EPIC));
+					.rarity(Rarity.EPIC)
+					.maxCount(1));
 
 	private ModItems() {
 	}

@@ -472,7 +472,7 @@ def pickaxe_model(stage):
     }
 
 
-def mace_model():
+def mace_elements(stage):
     E = []
     n = 0
 
@@ -481,40 +481,91 @@ def mace_model():
         n += 1
         E.append(element(frm, to, tex, rot, n))
 
-    # manche
+    # --- Forme de base : manche, tête lourde et coeur d'évolium
     add([7.25, -3, 7.25], [8.75, 10, 8.75], "handle")
     add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")
-    add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
     for y in (-2.25, -0.25, 1.75, 3.75):
         add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
     add([7.1, -2.5, 7.1], [8.9, 5.5, 8.9], "grip")
-    add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
     add([6.5, 9, 6.5], [9.5, 10.5, 9.5], "metal")
-    # tête : bloc lourd, coeur d'évolium sur chaque face, collerettes
     add([4.5, 10.5, 4.5], [11.5, 17.5, 11.5], "metal")
-    add([5.5, 11.5, 4], [10.5, 16.5, 12], "gem")
-    add([4, 11.5, 5.5], [12, 16.5, 10.5], "gem")
+    if stage >= 20:
+        add([5, 11, 3.75], [11, 17, 12.25], "gem")                    # coeur surchargé
+        add([3.75, 11, 5], [12.25, 17, 11], "gem")
+    else:
+        add([5.5, 11.5, 4], [10.5, 16.5, 12], "gem")
+        add([4, 11.5, 5.5], [12, 16.5, 10.5], "gem")
     add([4, 10, 4], [12, 11, 12], "metal")
     add([4, 17, 4], [12, 18, 12], "metal")
-    # pointes en losange sur les 4 côtés et au sommet
-    for (x, z) in ((2.5, 8), (13.5, 8), (8, 2.5), (8, 13.5)):
-        add([x - 1, 13, z - 1], [x + 1, 15, z + 1], "metal", ["y", 45, [x, 14, z]])
-    add([7, 18, 7], [9, 21, 9], "gem", ["y", 45, [8, 19.5, 8]])
-    # pointes diagonales en haut
-    add([3.5, 17, 7.5], [5, 20, 8.5], "metal", ["z", 22.5, [5, 17, 8]])
-    add([11, 17, 7.5], [12.5, 20, 8.5], "metal", ["z", -22.5, [11, 17, 8]])
 
-    st = f"{MOD}:item/pickaxe/stage"
-    model = pickaxe_model(0)
-    model["credit"] = "Evo Tool - mace 3D générée par tools/generate_assets.py"
-    model["textures"] = {
-        "particle": st + "8_metal",
-        "handle": st + "10_handle",
-        "grip": st + "10_grip",
-        "metal": st + "8_metal",
-        "gem": st + "10_gem",
-    }
-    model["elements"] = E
+    # --- Chaque forme (tous les 5 niveaux) ajoute des pièces
+    if stage >= 1:   # niv. 5 : garde sur le manche
+        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
+    if stage >= 2:   # niv. 10 : 4 pointes en losange
+        for (x, z) in ((2.5, 8), (13.5, 8), (8, 2.5), (8, 13.5)):
+            add([x - 1, 13, z - 1], [x + 1, 15, z + 1], "metal", ["y", 45, [x, 14, z]])
+    if stage >= 3:   # niv. 15 : pommeau en gemme
+        add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
+    if stage >= 4:   # niv. 20 : cristal au sommet
+        add([7, 18, 7], [9, 21, 9], "gem", ["y", 45, [8, 19.5, 8]])
+    if stage >= 5:   # niv. 25 : clous aux 4 coins de la tête
+        for (x, z) in ((4, 4), (11, 4), (4, 11), (11, 11)):
+            add([x, 13.5, z], [x + 1, 14.5, z + 1], "gem")
+    if stage >= 6:   # niv. 30 : pointes diagonales gauche / droite
+        add([3.5, 17, 7.5], [5, 20, 8.5], "metal", ["z", 22.5, [5, 17, 8]])
+        add([11, 17, 7.5], [12.5, 20, 8.5], "metal", ["z", -22.5, [11, 17, 8]])
+    if stage >= 7:   # niv. 35 : pointes diagonales avant / arrière
+        add([7.5, 17, 3.5], [8.5, 20, 5], "metal", ["x", -22.5, [8, 17, 5]])
+        add([7.5, 17, 11], [8.5, 20, 12.5], "metal", ["x", 22.5, [8, 17, 11]])
+    if stage >= 8:   # niv. 40 : pointes sous la tête
+        add([3.5, 8, 7.5], [5, 11, 8.5], "metal", ["z", -22.5, [5, 11, 8]])
+        add([11, 8, 7.5], [12.5, 11, 8.5], "metal", ["z", 22.5, [11, 11, 8]])
+    if stage >= 9:   # niv. 45 : runes sur le manche
+        for y in (6.25, 7.75):
+            add([7.75, y, 7.0], [8.25, y + 0.75, 7.25], "gem")
+            add([7.75, y, 8.75], [8.25, y + 0.75, 9.0], "gem")
+    if stage >= 10:  # niv. 50 : pointes latérales doublées
+        for (x, z) in ((0.5, 8), (15.5, 8), (8, 0.5), (8, 15.5)):
+            add([x - 0.6, 13.4, z - 0.6], [x + 0.6, 14.6, z + 0.6], "gem", ["y", 45, [x, 14, z]])
+    if stage >= 11:  # niv. 55 : lames verticales sur les 4 faces
+        add([3.5, 11, 7.75], [4, 17, 8.25], "metal")
+        add([12, 11, 7.75], [12.5, 17, 8.25], "metal")
+        add([7.75, 11, 3.5], [8.25, 17, 4], "metal")
+        add([7.75, 11, 12], [8.25, 17, 12.5], "metal")
+    if stage >= 12:  # niv. 60 : couronne
+        add([5, 18, 5], [11, 18.5, 11], "metal")
+        for (x, z) in ((5, 5), (10.25, 5), (5, 10.25), (10.25, 10.25)):
+            add([x, 18.5, z], [x + 0.75, 19.75, z + 0.75], "gem")
+    if stage >= 13:  # niv. 65 : cristal sous le pommeau
+        add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
+    if stage >= 14:  # niv. 70 : deux cristaux flottants
+        crystal(add, 0, 19)
+        crystal(add, 16, 19)
+    if stage >= 15:  # niv. 75 : ailes
+        add([2, 16, 7.7], [4, 20, 8.3], "metal", ["z", 22.5, [4, 16, 8]])
+        add([12, 16, 7.7], [14, 20, 8.3], "metal", ["z", -22.5, [12, 16, 8]])
+    if stage >= 16:  # niv. 80 : cristal au zénith
+        crystal(add, 8, 24)
+    if stage >= 17:  # niv. 85 : cristaux latéraux
+        crystal(add, -2.5, 11)
+        crystal(add, 18.5, 11)
+    if stage >= 18:  # niv. 90 : deuxième garde sertie
+        add([6.4, 5.75, 6.4], [9.6, 6.25, 9.6], "metal")
+        add([6.1, 5.6, 7.6], [6.4, 6.4, 8.4], "gem")
+        add([9.6, 5.6, 7.6], [9.9, 6.4, 8.4], "gem")
+    if stage >= 19:  # niv. 95 : anneau doré autour de la tête
+        add([3.25, 13.75, 3.25], [12.75, 14.25, 4], "metal")
+        add([3.25, 13.75, 12], [12.75, 14.25, 12.75], "metal")
+    if stage >= 20:  # niv. 100 : halo complet
+        crystal(add, -1, 4)
+        crystal(add, 17, 4)
+    return E
+
+
+def mace_model(stage):
+    model = pickaxe_model(stage)
+    model["credit"] = "Evo Tool - masse 3D générée par tools/generate_assets.py"
+    model["elements"] = mace_elements(stage)
     return model
 
 
@@ -574,6 +625,22 @@ ORES = {
 }
 
 
+def stage_dispatch(item):
+    """L'apparence change selon la forme (custom_model_data floats[0], mis à jour par le mod)."""
+    def ref(i):
+        return {"type": "minecraft:model", "model": f"{MOD}:item/{item}_stage{i}"}
+
+    return {
+        "model": {
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:custom_model_data",
+            "index": 0,
+            "fallback": ref(0),
+            "entries": [{"threshold": i, "model": ref(i)} for i in range(len(STAGES))],
+        }
+    }
+
+
 def gen_models():
     for b in BLOCKS:
         write_json(os.path.join(ASSETS, "blockstates", f"{b}.json"),
@@ -590,23 +657,11 @@ def gen_models():
     for i in range(len(STAGES)):
         write_json(os.path.join(ASSETS, "models", "item", f"evolving_pickaxe_stage{i}.json"), pickaxe_model(i))
 
-    write_json(os.path.join(ASSETS, "models", "item", "evolium_mace.json"), mace_model())
-    write_json(os.path.join(ASSETS, "items", "evolium_mace.json"),
-               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/evolium_mace"}})
+    for i in range(len(STAGES)):
+        write_json(os.path.join(ASSETS, "models", "item", f"evolium_mace_stage{i}.json"), mace_model(i))
+    write_json(os.path.join(ASSETS, "items", "evolium_mace.json"), stage_dispatch("evolium_mace"))
 
-    # L'apparence change selon le palier (custom_model_data floats[0], mis à jour par le mod).
-    def ref(i):
-        return {"type": "minecraft:model", "model": f"{MOD}:item/evolving_pickaxe_stage{i}"}
-
-    write_json(os.path.join(ASSETS, "items", "evolving_pickaxe.json"), {
-        "model": {
-            "type": "minecraft:range_dispatch",
-            "property": "minecraft:custom_model_data",
-            "index": 0,
-            "fallback": ref(0),
-            "entries": [{"threshold": i, "model": ref(i)} for i in range(len(STAGES))],
-        }
-    })
+    write_json(os.path.join(ASSETS, "items", "evolving_pickaxe.json"), stage_dispatch("evolving_pickaxe"))
 
 
 def gen_data():
