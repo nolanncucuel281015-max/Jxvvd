@@ -2,20 +2,16 @@ package fr.evotool.client;
 
 import fr.evotool.EvoTool;
 import fr.evotool.component.EvoData;
-import fr.evotool.component.MaceData;
-import fr.evotool.item.EvoliumMaceItem;
-import fr.evotool.item.EvolvingPickaxeItem;
-import fr.evotool.mining.EvoMode;
-import fr.evotool.mining.EvoProgression;
-import fr.evotool.weapon.MaceProgression;
-import java.util.List;
+import fr.evotool.evo.EvoKind;
+import fr.evotool.evo.EvoProfile;
+import fr.evotool.evo.EvoProgression;
+import fr.evotool.evo.Power;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
@@ -33,55 +29,44 @@ public class EvoToolClient implements ClientModInitializer {
 				if (client.player == null) {
 					continue;
 				}
-				if (client.player.getMainHandStack().getItem() instanceof EvolvingPickaxeItem) {
-					client.setScreen(new EvoToolScreen());
-				} else if (client.player.getMainHandStack().getItem() instanceof EvoliumMaceItem) {
-					client.setScreen(new MaceScreen());
+				if (EvoProgression.kindOf(client.player.getMainHandStack()) != null) {
+					client.setScreen(new EvoScreen());
 				} else {
-					client.player.sendMessage(Text.translatable("message.evotool.hold_pickaxe").formatted(Formatting.RED), true);
+					client.player.sendMessage(Text.translatable("message.evotool.hold_tool").formatted(Formatting.RED), true);
 				}
 			}
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
-			if (stack.getItem() instanceof EvoliumMaceItem) {
-				appendMaceTooltip(stack, lines);
+			EvoKind kind = EvoProgression.kindOf(stack);
+			if (kind == null) {
 				return;
 			}
-			if (!(stack.getItem() instanceof EvolvingPickaxeItem)) {
-				return;
-			}
+			EvoProfile profile = kind.profile();
 			EvoData data = EvoProgression.get(stack);
 			int level = data.level();
-			lines.add(1, Text.translatable("tooltip.evotool.level", level, EvoProgression.MAX_LEVEL).formatted(Formatting.LIGHT_PURPLE));
-			int index = 2;
+			int index = 1;
+			lines.add(index++, Text.translatable("tooltip.evotool.level", level, EvoProgression.MAX_LEVEL)
+					.formatted(Formatting.LIGHT_PURPLE));
 			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),
 					EvoProgression.stage(level), EvoProgression.MAX_STAGE).formatted(Formatting.YELLOW));
 			if (level < EvoProgression.MAX_LEVEL) {
-				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), EvoProgression.xpToNext(level)).formatted(Formatting.GRAY));
+				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), profile.curve().xpToNext(level))
+						.formatted(Formatting.GRAY));
 			}
-			lines.add(index++, Text.translatable("tooltip.evotool.mode", Text.translatable(EvoMode.byIndex(data.mode()).translationKey()))
-					.formatted(Formatting.AQUA));
-			if (EvoProgression.autosmeltUnlocked(level)) {
-				lines.add(index++, Text.translatable(data.autosmelt() ? "tooltip.evotool.autosmelt_on" : "tooltip.evotool.autosmelt_off")
-						.formatted(Formatting.GOLD));
+			if (profile.modes().size() > 1) {
+				lines.add(index++, Text.translatable("tooltip.evotool.mode",
+						Text.translatable(EvoProgression.selectedMode(profile, data).translationKey())).formatted(Formatting.AQUA));
 			}
-			lines.add(index++, Text.translatable("tooltip.evotool.blocks", data.totalBlocks()).formatted(Formatting.DARK_GRAY));
+			for (Power power : profile.powers().keySet()) {
+				if (power.toggleable() && profile.hasPower(power, level)) {
+					boolean on = EvoProgression.isActive(profile, data, power);
+					lines.add(index++, Text.translatable(on ? "tooltip.evotool.power_on" : "tooltip.evotool.power_off",
+							Text.translatable(power.translationKey())).formatted(on ? Formatting.GOLD : Formatting.DARK_GRAY));
+				}
+			}
+			lines.add(index++, Text.translatable(profile.counter().translationKey(), data.count()).formatted(Formatting.DARK_GRAY));
 			lines.add(index, Text.translatable("tooltip.evotool.hint").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
 		});
-	}
-
-	private static void appendMaceTooltip(ItemStack stack, List<Text> lines) {
-		MaceData data = MaceProgression.get(stack);
-		int level = data.level();
-		int index = 1;
-		lines.add(index++, Text.translatable("tooltip.evotool.level", level, MaceProgression.MAX_LEVEL).formatted(Formatting.RED));
-		lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),
-				EvoProgression.stage(level), EvoProgression.MAX_STAGE).formatted(Formatting.YELLOW));
-		if (level < MaceProgression.MAX_LEVEL) {
-			lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), MaceProgression.xpToNext(level)).formatted(Formatting.GRAY));
-		}
-		lines.add(index++, Text.translatable("tooltip.evotool.kills", data.kills()).formatted(Formatting.DARK_GRAY));
-		lines.add(index, Text.translatable("tooltip.evotool.mace_hint").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
 	}
 }

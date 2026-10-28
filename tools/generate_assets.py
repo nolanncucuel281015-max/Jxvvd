@@ -444,6 +444,27 @@ def crystal(add, cx, cy):
     add([cx - 0.6, cy - 1.1, 7.4], [cx + 0.6, cy + 1.1, 8.6], "gem", ["y", 45, [cx, cy, 8]])
 
 
+def display(height):
+    """Transformations d'affichage. Les modèles sont construits verticaux (manche en bas) ;
+    on les remet en diagonale comme les outils vanilla. L'échelle dépend de la hauteur du modèle."""
+    k = 27.0 / height
+
+    def sc(v):
+        v = round(v * k, 3)
+        return [v, v, v]
+
+    return {
+        "thirdperson_righthand": {"rotation": [0, -90, 10], "translation": [0, 3.5, 0.5], "scale": sc(0.6)},
+        "thirdperson_lefthand": {"rotation": [0, 90, -10], "translation": [0, 3.5, 0.5], "scale": sc(0.6)},
+        "firstperson_righthand": {"rotation": [0, -90, -20], "translation": [1.13, 3.6, 1.13], "scale": sc(0.5)},
+        "firstperson_lefthand": {"rotation": [0, 90, 20], "translation": [1.13, 3.6, 1.13], "scale": sc(0.5)},
+        "gui": {"rotation": [15, -25, -45], "translation": [0, 0, 0], "scale": sc(0.52)},
+        "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": sc(0.35)},
+        "fixed": {"rotation": [0, 180, 45], "translation": [0, 0, 0], "scale": sc(0.6)},
+        "head": {"rotation": [0, 180, 0], "translation": [0, 13, 7], "scale": sc(0.8)},
+    }
+
+
 def pickaxe_model(stage):
     st = f"{MOD}:item/pickaxe/stage{stage}_"
     return {
@@ -457,18 +478,7 @@ def pickaxe_model(stage):
             "gem": st + "gem",
         },
         "elements": pickaxe_elements(stage),
-        # Le modèle est construit vertical (manche en bas, tête en haut) ;
-        # les transformations le remettent en diagonale comme une pioche vanilla.
-        "display": {
-            "thirdperson_righthand": {"rotation": [0, -90, 10], "translation": [0, 3.5, 0.5], "scale": [0.6, 0.6, 0.6]},
-            "thirdperson_lefthand": {"rotation": [0, 90, -10], "translation": [0, 3.5, 0.5], "scale": [0.6, 0.6, 0.6]},
-            "firstperson_righthand": {"rotation": [0, -90, -20], "translation": [1.13, 3.6, 1.13], "scale": [0.5, 0.5, 0.5]},
-            "firstperson_lefthand": {"rotation": [0, 90, 20], "translation": [1.13, 3.6, 1.13], "scale": [0.5, 0.5, 0.5]},
-            "gui": {"rotation": [15, -25, -45], "translation": [0, 0, 0], "scale": [0.52, 0.52, 0.52]},
-            "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.35, 0.35, 0.35]},
-            "fixed": {"rotation": [0, 180, 45], "translation": [0, 0, 0], "scale": [0.6, 0.6, 0.6]},
-            "head": {"rotation": [0, 180, 0], "translation": [0, 13, 7], "scale": [0.8, 0.8, 0.8]},
-        },
+        "display": display(27),
     }
 
 
@@ -569,6 +579,255 @@ def mace_model(stage):
     return model
 
 
+# --------------------------------------------------------------------------- épée, hache, pelle, houe
+
+def builder():
+    E = []
+    n = [0]
+
+    def add(frm, to, tex, rot=None):
+        n[0] += 1
+        E.append(element(frm, to, tex, rot, n[0]))
+
+    return E, add
+
+
+def handle(add, top, grip_top=5.5):
+    add([7.25, -3, 7.25], [8.75, top, 8.75], "handle")
+    add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")
+    for y in (-2.25, -0.25, 1.75, 3.75):
+        if y + 1.25 <= grip_top:
+            add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
+    add([7.1, -2.5, 7.1], [8.9, grip_top, 8.9], "grip")
+
+
+def common_decor(add, stage, runes, crystals, second_guard_y=5.75):
+    """Décorations communes à tous les outils, qui s'ajoutent forme après forme."""
+    if stage >= 3:   # niv. 15 : pommeau en gemme
+        add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
+    if stage >= 9:   # niv. 45 : garde sur le manche
+        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
+    if stage >= 12:  # niv. 60 : runes lumineuses
+        for (y, z0, z1) in runes:
+            add([7.75, y, z0], [8.25, y + 0.75, z1], "gem")
+    if stage >= 13:  # niv. 65 : cristal sous le pommeau
+        add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
+    if stage >= 14:  # niv. 70 : deux cristaux flottants
+        for c in crystals[0:2]:
+            crystal(add, *c)
+    if stage >= 16:  # niv. 80 : cristal au zénith
+        crystal(add, *crystals[2])
+    if stage >= 17:  # niv. 85 : cristaux latéraux
+        for c in crystals[3:5]:
+            crystal(add, *c)
+    if stage >= 18:  # niv. 90 : deuxième garde sertie
+        y = second_guard_y
+        add([6.4, y, 6.4], [9.6, y + 0.5, 9.6], "metal")
+        add([6.1, y - 0.15, 7.6], [6.4, y + 0.65, 8.4], "gem")
+        add([9.6, y - 0.15, 7.6], [9.9, y + 0.65, 8.4], "gem")
+    if stage >= 20:  # niv. 100 : halo complet
+        for c in crystals[5:7]:
+            crystal(add, *c)
+
+
+def handle_runes(*ys):
+    return [r for y in ys for r in ((y, 7.0, 7.25), (y, 8.75, 9.0))]
+
+
+def sword_elements(stage):
+    E, add = builder()
+    bt = 24 if stage < 8 else 26                                     # haut de la lame
+    handle(add, 5.5, 5)
+    add([3, 5.5, 7], [13, 7, 9], "metal")                            # garde
+    add([6.5, 7, 7.6], [9.5, bt, 8.4], "metal")                      # lame
+    add([6.25, 7, 7.75], [6.5, bt, 8.25], "metal")                   # tranchants
+    add([9.5, 7, 7.75], [9.75, bt, 8.25], "metal")
+    add([6.94, bt - 1.06, 7.6], [9.06, bt + 1.06, 8.4], "metal", ["z", 45, [8, bt, 8]])  # pointe
+    if stage >= 1:   # embouts de garde
+        add([2.5, 5.25, 6.75], [3.5, 7.25, 9.25], "metal")
+        add([12.5, 5.25, 6.75], [13.5, 7.25, 9.25], "metal")
+    if stage >= 2:   # gouttière en gemme
+        if stage >= 20:
+            add([7.5, 8, 7.45], [8.5, bt - 2, 8.55], "gem")
+        else:
+            add([7.75, 8, 7.5], [8.25, bt - 2, 8.5], "gem")
+    if stage >= 4:   # gemme au centre de la garde
+        add([7, 5.25, 6.75], [9, 7.25, 9.25], "gem")
+    if stage >= 5:   # gemmes sur la garde
+        add([4.5, 5.75, 6.9], [5.5, 6.75, 9.1], "gem")
+        add([10.5, 5.75, 6.9], [11.5, 6.75, 9.1], "gem")
+    if stage >= 6:   # quillons relevés
+        add([0.5, 6, 7.6], [3, 7.5, 8.4], "metal", ["z", -22.5, [3, 6.75, 8]])
+        add([13, 6, 7.6], [15.5, 7.5, 8.4], "metal", ["z", 22.5, [13, 6.75, 8]])
+    if stage >= 7:   # talon de lame renforcé
+        add([6.25, 7, 7.4], [9.75, 9, 8.6], "metal")
+    if stage >= 10:  # losange de gemme à la base de la lame
+        add([7.25, 10, 7.35], [8.75, 11.5, 8.65], "gem", ["z", 45, [8, 10.75, 8]])
+    if stage >= 11:  # dents sur les tranchants
+        for y in (13, 16, 19):
+            add([5.7, y, 7.7], [6.5, y + 0.8, 8.3], "metal", ["z", 45, [6.1, y + 0.4, 8]])
+            add([9.5, y, 7.7], [10.3, y + 0.8, 8.3], "metal", ["z", 45, [9.9, y + 0.4, 8]])
+    if stage >= 15:  # ailes sur la garde
+        add([2, 7, 7.7], [4, 11, 8.3], "metal", ["z", 22.5, [4, 7, 8]])
+        add([12, 7, 7.7], [14, 11, 8.3], "metal", ["z", -22.5, [12, 7, 8]])
+    if stage >= 19:  # diadème
+        add([5.5, 7, 7.7], [10.5, 7.5, 8.3], "metal")
+    runes = [r for y in (12, 15, 18, 21) for r in ((y, 7.35, 7.6), (y, 8.4, 8.65))]
+    common_decor(add, stage, runes,
+                 [(3, 15), (13, 15), (8, bt + 4), (1, 21), (15, 21), (2, 2), (14, 2)], second_guard_y=-3.6)
+    return E
+
+
+def axe_elements(stage):
+    E, add = builder()
+    handle(add, 11)
+    add([6.75, 9.5, 6.75], [9.25, 11, 9.25], "metal")                # virole
+    add([6.5, 11, 6.5], [9.5, 16, 9.5], "metal")                     # douille
+    if stage >= 20:
+        add([6.75, 11.5, 6], [9.25, 15.5, 10], "gem")
+    else:
+        add([7, 12, 6.25], [9, 15, 9.75], "gem")
+    add([2.5, 10.5, 7.4], [6.5, 16.5, 8.6], "metal")                 # corps de la lame
+    add([1, 9.5, 7.6], [2.5, 17.5, 8.4], "metal")                    # tranchant
+    add([0.5, 16.5, 7.65], [2.5, 18, 8.35], "metal", ["z", -22.5, [2.5, 17.25, 8]])
+    add([0.5, 8, 7.65], [2.5, 9.5, 8.35], "metal", ["z", 22.5, [2.5, 8.75, 8]])
+    if stage < 10:
+        add([9.5, 12.5, 7.25], [11, 14.5, 8.75], "metal")            # talon
+    if stage >= 1:   # arête sur la lame
+        add([2.5, 16.5, 7.5], [6.5, 17, 8.5], "metal")
+    if stage >= 2:   # fil en gemme
+        add([0.5, 10, 7.7], [1, 17, 8.3], "gem")
+    if stage >= 4:   # cristal sur la douille
+        add([7, 16, 7], [9, 17.5, 9], "gem")
+    if stage >= 5:   # clous sur la lame
+        add([3.5, 12, 7.2], [4.5, 13, 8.8], "gem")
+        add([3.5, 14, 7.2], [4.5, 15, 8.8], "gem")
+    if 6 <= stage < 10:  # bec à l'arrière
+        add([11, 12.75, 7.5], [14, 14.25, 8.5], "metal", ["z", -22.5, [11, 13.5, 8]])
+    if stage >= 7:   # incrustation
+        add([5, 12.5, 7.3], [6.25, 14.5, 8.7], "gem")
+    if stage >= 8:   # corne au-dessus du tranchant
+        add([1, 17.5, 7.7], [2, 20, 8.3], "metal", ["z", 22.5, [1.5, 17.5, 8]])
+    if stage >= 10:  # hache double
+        add([9.5, 11, 7.45], [13, 16, 8.55], "metal")
+        add([13, 10, 7.6], [14.5, 17, 8.4], "metal")
+        add([14.5, 10.5, 7.7], [15, 16.5, 8.3], "gem")
+    if stage >= 11:  # barbes sous la lame
+        add([3, 9.25, 7.6], [4, 10.5, 8.4], "metal", ["z", 45, [3.5, 10.5, 8]])
+    if stage >= 15:  # ailes
+        add([5.5, 16, 7.7], [7, 19.5, 8.3], "metal", ["z", 22.5, [7, 16, 8]])
+        add([9, 16, 7.7], [10.5, 19.5, 8.3], "metal", ["z", -22.5, [9, 16, 8]])
+    if stage >= 19:  # diadème
+        add([6, 16, 7.75], [10, 16.5, 8.25], "metal")
+    common_decor(add, stage, handle_runes(6.75, 8.25),
+                 [(4, 21), (12, 21), (8, 24), (-2, 13), (18, 13), (-1, 4), (17, 4)])
+    return E
+
+
+def shovel_elements(stage):
+    E, add = builder()
+    top = 19 if stage < 8 else 20                                    # haut de la lame
+    handle(add, 9)
+    add([6.75, 9, 6.75], [9.25, 10.5, 9.25], "metal")                # virole
+    add([7.25, 10.5, 7.5], [8.75, 12, 8.5], "metal")                 # col
+    add([5, 12, 7.5], [11, top, 8.5], "metal")                       # lame
+    add([4.75, 12, 7.6], [5, top, 8.4], "metal")
+    add([11, 12, 7.6], [11.25, top, 8.4], "metal")
+    add([5.5, top, 7.55], [10.5, top + 1, 8.45], "metal")            # bout arrondi
+    add([6.5, top + 1, 7.6], [9.5, top + 2, 8.4], "metal")
+    add([7.25, top + 2, 7.65], [8.75, top + 2.75, 8.35], "metal")
+    if stage >= 20:
+        add([6.25, 13.25, 7.2], [9.75, 16.75, 8.8], "gem")
+    else:
+        add([6.5, 13.5, 7.25], [9.5, 16.5, 8.75], "gem")
+    if stage >= 1:   # nervure au dos
+        add([7.75, 12, 8.5], [8.25, top, 8.75], "metal")
+    if stage >= 2:   # bord en gemme
+        add([5, 12, 7.4], [11, 12.75, 8.6], "gem")
+    if stage >= 4:   # pointe en gemme
+        add([7.5, top + 2.5, 7.7], [8.5, top + 3.5, 8.3], "gem", ["z", 45, [8, top + 3, 8]])
+    if stage >= 5:   # clous
+        add([5.5, 17, 7.3], [6.25, 17.75, 8.7], "gem")
+        add([9.75, 17, 7.3], [10.5, 17.75, 8.7], "gem")
+    if stage >= 6:   # épaulettes
+        add([3.5, 11.5, 7.7], [5, 14, 8.3], "metal", ["z", -22.5, [5, 12, 8]])
+        add([11, 11.5, 7.7], [12.5, 14, 8.3], "metal", ["z", 22.5, [11, 12, 8]])
+    if stage >= 7:   # collier
+        add([6, 11.75, 7.25], [10, 12.25, 8.75], "metal")
+    if stage >= 10:  # grand losange de gemme
+        add([6.9, 15, 7.15], [9.1, 17.2, 8.85], "gem", ["z", 45, [8, 16.1, 8]])
+    if stage >= 11:  # pointes latérales
+        add([3.75, 15, 7.7], [4.75, 16, 8.3], "metal", ["z", 45, [4.25, 15.5, 8]])
+        add([11.25, 15, 7.7], [12.25, 16, 8.3], "metal", ["z", 45, [11.75, 15.5, 8]])
+    if stage >= 15:  # ailes
+        add([4, 8.5, 7.7], [6, 12, 8.3], "metal", ["z", 22.5, [6, 9, 8]])
+        add([10, 8.5, 7.7], [12, 12, 8.3], "metal", ["z", -22.5, [10, 9, 8]])
+    if stage >= 19:  # diadème
+        add([5, top - 0.5, 7.4], [11, top, 8.6], "metal")
+    common_decor(add, stage, handle_runes(6, 7.5),
+                 [(2, 20), (14, 20), (8, top + 6), (-1, 14), (17, 14), (0, 4), (16, 4)])
+    return E
+
+
+def hoe_elements(stage):
+    E, add = builder()
+    bottom = 9.5 if stage < 8 else 8.5                               # bas de la lame
+    handle(add, 13)
+    add([6.75, 11.5, 6.75], [9.25, 13, 9.25], "metal")               # virole
+    add([6.5, 13, 6.5], [9.5, 16, 9.5], "metal")                     # douille
+    if stage >= 20:
+        add([6.75, 13.25, 6], [9.25, 15.75, 10], "gem")
+    else:
+        add([7, 13.5, 6.25], [9, 15.5, 9.75], "gem")
+    add([1.5, 13.75, 7.25], [6.5, 15.75, 8.75], "metal")             # bras
+    add([0, bottom, 6.5], [2.5, 15.75, 9.5], "metal")                # lame
+    add([0.25, bottom - 1, 6.75], [2.25, bottom, 9.25], "metal")     # tranchant
+    add([9.5, 14, 7.25], [11.5, 15.5, 8.75], "metal")                # contrepoids
+    if stage >= 1:   # arête du bras
+        add([2, 15.75, 7.5], [6.5, 16.25, 8.5], "metal")
+    if stage >= 2:   # fil en gemme
+        add([-0.25, bottom - 0.5, 6.6], [0.25, 15, 9.4], "gem")
+    if stage >= 4:   # cristal sur la douille
+        add([7, 16, 7], [9, 17.5, 9], "gem")
+    if stage >= 5:   # clous sur le bras
+        add([3.5, 13.5, 7], [4.5, 14.5, 9], "gem")
+    if stage >= 6:   # pointe du contrepoids
+        add([11.5, 14.25, 7.5], [14, 15.25, 8.5], "metal", ["z", 22.5, [11.5, 14.75, 8]])
+    if stage >= 7:   # incrustation sur la lame
+        add([0.6, 11, 6.35], [2, 13, 9.65], "gem")
+    if stage >= 10:  # dents
+        for (z0, z1) in ((6.75, 7.5), (7.6, 8.4), (8.5, 9.25)):
+            add([0.5, bottom - 3, z0], [1.75, bottom - 1, z1], "metal")
+    if stage >= 11:  # barbe sous le bras
+        add([3, 12.5, 7.6], [4, 13.75, 8.4], "metal", ["z", 45, [3.5, 13.75, 8]])
+    if stage >= 15:  # ailes
+        add([5.5, 16, 7.7], [7, 19.5, 8.3], "metal", ["z", 22.5, [7, 16, 8]])
+        add([9, 16, 7.7], [10.5, 19.5, 8.3], "metal", ["z", -22.5, [9, 16, 8]])
+    if stage >= 19:  # diadème
+        add([6, 16, 7.75], [10, 16.5, 8.25], "metal")
+    common_decor(add, stage, handle_runes(7, 8.5),
+                 [(4, 20), (13, 19.5), (8, 22.5), (-3, 12), (18, 12), (-2, 3), (17, 3)])
+    return E
+
+
+TOOL_MODELS = {
+    # id: (éléments, hauteur approximative pour l'échelle d'affichage)
+    "evolving_sword": (sword_elements, 34),
+    "evolving_axe": (axe_elements, 28),
+    "evolving_shovel": (shovel_elements, 30),
+    "evolving_hoe": (hoe_elements, 27),
+}
+
+
+def tool_model(item, stage):
+    elements, height = TOOL_MODELS[item]
+    model = pickaxe_model(stage)
+    model["credit"] = "Evo Tool - modèle 3D généré par tools/generate_assets.py"
+    model["elements"] = elements(stage)
+    model["display"] = display(height)
+    return model
+
+
 def mod_icon():
     """Icône 128x128 : sprite de pioche dessiné en pixel art, agrandi."""
     st = STAGES[10]
@@ -660,6 +919,10 @@ def gen_models():
     for i in range(len(STAGES)):
         write_json(os.path.join(ASSETS, "models", "item", f"evolium_mace_stage{i}.json"), mace_model(i))
     write_json(os.path.join(ASSETS, "items", "evolium_mace.json"), stage_dispatch("evolium_mace"))
+    for item in TOOL_MODELS:
+        for i in range(len(STAGES)):
+            write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"), tool_model(item, i))
+        write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item))
 
     write_json(os.path.join(ASSETS, "items", "evolving_pickaxe.json"), stage_dispatch("evolving_pickaxe"))
 
@@ -712,6 +975,17 @@ def gen_data():
         "key": {"E": f"{MOD}:evolium", "|": "minecraft:stick"},
         "result": {"id": f"{MOD}:evolving_pickaxe", "count": 1},
     })
+    for item, pattern in (("evolving_sword", ["E", "E", "|"]),
+                          ("evolving_axe", ["EE", "E|", " |"]),
+                          ("evolving_shovel", ["E", "|", "|"]),
+                          ("evolving_hoe", ["EE", " |", " |"])):
+        write_json(os.path.join(rec, f"{item}.json"), {
+            "type": "minecraft:crafting_shaped",
+            "category": "equipment",
+            "pattern": pattern,
+            "key": {"E": f"{MOD}:evolium", "|": "minecraft:stick"},
+            "result": {"id": f"{MOD}:{item}", "count": 1},
+        })
     write_json(os.path.join(rec, "evolium_mace.json"), {
         "type": "minecraft:crafting_shaped",
         "category": "equipment",
@@ -762,8 +1036,6 @@ def gen_data():
     write_json(os.path.join(tags, "c", "tags", "block", "ores.json"), {"replace": False, "values": ore_ids})
     write_json(os.path.join(tags, "c", "tags", "item", "gems.json"),
                {"replace": False, "values": [f"{MOD}:{g}" for g in GEMS]})
-    write_json(os.path.join(DATA, "tags", "block", "evolium_ores.json"),
-               {"replace": False, "values": [f"{MOD}:deepslate_evolium_ore"]})
     write_json(os.path.join(DATA, "tags", "block", "gem_ores.json"),
                {"replace": False, "values": [o for o in ore_ids if "evolium" not in o]})
     write_json(os.path.join(DATA, "tags", "item", "evolium_tool_materials.json"),
@@ -771,8 +1043,10 @@ def gen_data():
     # la mace accepte Densité, Brèche et Charge de vent comme la mace vanilla
     write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "mace.json"),
                {"replace": False, "values": [f"{MOD}:evolium_mace"]})
-    write_json(os.path.join(tags, "minecraft", "tags", "item", "pickaxes.json"),
-               {"replace": False, "values": [f"{MOD}:evolving_pickaxe"]})
+    for tag, item in (("pickaxes", "evolving_pickaxe"), ("swords", "evolving_sword"), ("axes", "evolving_axe"),
+                      ("shovels", "evolving_shovel"), ("hoes", "evolving_hoe")):
+        write_json(os.path.join(tags, "minecraft", "tags", "item", f"{tag}.json"),
+                   {"replace": False, "values": [f"{MOD}:{item}"]})
 
     # --- génération du monde
     wg = os.path.join(DATA, "worldgen")

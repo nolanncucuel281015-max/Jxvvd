@@ -5,8 +5,9 @@ import fr.evotool.component.ModComponents;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
 import fr.evotool.mining.EvoMiningHandler;
+import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
-import fr.evotool.weapon.MaceCombatHandler;
+import fr.evotool.weapon.CombatHandler;
 import fr.evotool.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -31,7 +32,8 @@ public class EvoTool implements ModInitializer {
 		ModWorldGen.init();
 		ModNetworking.init();
 		EvoMiningHandler.init();
-		MaceCombatHandler.init();
+		FarmingHandler.init();
+		CombatHandler.init();
 		LOGGER.info("Evo Tool chargé : que l'évolution commence !");
 	}
 }

@@ -12,12 +12,6 @@ public final class ModComponents {
 			ComponentType.<EvoData>builder().codec(EvoData.CODEC).packetCodec(EvoData.PACKET_CODEC).build()
 	);
 
-	public static final ComponentType<MaceData> MACE_DATA = Registry.register(
-			Registries.DATA_COMPONENT_TYPE,
-			EvoTool.id("mace_data"),
-			ComponentType.<MaceData>builder().codec(MaceData.CODEC).packetCodec(MaceData.PACKET_CODEC).build()
-	);
-
 	private ModComponents() {
 	}
 

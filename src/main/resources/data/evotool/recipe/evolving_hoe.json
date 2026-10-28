@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "EE",
+    " |",
+    " |"
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "evotool:evolving_hoe",
+    "count": 1
+  }
+}

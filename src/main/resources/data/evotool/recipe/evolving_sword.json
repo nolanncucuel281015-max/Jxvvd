@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "E",
+    "E",
+    "|"
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "evotool:evolving_sword",
+    "count": 1
+  }
+}

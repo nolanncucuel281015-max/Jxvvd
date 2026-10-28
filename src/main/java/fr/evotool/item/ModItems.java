@@ -2,8 +2,9 @@ package fr.evotool.item;
 
 import fr.evotool.EvoTool;
 import fr.evotool.component.EvoData;
-import fr.evotool.component.MaceData;
 import fr.evotool.component.ModComponents;
+import fr.evotool.evo.EvoKind;
+import java.util.List;
 import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.component.DataComponentTypes;
@@ -21,12 +22,11 @@ import net.minecraft.util.Unit;
 
 public final class ModItems {
 	public static final TagKey<Item> EVOLIUM_REPAIR = TagKey.of(RegistryKeys.ITEM, EvoTool.id("evolium_tool_materials"));
-	public static final TagKey<Block> EVOLIUM_ORES = TagKey.of(RegistryKeys.BLOCK, EvoTool.id("evolium_ores"));
 	public static final TagKey<Block> GEM_ORES = TagKey.of(RegistryKeys.BLOCK, EvoTool.id("gem_ores"));
 
 	/**
-	 * Matériau de base : vitesse d'une pioche en fer au début, mais peut tout récolter.
-	 * La vitesse augmente ensuite avec le niveau (attribut d'efficacité de minage).
+	 * Matériau de base : vitesse d'un outil en fer au début, mais peut tout récolter.
+	 * La vitesse et les dégâts augmentent ensuite avec le niveau.
 	 */
 	public static final ToolMaterial EVOLIUM_MATERIAL = new ToolMaterial(
 			BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 4096, 6.0F, 4.0F, 22, EVOLIUM_REPAIR);
@@ -35,29 +35,40 @@ public final class ModItems {
 	public static final Item RUBY = register("ruby", Item::new, new Item.Settings());
 	public static final Item SAPPHIRE = register("sapphire", Item::new, new Item.Settings());
 
-	public static final Item EVOLVING_PICKAXE = register("evolving_pickaxe", EvolvingPickaxeItem::new,
-			new Item.Settings()
-					.pickaxe(EVOLIUM_MATERIAL, 1.0F, -2.8F)
-					.component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
-					.component(ModComponents.EVO_DATA, EvoData.DEFAULT)
-					.fireproof()
-					.rarity(Rarity.EPIC)
-					.maxCount(1));
-
+	public static final Item EVOLVING_PICKAXE = register("evolving_pickaxe",
+			s -> new EvolvingToolItem(EvoKind.PICKAXE, s),
+			evolving().pickaxe(EVOLIUM_MATERIAL, 1.0F, -2.8F));
+	public static final Item EVOLVING_SHOVEL = register("evolving_shovel",
+			s -> new EvolvingShovelItem(EVOLIUM_MATERIAL, 1.5F, -3.0F, s), evolving());
+	public static final Item EVOLVING_AXE = register("evolving_axe",
+			s -> new EvolvingAxeItem(EVOLIUM_MATERIAL, 5.0F, -3.0F, s), evolving());
+	public static final Item EVOLVING_HOE = register("evolving_hoe",
+			s -> new EvolvingHoeItem(EVOLIUM_MATERIAL, -4.0F, 0.0F, s), evolving());
+	public static final Item EVOLVING_SWORD = register("evolving_sword",
+			s -> new EvolvingToolItem(EvoKind.SWORD, s),
+			evolving().sword(EVOLIUM_MATERIAL, 3.0F, -2.4F));
 	public static final Item EVOLIUM_MACE = register("evolium_mace", EvoliumMaceItem::new,
-			new Item.Settings()
+			evolving()
 					.maxDamage(2500)
-					.component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
-					.component(ModComponents.MACE_DATA, MaceData.DEFAULT)
 					.component(DataComponentTypes.TOOL, MaceItem.createToolComponent())
 					.attributeModifiers(EvoliumMaceItem.createEvoliumAttributeModifiers())
 					.repairable(EVOLIUM_REPAIR)
-					.enchantable(20)
-					.fireproof()
-					.rarity(Rarity.EPIC)
-					.maxCount(1));
+					.enchantable(20));
+
+	public static final List<Item> EVOLVING_ITEMS = List.of(
+			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLIUM_MACE);
 
 	private ModItems() {
+	}
+
+	/** Réglages communs : incassable, résiste à la lave, données d'évolution. */
+	private static Item.Settings evolving() {
+		return new Item.Settings()
+				.component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+				.component(ModComponents.EVO_DATA, EvoData.DEFAULT)
+				.fireproof()
+				.rarity(Rarity.EPIC)
+				.maxCount(1);
 	}
 
 	private static Item register(String name, Function<Item.Settings, Item> factory, Item.Settings settings) {

@@ -1,39 +1,74 @@
-# Evo Tool — la Pioche Évolutive (Fabric 1.21.11)
+# Evo Tool — outils évolutifs (Fabric 1.21.11)
 
-Une pioche qui **évolue** : plus tu casses de blocs, plus elle gagne de l'XP et monte de niveau (jusqu'au niveau 100).
+Six outils en évolium qui **évoluent** quand tu t'en sers, jusqu'au niveau 100 :
+pioche, pelle, hache, houe, épée et masse (mace). Tous :
 
-## Déblocages
+- changent de **forme tous les 5 niveaux** (21 formes, modèles 3D, voir plus bas) ;
+- sont incassables et résistent à la lave ;
+- ont un menu avec la **touche Y** (configurable) : niveau, XP, mode de zone, pouvoirs à activer / couper, bonus actifs ;
+- **accroupi** = un seul bloc (pas de zone, pas d'abattage).
+
+## Pioche et pelle — en cassant des blocs
 
 | Niveau | Déblocage |
 |-------:|-----------|
-| 10  | Auto-smelt (activable / désactivable dans le menu) |
-| 15  | Fortune I |
-| 20  | Fortune II + minage **3x3** |
-| 25  | Fortune III |
-| 30  | Fortune IV + minage **3x3x3** |
-| 35  | Fortune V |
-| 40  | Fortune VI + minage **5x5** |
-| 50  | minage **5x5x5** |
+| 10  | Auto-smelt (minerais → lingots, sable → verre…) |
+| 15 / 20 / 25 / 30 / 35 / 40 | Fortune I à VI |
+| 20 / 30 / 40 / 50 | Zone **3x3**, **3x3x3**, **5x5**, **5x5x5** |
 | 100 | **Minage instantané** de tout (ardoise, minerais, obsidienne…) |
 
-En plus, **tous les 5 niveaux la pioche prend une nouvelle forme** (voir plus bas).
+La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
 
-La vitesse de minage augmente aussi un peu à chaque niveau.
+## Hache — en coupant du bois et en tuant des monstres
 
-- **Touche Y** (configurable) : ouvre le menu pour choisir le mode (1 bloc, 3x3, 3x3x3, 5x5, 5x5x5) et l'auto-smelt.
-- **Accroupi** : mine toujours un seul bloc.
-- La pioche est incassable et résiste à la lave.
+| Niveau | Déblocage |
+|-------:|-----------|
+| 10  | **Abattage** : tout l'arbre tombe d'un coup |
+| 15 / 25 / 35 / 45 / 55 | Tranchant I à V |
+| 20  | L'abattage emporte aussi les feuilles |
+| 30  | **Replantation** automatique d'une pousse |
+| 40  | Vol de vie |
+| 60  | Onde de choc |
+| 100 | Minage instantané + exécution |
 
-### Courbe d'XP
+## Houe — en labourant et en récoltant
 
-1 XP par bloc minable à la pioche, 6 par minerai, 15 par rubis/saphir, 60 par évolium.
+| Niveau | Déblocage |
+|-------:|-----------|
+| 10  | **Replantation** automatique des cultures récoltées |
+| 15 / 20 / 25 / 30 / 35 / 40 | Fortune I à VI (plus de récoltes) |
+| 20 / 40 / 60 / 80 | Labour **et** récolte en zone 3x3, 5x5, 7x7, 9x9 |
+| 100 | **Pousse instantanée** : les cultures replantées sont déjà mûres |
 
-| Niveau | XP totale | Ordre de grandeur |
-|-------:|----------:|-------------------|
-| 20  | ~1 500     | ~10 min de minage |
-| 30  | ~8 600     | |
-| 50  | ~112 000   | |
-| 100 | ~4 400 000 | très, très long |
+## Épée et masse — en tuant des monstres
+
+XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
+Les animaux ne rapportent rien. Chaque niveau donne +0,1 dégât (+10 au niveau 100).
+
+| Niveau | Épée | Masse |
+|-------:|------|-------|
+| 10  | Vol de vie (10 % des dégâts) | Vol de vie |
+| 15 → 55 | Tranchant I à V (15/25/35/45/55) | Densité I à V (15/25/35/45/55) |
+| 20 → 60 | Butin I à V (20/30/40/50/60) | Brèche I à IV (20/30/40/50) |
+| 30  | **Onde de choc** (monstres à 3 blocs : moitié des dégâts) | Onde de choc |
+| 35 / 55 / 70 | Affilage I à III | — |
+| 50  | **Foudre** (20 % de chance) | Foudre |
+| 60 / 70 / 80 | — | Charge de vent I à III |
+| 65 / 85 | Aura de feu I et II | — |
+| 75  | Onde de choc élargie (5 blocs) | Onde de choc élargie |
+| 100 | **Exécution** : tue en un coup tout monstre qui n'est pas un boss | Exécution |
+
+La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
+
+## Courbes d'XP
+
+| Niveau | Outils (blocs) | Épée / masse (monstres) |
+|-------:|---------------:|------------------------:|
+| 20  | ~1 500 XP (~10 min) | ~400 XP |
+| 50  | ~112 000 XP | ~28 000 XP |
+| 100 | ~4 400 000 XP | ~1 100 000 XP |
+
+Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 60 par évolium, 3 par culture mûre, 1 par bloc labouré.
 
 ## Nouveaux minerais
 
@@ -47,48 +82,21 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 
 ## Recettes
 
-**Pioche Évolutive** (comme une pioche en diamant) :
+Comme les outils en diamant, avec de l'**évolium** à la place du diamant :
+pioche (3 + 2 bâtons), pelle (1 + 2), hache (3 + 2), houe (2 + 2), épée (2 + 1).
 
-```
-[Évolium][Évolium][Évolium]
-[       ][ Bâton ][       ]
-[       ][ Bâton ][       ]
-```
-
-**Masse en évolium** (mace) : un bloc d'évolium au-dessus d'un bâton.
+La **masse** : un bloc d'évolium au-dessus d'un bâton.
 
 ```
 [Bloc d'évolium]
 [    Bâton     ]
 ```
 
-La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
-Elle est incassable, résiste à la lave et **évolue en tuant des monstres** (voir plus bas).
-
-## Évolution de la masse (en tuant des monstres)
-
-XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
-Environ 400 XP pour le niveau 20, environ 1,1 million pour le niveau 100.
-Chaque niveau donne aussi +0,1 dégât (+10 au niveau 100).
-
-| Niveau | Déblocage |
-|-------:|-----------|
-| 10  | Vol de vie (10 % des dégâts infligés) |
-| 15 / 25 / 35 / 45 / 55 | Densité I à V |
-| 20 / 30 / 40 / 50 | Brèche I à IV |
-| 30  | **Onde de choc** : les monstres à 3 blocs prennent la moitié des dégâts |
-| 50  | **Foudre** : 20 % de chance de foudroyer la cible |
-| 60 / 70 / 80 | Charge de vent I à III |
-| 75  | Onde de choc élargie (5 blocs) |
-| 100 | **Exécution** : tue en un coup tout monstre qui n'est pas un boss |
-
-- **Touche Y** avec la masse en main : niveau, XP, bonus actifs, et activer/couper l'onde de choc et la foudre.
-- Comme la pioche, la masse change de forme **tous les 5 niveaux** (21 formes, mêmes thèmes que la pioche).
-
 ## Modèle 3D — 21 formes
 
-La pioche et la masse ont un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux elle change de forme** :
-nouvelles couleurs et nouvelles pièces qui s'ajoutent aux précédentes.
+Chaque outil a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux il change de forme** :
+nouvelles couleurs et nouvelles pièces qui s'ajoutent aux précédentes (pointes, gemmes, ailes, cristaux flottants…).
+Le tableau détaille la pioche ; les autres outils suivent les mêmes thèmes avec leurs propres pièces.
 
 | Niv. | Forme | Ajout | Niv. | Forme | Ajout |
 |----:|-------|-------|----:|-------|-------|

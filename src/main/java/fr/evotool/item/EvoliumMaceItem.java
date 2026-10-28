@@ -1,5 +1,7 @@
 package fr.evotool.item;
 
+import fr.evotool.evo.EvoKind;
+import fr.evotool.evo.EvolvingItem;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -7,12 +9,17 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.MaceItem;
 
 /**
- * Masse en évolium : garde l'attaque écrasante de la mace vanilla (dégâts bonus en chute)
- * et évolue en tuant des monstres (voir {@link fr.evotool.weapon.MaceProgression}).
+ * Masse évolutive : garde l'attaque écrasante de la mace vanilla (dégâts bonus en chute)
+ * et évolue en tuant des monstres.
  */
-public class EvoliumMaceItem extends MaceItem {
+public class EvoliumMaceItem extends MaceItem implements EvolvingItem {
 	public EvoliumMaceItem(Settings settings) {
 		super(settings);
+	}
+
+	@Override
+	public EvoKind evoKind() {
+		return EvoKind.MACE;
 	}
 
 	public static AttributeModifiersComponent createEvoliumAttributeModifiers() {
