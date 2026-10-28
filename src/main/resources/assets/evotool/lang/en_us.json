@@ -97,6 +97,5 @@
   "message.evotool.armor_level": "🛡 Your armor evolves: set level %s! 🛡",
   "message.evotool.armor_actionbar": "Armor lvl %s — %s lvl %s: %s / %s XP",
   "message.evotool.armor_actionbar_max": "Armor lvl 100 — invincible",
-  "armor.evotool.more_hearts": "+%s hearts (%s total)",
   "armor.evotool.next": "Next bonus (lvl %s): %s"
 }

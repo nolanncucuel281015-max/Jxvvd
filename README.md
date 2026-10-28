@@ -67,27 +67,44 @@ ne fasse pas tout monter d'un coup). C'est **long** : environ 4 min pour le nive
 niveau 80 et **2 h 30 de coups en continu** pour le niveau 100.
 
 Les bonus dépendent du **niveau de l'ensemble** = moyenne des 4 pièces (une pièce manquante compte 0),
-donc il faut porter l'armure complète. **Un nouveau bonus tous les 5 niveaux**, permanent tant qu'on la porte :
+donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'on la porte :
 
-| Niv. | Bonus | Niv. | Bonus |
-|----:|-------|----:|-------|
-| 5  | Résistance I        | 55  | Hâte I |
-| 10 | Vitesse I           | 60  | Vitesse III |
-| 15 | Régénération I      | 65  | Résistance IV |
-| 20 | Vision nocturne     | 70  | Régénération III |
-| 25 | Résistance II       | 75  | Hâte II |
-| 30 | Vitesse II          | 80  | **+2 cœurs** |
-| 35 | Résistance au feu   | 85  | **+2 cœurs** (4 au total) |
-| 40 | Régénération II     | 90  | **+2 cœurs** (6 au total) |
-| 45 | Résistance III      | 95  | **+2 cœurs** (8 au total) |
-| 50 | Respiration aquatique | 100 | **+2 cœurs** (10 au total) + **Résistance V** |
+| Niveau d'ensemble | Bonus |
+|------------------:|-------|
+| 10 / 30 / 50 / 75 / 100 | Résistance I à **V** |
+| 15 / 45 / 70 | Vitesse I à **III** |
+| 20 / 55 / 90 | Régénération I à **III** |
+| 80  | **+4 cœurs** |
+| 100 | **+10 cœurs** au total |
 
 Résistance V = plus aucun dégât (sauf /kill et le vide).
 
-**Look de chevalier** : le casque est un vrai heaume 3D à cornes porté sur la tête (visière, trous
-d'aération, cornes qui s'allongent, crête, ailes, cristaux flottants…). Le plastron, les jambières et
-les bottes ont des textures d'armure de plates (épaulières à pointes, cotte de mailles, genouillères,
-gemme au centre du plastron, runes…). Comme les outils, l'armure change de **forme tous les 5 niveaux**.
+**Look de chevalier qui change tous les 5 niveaux** (21 formes) : nouvelles couleurs **et** un nouveau détail
+à chaque forme, qui s'ajoute aux précédents.
+
+| Niv. | Casque (3D) | Plastron / jambières / bottes |
+|----:|-------------|-------------------------------|
+| 0  | heaume à cornes, visière | armure de plates, cotte de mailles |
+| 5  | bandeau | rivets |
+| 10 | protège-joues | jointures lumineuses |
+| 15 | gemme frontale | grosse gemme sur le plastron |
+| 20 | cornes plus longues | bordure colorée des épaulières |
+| 25 | rivets sertis | gemmes sur les genouillères |
+| 30 | crête | épaulières à pointes |
+| 35 | protège-nuque | blason en croix |
+| 40 | pointes sur la crête | manchettes des gantelets |
+| 45 | mentonnière | bordures couleur gemme |
+| 50 | bouts de cornes en gemme | éperons, bouts de bottes sertis |
+| 55 | petites cornes frontales | clous sur la ceinture |
+| 60 | visière lumineuse | runes |
+| 65 | pointes à l'arrière | **cape** dans le dos |
+| 70 | 2 cristaux flottants | runes sur les bras |
+| 75 | ailes | ailes brodées sur la cape |
+| 80 | cristal au zénith | ailettes sur les bottes |
+| 85 | cristaux latéraux | bandes lumineuses sur les cuissardes |
+| 90 | couronne de gemmes | bordures en gemme |
+| 95 | diadème | filigrane doré |
+| 100 | halo complet | toutes les jointures brillent |
 
 ## Courbes d'XP
 

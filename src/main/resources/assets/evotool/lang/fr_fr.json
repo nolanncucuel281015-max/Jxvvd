@@ -97,6 +97,5 @@
   "message.evotool.armor_level": "🛡 Ton armure évolue : niveau d'ensemble %s ! 🛡",
   "message.evotool.armor_actionbar": "Armure niv. %s — %s niv. %s : %s / %s XP",
   "message.evotool.armor_actionbar_max": "Armure niv. 100 — invincible",
-  "armor.evotool.more_hearts": "+%s cœurs (%s au total)",
   "armor.evotool.next": "Prochain bonus (niv. %s) : %s"
 }

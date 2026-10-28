@@ -899,6 +899,8 @@ def helmet_elements(stage):
     if stage >= 8:   # pointes sur la crête
         for z in (5, 8, 11):
             add([7.5, 17.5, z], [8.5, 19 + (0.5 if z == 8 else 0), z + 1], "metal")
+    if stage >= 9:   # mentonnière
+        add([2.5, 0, 0], [13.5, 1.5, 0.5], "metal")
     if stage >= 10:  # bouts de cornes en gemme
         sym([-7.25, 17, 7.5], [-5.75, 20, 8.5], "gem", ["z", 45, [-6.5, 17, 8]])
     if stage >= 11:  # petites cornes frontales
@@ -911,6 +913,9 @@ def helmet_elements(stage):
     if stage >= 19:  # diadème
         add([2, 13.5, 0.25], [14, 14, 0.5], "gem")
     crystals = [(-1, 20), (17, 20), (8, 23), (-6, 9), (22, 9), (-4, 3), (20, 3)]
+    if stage >= 13:  # pointes à l'arrière du casque
+        for y in (6, 10):
+            add([7.5, y, 15], [8.5, y + 1, 17], "metal")
     if stage >= 14:
         for c in crystals[0:2]:
             crystal(add, *c)
@@ -1025,77 +1030,147 @@ def paint_box(img, box, st, stage, kind, rows_main, seed):
         paint_side(img, (x0, y0, w, h), st, r, [y for y in rows_main if y < h], kind, stage, face)
 
 
+def put(img, box, face, x, y, color):
+    """Pose un pixel sur une face d'une boîte (coordonnées relatives à la face)."""
+    x0, y0, w, h = box_faces(box)[face]
+    if 0 <= x < w and 0 <= y < h:
+        img.putpixel((x0 + x, y0 + y), color)
+
+
+SIDES = ("front", "back", "right", "left")
+
+
 def armor_textures(stage):
+    """Textures portées. Chaque forme (tous les 5 niveaux) ajoute un nouveau détail aux précédents."""
     st = STAGES[stage]
     gem = st["gem"]
+    metal = st["metal"]
+    light = shade(metal, 1.35)
     humanoid = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
     leggings = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
 
-    # --- Plastron : corps + bras complets
+    # --- Base (niv. 0) : plastron + bras, bottes, ceinture + cuissardes
     paint_box(humanoid, BODY, st, stage, "chest", range(12), 1)
     paint_box(humanoid, ARM, st, stage, "arm", range(12), 2)
-    for box, light in ((BODY, 1.2), (ARM, 1.3)):
+    for box, top_light in ((BODY, 1.2), (ARM, 1.3)):
         faces = box_faces(box)
         for face in ("top", "bottom"):
             x0, y0, w, h = faces[face]
             for y in range(h):
                 for x in range(w):
-                    humanoid.putpixel((x0 + x, y0 + y), shade(st["metal"], light if face == "top" else 0.6))
-    fx, fy, _, _ = box_faces(BODY)["front"]
-    # gemme au centre du plastron, qui grandit avec les formes
-    size = 1 if stage < 3 else 2
-    for dx in range(size):
-        for dy in range(size):
-            humanoid.putpixel((fx + 3 + dx + (1 if size == 1 else 0), fy + 2 + dy), gem[2] if dy == 0 else gem[1])
-    if stage >= 3:
-        humanoid.putpixel((fx + 3, fy + 2), gem[4])
-    if stage >= 6:   # épaulières à pointes
-        tx, ty, w, h = box_faces(ARM)["top"]
-        for (x, y) in ((1, 1), (2, 2), (1, 2), (2, 1)):
-            humanoid.putpixel((tx + x, ty + y), shade(st["metal"], 1.6))
-        lx, ly, _, _ = box_faces(ARM)["right"]
-        for (x, y) in ((1, 1), (2, 0), (2, 1), (1, 2)):
-            humanoid.putpixel((lx + x, ly + y), shade(st["metal"], 1.55))
-    if stage >= 12:  # runes lumineuses sur le plastron
-        for (x, y) in ((1, 4), (6, 4), (1, 5), (6, 5)):
-            humanoid.putpixel((fx + x, fy + y), gem[3])
-    if stage >= 15:  # ailes gravées dans le dos
-        bx, by, _, _ = box_faces(BODY)["back"]
-        for i in range(4):
-            humanoid.putpixel((bx + 3 - i, by + 1 + i), gem[2])
-            humanoid.putpixel((bx + 4 + i, by + 1 + i), gem[2])
-    if stage >= 18:  # bordures en gemme
-        for face in ("front", "back"):
-            x0, y0, w, h = box_faces(BODY)[face]
-            for y in range(7):
-                humanoid.putpixel((x0, y0 + y), gem[2])
-                humanoid.putpixel((x0 + w - 1, y0 + y), gem[2])
-
-    # --- Bottes (même texture, jambes) : 6 lignes du bas
+                    humanoid.putpixel((x0 + x, y0 + y), shade(metal, top_light if face == "top" else 0.6))
     paint_box(humanoid, LEG, st, stage, "boot", range(6, 12), 3)
-    bx, by, w, h = box_faces(LEG)["bottom"]
+    x0, y0, w, h = box_faces(LEG)["bottom"]
     for y in range(h):
         for x in range(w):
-            humanoid.putpixel((bx + x, by + y), shade(st["metal"], 0.4))
-    if stage >= 10:  # éperon en gemme
-        x0, y0, _, _ = box_faces(LEG)["back"]
-        humanoid.putpixel((x0 + 1, y0 + 9), gem[2])
-        humanoid.putpixel((x0 + 2, y0 + 9), gem[2])
-
-    # --- Jambières : ceinture (bas du corps) + cuissardes / genouillères
+            humanoid.putpixel((x0 + x, y0 + y), shade(metal, 0.4))
     paint_box(leggings, BODY, st, stage, "belt", range(7, 12), 4)
-    fx, fy, _, _ = box_faces(BODY)["front"]
-    for (x, y) in ((3, 8), (4, 8), (3, 9), (4, 9)):
-        leggings.putpixel((fx + x, fy + y), gem[2] if y == 8 else gem[1])  # boucle
     paint_box(leggings, LEG, st, stage, "thigh", range(0, 10), 5)
-    tx, ty, w, h = box_faces(LEG)["top"]
+    x0, y0, w, h = box_faces(LEG)["top"]
     for y in range(h):
         for x in range(w):
-            leggings.putpixel((tx + x, ty + y), shade(st["metal"], 1.1))
-    if stage >= 12:
-        x0, y0, _, _ = box_faces(LEG)["front"]
-        leggings.putpixel((x0 + 1, y0 + 6), gem[3])
-        leggings.putpixel((x0 + 2, y0 + 6), gem[3])
+            leggings.putpixel((x0 + x, y0 + y), shade(metal, 1.1))
+    put(humanoid, BODY, "front", 4, 3, gem[2])                       # petite gemme
+    for (x, y) in ((3, 8), (4, 8), (3, 9), (4, 9)):                  # boucle de ceinture
+        put(leggings, BODY, "front", x, y, gem[2] if y == 8 else gem[1])
+
+    if stage >= 1:   # niv. 5 : rivets
+        for face in ("front", "back"):
+            for (x, y) in ((1, 1), (6, 1), (1, 5), (6, 5)):
+                put(humanoid, BODY, face, x, y, light)
+        for face in SIDES:
+            put(humanoid, ARM, face, 1, 10, light)
+            put(humanoid, ARM, face, 2, 10, light)
+    if stage >= 2:   # niv. 10 : jointures lumineuses entre les lames
+        for face in SIDES:
+            for x in range(8 if face in ("front", "back") else 4):
+                put(humanoid, BODY, face, x, 9, gem[1])
+    if stage >= 3:   # niv. 15 : grosse gemme au centre du plastron
+        for (x, y) in ((3, 2), (4, 2), (3, 3), (4, 3)):
+            put(humanoid, BODY, "front", x, y, gem[2] if y == 2 else gem[1])
+        put(humanoid, BODY, "front", 3, 2, gem[4])
+    if stage >= 4:   # niv. 20 : bordure colorée des épaulières
+        for face in SIDES:
+            for x in range(4):
+                put(humanoid, ARM, face, x, 4, gem[1])
+    if stage >= 5:   # niv. 25 : gemmes sur les genouillères
+        put(leggings, LEG, "front", 1, 6, gem[2])
+        put(leggings, LEG, "front", 2, 6, gem[3])
+    if stage >= 6:   # niv. 30 : épaulières à pointes
+        for (x, y) in ((1, 1), (2, 2), (1, 2), (2, 1)):
+            put(humanoid, ARM, "top", x, y, shade(metal, 1.6))
+        for (x, y) in ((1, 1), (2, 0), (2, 1), (1, 2)):
+            put(humanoid, ARM, "right", x, y, shade(metal, 1.55))
+    if stage >= 7:   # niv. 35 : blason en croix sur le plastron
+        for x in range(1, 7):
+            if x not in (3, 4):
+                put(humanoid, BODY, "front", x, 3, light)
+        for y in (0, 1, 5, 6):
+            put(humanoid, BODY, "front", 3, y, light)
+            put(humanoid, BODY, "front", 4, y, light)
+    if stage >= 8:   # niv. 40 : manchettes des gantelets
+        for face in SIDES:
+            for x in range(4):
+                put(humanoid, ARM, face, x, 11, gem[1])
+    # niv. 45 : les bordures passent à la couleur de la gemme (voir paint_side, stage >= 9)
+    if stage >= 10:  # niv. 50 : éperons et bouts de bottes sertis
+        put(humanoid, LEG, "back", 1, 9, gem[2])
+        put(humanoid, LEG, "back", 2, 9, gem[2])
+        put(humanoid, LEG, "front", 1, 10, gem[3])
+        put(humanoid, LEG, "front", 2, 10, gem[3])
+    if stage >= 11:  # niv. 55 : clous sur la ceinture
+        for face in ("front", "back"):
+            for x in (1, 6):
+                put(leggings, BODY, face, x, 9, gem[3])
+    if stage >= 12:  # niv. 60 : runes lumineuses
+        for (x, y) in ((1, 4), (6, 4), (1, 5), (6, 5)):
+            put(humanoid, BODY, "front", x, y, gem[3])
+        put(leggings, LEG, "front", 1, 1, gem[3])
+        put(leggings, LEG, "front", 2, 1, gem[3])
+    if stage >= 13:  # niv. 65 : cape dans le dos
+        for y in range(1, 12):
+            for x in range(1, 7):
+                put(humanoid, BODY, "back", x, y, shade(st["grip"], 1.05 - 0.04 * y + (0.06 if x % 2 else 0)))
+        put(humanoid, BODY, "back", 3, 0, gem[2])
+        put(humanoid, BODY, "back", 4, 0, gem[2])
+    if stage >= 14:  # niv. 70 : runes sur les bras
+        for face in ("right", "left"):
+            put(humanoid, ARM, face, 1, 9, gem[3])
+            put(humanoid, ARM, face, 2, 9, gem[3])
+    if stage >= 15:  # niv. 75 : ailes brodées sur la cape
+        for i in range(4):
+            put(humanoid, BODY, "back", 3 - i, 2 + i, gem[2])
+            put(humanoid, BODY, "back", 4 + i, 2 + i, gem[2])
+    if stage >= 16:  # niv. 80 : ailettes sur les bottes
+        for face in ("right", "left"):
+            for (x, y) in ((1, 7), (2, 7), (2, 8)):
+                put(humanoid, LEG, face, x, y, gem[3])
+    if stage >= 17:  # niv. 85 : bandes lumineuses sur les cuissardes
+        for face in ("right", "left"):
+            for y in range(9):
+                put(leggings, LEG, face, 2, y, gem[1])
+    if stage >= 18:  # niv. 90 : bordures en gemme sur le plastron
+        for y in range(7):
+            put(humanoid, BODY, "front", 0, y, gem[2])
+            put(humanoid, BODY, "front", 7, y, gem[2])
+    if stage >= 19:  # niv. 95 : filigrane doré
+        for x in range(0, 8, 2):
+            put(humanoid, BODY, "front", x, 0, gem[3])
+            put(leggings, BODY, "front", x, 7, gem[3])
+        for face in SIDES:
+            put(humanoid, ARM, face, 0, 0, gem[3])
+            put(humanoid, ARM, face, 3, 0, gem[3])
+    if stage >= 20:  # niv. 100 : armure ultime, toutes les jointures brillent
+        for face in SIDES:
+            for x in range(8 if face in ("front", "back") else 4):
+                put(humanoid, BODY, face, x, 7, gem[2])
+                put(humanoid, BODY, face, x, 11, gem[3])
+        for face in SIDES:
+            put(leggings, LEG, face, 0, 3, gem[2])
+            put(leggings, LEG, face, 3, 3, gem[2])
+        r = random.Random(100)
+        for _ in range(6):
+            put(humanoid, BODY, "front", r.randrange(8), r.randrange(7), gem[4])
     return humanoid, leggings
 
 
