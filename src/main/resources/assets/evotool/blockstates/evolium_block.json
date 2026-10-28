@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "evotool:block/evolium_block"
+    }
+  }
+}

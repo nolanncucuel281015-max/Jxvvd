@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "evotool",
+	"version": "${version}",
+	"name": "Evo Tool",
+	"description": "Une pioche évolutive : plus tu casses de blocs, plus elle monte de niveau (auto-smelt, Fortune I à VI, minage 3x3 / 3x3x3 / 5x5 / 5x5x5, minage instantané au niveau 100). Ajoute l'Évolium, le Rubis et le Saphir.",
+	"authors": ["Evo Tool"],
+	"license": "MIT",
+	"icon": "assets/evotool/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["fr.evotool.EvoTool"],
+		"client": ["fr.evotool.client.EvoToolClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.18.0",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

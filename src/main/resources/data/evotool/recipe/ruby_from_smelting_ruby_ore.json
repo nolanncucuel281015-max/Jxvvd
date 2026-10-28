@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "ruby",
+  "ingredient": "evotool:ruby_ore",
+  "result": {
+    "id": "evotool:ruby"
+  },
+  "experience": 1.0,
+  "cookingtime": 200
+}

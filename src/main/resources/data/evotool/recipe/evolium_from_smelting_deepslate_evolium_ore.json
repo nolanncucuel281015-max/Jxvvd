@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "evolium",
+  "ingredient": "evotool:deepslate_evolium_ore",
+  "result": {
+    "id": "evotool:evolium"
+  },
+  "experience": 2.0,
+  "cookingtime": 200
+}

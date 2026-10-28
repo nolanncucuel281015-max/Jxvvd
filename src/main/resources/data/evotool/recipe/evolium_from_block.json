@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "evotool:evolium_block"
+  ],
+  "result": {
+    "id": "evotool:evolium",
+    "count": 9
+  }
+}

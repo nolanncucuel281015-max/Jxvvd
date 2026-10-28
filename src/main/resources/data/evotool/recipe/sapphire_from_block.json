@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "evotool:sapphire_block"
+  ],
+  "result": {
+    "id": "evotool:sapphire",
+    "count": 9
+  }
+}

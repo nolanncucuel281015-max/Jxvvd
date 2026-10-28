@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "sapphire",
+  "ingredient": "evotool:deepslate_sapphire_ore",
+  "result": {
+    "id": "evotool:sapphire"
+  },
+  "experience": 1.0,
+  "cookingtime": 200
+}

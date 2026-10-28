@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "evotool:evolium_block",
+    "evotool:ruby_block",
+    "evotool:sapphire_block"
+  ]
+}

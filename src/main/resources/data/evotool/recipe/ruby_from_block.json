@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "evotool:ruby_block"
+  ],
+  "result": {
+    "id": "evotool:ruby",
+    "count": 9
+  }
+}
