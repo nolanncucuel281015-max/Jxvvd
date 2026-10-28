@@ -10,6 +10,7 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.item.ModItems;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
@@ -19,6 +20,7 @@ import net.minecraft.text.Text;
 
 /**
  * {@code /upgrade <outil> <niveau>} : met l'outil évolutif au niveau voulu (0 à 100).
+ * {@code /upgrade armor <niveau>} règle les 4 pièces d'armure d'un coup.
  * Prend l'outil en main, sinon le premier trouvé dans l'inventaire, sinon en donne un neuf.
  * Réservée aux opérateurs (comme /give).
  */
@@ -30,7 +32,12 @@ public final class UpgradeCommand {
 			{"hoe", "houe"},
 			{"sword", "epee"},
 			{"mace", "masse"},
+			{"helmet", "casque"},
+			{"chestplate", "plastron"},
+			{"leggings", "jambieres"},
+			{"boots", "bottes"},
 	};
+	private static final EvoKind[] ARMOR = {EvoKind.HELMET, EvoKind.CHESTPLATE, EvoKind.LEGGINGS, EvoKind.BOOTS};
 
 	private UpgradeCommand() {
 	}
@@ -49,6 +56,18 @@ public final class UpgradeCommand {
 								.executes(context -> upgrade(context.getSource(), kind,
 										IntegerArgumentType.getInteger(context, "level")))));
 			}
+		}
+		// /upgrade armor <niveau> : les 4 pièces d'un coup.
+		for (String name : new String[] {"armor", "armure"}) {
+			root.then(CommandManager.literal(name)
+					.then(CommandManager.argument("level", IntegerArgumentType.integer(0, EvoProgression.MAX_LEVEL))
+							.executes(context -> {
+								int level = IntegerArgumentType.getInteger(context, "level");
+								for (EvoKind kind : ARMOR) {
+									upgrade(context.getSource(), kind, level);
+								}
+								return level;
+							})));
 		}
 		dispatcher.register(root);
 	}
@@ -75,13 +94,12 @@ public final class UpgradeCommand {
 		return level;
 	}
 
-	/** Main principale, puis seconde main, puis le reste de l'inventaire. */
+	/** Main principale, seconde main et armure portée, puis le reste de l'inventaire. */
 	private static ItemStack findTool(ServerPlayerEntity player, EvoKind kind) {
-		if (EvoProgression.kindOf(player.getMainHandStack()) == kind) {
-			return player.getMainHandStack();
-		}
-		if (EvoProgression.kindOf(player.getOffHandStack()) == kind) {
-			return player.getOffHandStack();
+		for (EquipmentSlot slot : EquipmentSlot.values()) {
+			if (EvoProgression.kindOf(player.getEquippedStack(slot)) == kind) {
+				return player.getEquippedStack(slot);
+			}
 		}
 		PlayerInventory inventory = player.getInventory();
 		for (int i = 0; i < inventory.size(); i++) {

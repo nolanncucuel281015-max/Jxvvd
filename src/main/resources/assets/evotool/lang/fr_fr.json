@@ -62,7 +62,7 @@
   "message.evotool.unlock.mode": "Mode %s (touche Y)",
   "message.evotool.actionbar": "%s niv. %s — %s / %s XP",
   "message.evotool.actionbar_max": "%s niv. 100 — puissance maximale",
-  "message.evotool.hold_tool": "Tiens un outil évolutif en main pour ouvrir le menu.",
+  "message.evotool.hold_tool": "Tiens un outil évolutif en main (ou porte l'armure évolutive) pour ouvrir le menu.",
   "stage.evotool.0": "Fer brut",
   "stage.evotool.1": "Fer forgé",
   "stage.evotool.2": "Braises",
@@ -84,6 +84,17 @@
   "stage.evotool.18": "Stellaire",
   "stage.evotool.19": "Divin",
   "stage.evotool.20": "Ultime",
-  "command.evotool.upgrade.done": "%s passée au niveau %s (forme : %s)",
-  "command.evotool.upgrade.given": "%s donnée au niveau %s (forme : %s)"
+  "command.evotool.upgrade.done": "%s : niveau %s (forme : %s)",
+  "command.evotool.upgrade.given": "Tu reçois : %s, niveau %s (forme : %s)",
+  "item.evotool.evolving_helmet": "Casque Évolutif",
+  "item.evotool.evolving_chestplate": "Plastron Évolutif",
+  "item.evotool.evolving_leggings": "Jambières Évolutives",
+  "item.evotool.evolving_boots": "Bottes Évolutives",
+  "tooltip.evotool.count.damage": "Dégâts encaissés : %s",
+  "tooltip.evotool.armor_hint": "Évolue en encaissant des coups • Touche Y : bonus de l'ensemble",
+  "armor.evotool.set_level": "Niveau de l'ensemble : %s",
+  "armor.evotool.hearts": "+%s cœurs",
+  "message.evotool.armor_level": "🛡 Ton armure évolue : niveau d'ensemble %s ! 🛡",
+  "message.evotool.armor_actionbar": "Armure niv. %s — %s niv. %s : %s / %s XP",
+  "message.evotool.armor_actionbar_max": "Armure niv. 100 — invincible"
 }

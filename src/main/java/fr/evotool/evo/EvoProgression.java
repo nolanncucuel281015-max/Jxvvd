@@ -16,6 +16,7 @@ import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -115,25 +116,14 @@ public final class EvoProgression {
 			return;
 		}
 		EvoProfile profile = kind.profile();
-		EvoData data = get(stack);
-		int level = data.level();
-		int xp = data.xp() + amount;
-		int startLevel = level;
-
-		while (level < MAX_LEVEL && xp >= profile.curve().xpToNext(level)) {
-			xp -= profile.curve().xpToNext(level);
-			level++;
-			announceUnlocks(profile, player, level);
+		int startLevel = get(stack).level();
+		int level = gainXp(stack, amount, countIncrement, world);
+		for (int reached = startLevel + 1; reached <= level; reached++) {
+			announceUnlocks(profile, player, reached);
 		}
-		if (level >= MAX_LEVEL) {
-			xp = 0;
-		}
-
-		stack.set(ModComponents.EVO_DATA, data.withProgress(level, xp, data.count() + countIncrement));
 
 		Text name = stack.getName();
 		if (level != startLevel) {
-			refresh(stack, world.getRegistryManager());
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP,
 					SoundCategory.PLAYERS, 0.8F, 0.6F + level / 200.0F);
 			player.sendMessage(Text.translatable("message.evotool.level_up", name, level)
@@ -143,9 +133,38 @@ public final class EvoProgression {
 		if (level >= MAX_LEVEL) {
 			player.sendMessage(Text.translatable("message.evotool.actionbar_max", name).formatted(Formatting.GOLD), true);
 		} else {
-			player.sendMessage(Text.translatable("message.evotool.actionbar", name, level, xp, profile.curve().xpToNext(level))
-					.formatted(Formatting.AQUA), true);
+			player.sendMessage(Text.translatable("message.evotool.actionbar", name, level, get(stack).xp(),
+					profile.curve().xpToNext(level)).formatted(Formatting.AQUA), true);
 		}
+	}
+
+	/**
+	 * Ajoute de l'XP sans rien annoncer (l'armure annonce une seule fois pour tout l'ensemble).
+	 *
+	 * @return le nouveau niveau
+	 */
+	public static int gainXp(ItemStack stack, int amount, int countIncrement, World world) {
+		EvoKind kind = kindOf(stack);
+		EvoData data = get(stack);
+		if (kind == null || amount <= 0) {
+			return data.level();
+		}
+		XpCurve curve = kind.profile().curve();
+		int level = data.level();
+		int xp = data.xp() + amount;
+		while (level < MAX_LEVEL && xp >= curve.xpToNext(level)) {
+			xp -= curve.xpToNext(level);
+			level++;
+		}
+		if (level >= MAX_LEVEL) {
+			xp = 0;
+		}
+		boolean leveledUp = level != data.level();
+		stack.set(ModComponents.EVO_DATA, data.withProgress(level, xp, data.count() + countIncrement));
+		if (leveledUp) {
+			refresh(stack, world.getRegistryManager());
+		}
+		return level;
 	}
 
 	private static void announceUnlocks(EvoProfile profile, PlayerEntity player, int level) {
@@ -228,5 +247,11 @@ public final class EvoProgression {
 
 		stack.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(
 				List.of((float) stage(level)), List.of(), List.of(), List.of()));
+
+		// Plastron, jambières et bottes : la texture portée change aussi avec la forme.
+		// (Le casque est un modèle 3D porté sur la tête : il suit déjà custom_model_data.)
+		if (profile.isArmor() && profile.armorSlot() != EquipmentSlot.HEAD) {
+			stack.set(DataComponentTypes.EQUIPPABLE, ModItems.equippable(profile.armorSlot(), stage(level)));
+		}
 	}
 }

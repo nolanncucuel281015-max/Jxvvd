@@ -1,9 +1,10 @@
 package fr.evotool.evo;
 
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.EquipmentSlot;
 
 /**
- * Les six outils évolutifs et leurs profils d'évolution.
+ * Les outils et pièces d'armure évolutifs, et leurs profils d'évolution.
  * Tous changent de forme tous les 5 niveaux (21 formes).
  */
 public enum EvoKind {
@@ -53,7 +54,17 @@ public enum EvoKind {
 			.power(Power.WIDE_SHOCKWAVE, 75).power(Power.EXECUTION, 100)
 			.enchant(Enchantments.DENSITY, "density", 15, 25, 35, 45, 55)
 			.enchant(Enchantments.BREACH, "breach", 20, 30, 40, 50)
-			.enchant(Enchantments.WIND_BURST, "wind_burst", 60, 70, 80));
+			.enchant(Enchantments.WIND_BURST, "wind_burst", 60, 70, 80)),
+
+	/**
+	 * Armure : chaque pièce portée gagne de l'XP en encaissant des dégâts.
+	 * Les effets (Résistance, Régénération, Vitesse, cœurs) dépendent du niveau de l'ensemble,
+	 * voir {@link fr.evotool.armor.ArmorSet}.
+	 */
+	HELMET(new EvoProfile().armor(EquipmentSlot.HEAD)),
+	CHESTPLATE(new EvoProfile().armor(EquipmentSlot.CHEST)),
+	LEGGINGS(new EvoProfile().armor(EquipmentSlot.LEGS)),
+	BOOTS(new EvoProfile().armor(EquipmentSlot.FEET));
 
 	private final EvoProfile profile;
 

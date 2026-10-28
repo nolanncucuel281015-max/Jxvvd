@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.registry.RegistryKey;
 
 /** Décrit comment un outil évolue : d'où vient l'XP, ce qu'il débloque et à quel niveau. */
@@ -26,7 +27,7 @@ public final class EvoProfile {
 
 	/** Ce que compte le compteur affiché dans l'info-bulle. */
 	public enum Counter {
-		BLOCKS, KILLS, FARMING;
+		BLOCKS, KILLS, FARMING, DAMAGE;
 
 		public String translationKey() {
 			return "tooltip.evotool.count." + name().toLowerCase(java.util.Locale.ROOT);
@@ -40,6 +41,7 @@ public final class EvoProfile {
 	private boolean areaMining;
 	private boolean speedBonus;
 	private boolean damageBonus;
+	private EquipmentSlot armorSlot;
 	private final List<ModeUnlock> modes = new ArrayList<>(List.of(new ModeUnlock(EvoMode.SINGLE, 0)));
 	private final Map<Power, Integer> powers = new LinkedHashMap<>();
 	private final List<EnchantStep> enchants = new ArrayList<>();
@@ -63,6 +65,13 @@ public final class EvoProfile {
 	EvoProfile killXp() {
 		killXp = true;
 		damageBonus = true;
+		return this;
+	}
+
+	EvoProfile armor(EquipmentSlot slot) {
+		armorSlot = slot;
+		curve = XpCurve.ARMOR;
+		counter = Counter.DAMAGE;
 		return this;
 	}
 
@@ -115,6 +124,15 @@ public final class EvoProfile {
 
 	public boolean damageBonus() {
 		return damageBonus;
+	}
+
+	/** Emplacement porté pour une pièce d'armure, sinon null. */
+	public EquipmentSlot armorSlot() {
+		return armorSlot;
+	}
+
+	public boolean isArmor() {
+		return armorSlot != null;
 	}
 
 	public List<ModeUnlock> modes() {

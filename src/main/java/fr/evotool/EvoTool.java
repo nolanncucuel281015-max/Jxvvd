@@ -1,5 +1,6 @@
 package fr.evotool;
 
+import fr.evotool.armor.ArmorHandler;
 import fr.evotool.block.ModBlocks;
 import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
@@ -36,6 +37,7 @@ public class EvoTool implements ModInitializer {
 		EvoMiningHandler.init();
 		FarmingHandler.init();
 		CombatHandler.init();
+		ArmorHandler.init();
 		LOGGER.info("Evo Tool chargé : que l'évolution commence !");
 	}
 }

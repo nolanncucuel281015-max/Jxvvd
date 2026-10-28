@@ -1,7 +1,7 @@
-# Evo Tool — outils évolutifs (Fabric 1.21.11)
+# Evo Tool — outils et armure évolutifs (Fabric 1.21.11)
 
-Six outils en évolium qui **évoluent** quand tu t'en sers, jusqu'au niveau 100 :
-pioche, pelle, hache, houe, épée et masse (mace). Tous :
+Six outils et une armure complète en évolium qui **évoluent** quand tu t'en sers, jusqu'au niveau 100 :
+pioche, pelle, hache, houe, épée, masse (mace), casque, plastron, jambières et bottes. Tous :
 
 - changent de **forme tous les 5 niveaux** (21 formes, modèles 3D, voir plus bas) ;
 - sont incassables et résistent à la lave ;
@@ -60,6 +60,30 @@ Les animaux ne rapportent rien. Chaque niveau donne +0,1 dégât (+10 au niveau 
 
 La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
 
+## Armure — en encaissant des coups
+
+Chaque pièce portée gagne 1 XP par point de dégât encaissé (20 max par coup, pour qu'une grosse chute
+ne fasse pas tout monter d'un coup). C'est **long** : environ 4 min pour le niveau 50, 45 min pour le
+niveau 80 et **2 h 30 de coups en continu** pour le niveau 100.
+
+Les bonus dépendent du **niveau de l'ensemble** = moyenne des 4 pièces (une pièce manquante compte 0),
+donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'on la porte :
+
+| Niveau d'ensemble | Bonus |
+|------------------:|-------|
+| 10 / 30 / 50 / 75 / 100 | Résistance I à **V** |
+| 15 / 45 / 70 | Vitesse I à **III** |
+| 20 / 55 / 90 | Régénération I à **III** |
+| 80  | **+4 cœurs** |
+| 100 | **+10 cœurs** au total |
+
+Résistance V = plus aucun dégât (sauf /kill et le vide).
+
+**Look de chevalier** : le casque est un vrai heaume 3D à cornes porté sur la tête (visière, trous
+d'aération, cornes qui s'allongent, crête, ailes, cristaux flottants…). Le plastron, les jambières et
+les bottes ont des textures d'armure de plates (épaulières à pointes, cotte de mailles, genouillères,
+gemme au centre du plastron, runes…). Comme les outils, l'armure change de **forme tous les 5 niveaux**.
+
 ## Courbes d'XP
 
 | Niveau | Outils (blocs) | Épée / masse (monstres) |
@@ -67,6 +91,8 @@ La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, 
 | 20  | ~1 500 XP (~10 min) | ~400 XP |
 | 50  | ~112 000 XP | ~28 000 XP |
 | 100 | ~4 400 000 XP | ~1 100 000 XP |
+
+Armure : ~2 000 XP pour le niveau 50, ~22 000 pour le niveau 80, ~70 000 pour le niveau 100.
 
 Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 60 par évolium, 3 par culture mûre, 1 par bloc labouré.
 
@@ -76,7 +102,9 @@ Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 
 /upgrade <outil> <niveau>
 ```
 
-- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `mace` (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `masse`)
+- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `mace`, `helmet`, `chestplate`, `leggings`, `boots`
+  (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `masse`, `casque`, `plastron`, `jambieres`, `bottes`)
+- `armor` / `armure` : les 4 pièces d'armure d'un coup (ex. `/upgrade armor 100`)
 - `<niveau>` : de 0 à 100
 
 Exemple : `/upgrade pickaxe 50`. La commande règle l'outil tenu en main (ou le premier trouvé dans l'inventaire) ;
@@ -96,7 +124,8 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 ## Recettes
 
 Comme les outils en diamant, avec de l'**évolium** à la place du diamant :
-pioche (3 + 2 bâtons), pelle (1 + 2), hache (3 + 2), houe (2 + 2), épée (2 + 1).
+pioche (3 + 2 bâtons), pelle (1 + 2), hache (3 + 2), houe (2 + 2), épée (2 + 1),
+casque (5), plastron (8), jambières (7), bottes (4).
 
 La **masse** : un bloc d'évolium au-dessus d'un bâton.
 

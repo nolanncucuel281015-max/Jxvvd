@@ -62,7 +62,7 @@
   "message.evotool.unlock.mode": "%s mode (Y key)",
   "message.evotool.actionbar": "%s lvl %s — %s / %s XP",
   "message.evotool.actionbar_max": "%s lvl 100 — maximum power",
-  "message.evotool.hold_tool": "Hold an evolving tool to open the menu.",
+  "message.evotool.hold_tool": "Hold an evolving tool (or wear the evolving armor) to open the menu.",
   "stage.evotool.0": "Raw Iron",
   "stage.evotool.1": "Wrought Iron",
   "stage.evotool.2": "Embers",
@@ -84,6 +84,17 @@
   "stage.evotool.18": "Stellar",
   "stage.evotool.19": "Divine",
   "stage.evotool.20": "Ultimate",
-  "command.evotool.upgrade.done": "%s set to level %s (form: %s)",
-  "command.evotool.upgrade.given": "%s given at level %s (form: %s)"
+  "command.evotool.upgrade.done": "%s: level %s (form: %s)",
+  "command.evotool.upgrade.given": "You receive: %s, level %s (form: %s)",
+  "item.evotool.evolving_helmet": "Evolving Helmet",
+  "item.evotool.evolving_chestplate": "Evolving Chestplate",
+  "item.evotool.evolving_leggings": "Evolving Leggings",
+  "item.evotool.evolving_boots": "Evolving Boots",
+  "tooltip.evotool.count.damage": "Damage taken: %s",
+  "tooltip.evotool.armor_hint": "Evolves by taking hits • Y: set bonuses",
+  "armor.evotool.set_level": "Set level: %s",
+  "armor.evotool.hearts": "+%s hearts",
+  "message.evotool.armor_level": "🛡 Your armor evolves: set level %s! 🛡",
+  "message.evotool.armor_actionbar": "Armor lvl %s — %s lvl %s: %s / %s XP",
+  "message.evotool.armor_actionbar_max": "Armor lvl 100 — invincible"
 }

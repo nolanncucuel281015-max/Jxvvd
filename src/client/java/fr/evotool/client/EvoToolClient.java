@@ -29,7 +29,7 @@ public class EvoToolClient implements ClientModInitializer {
 				if (client.player == null) {
 					continue;
 				}
-				if (EvoProgression.kindOf(client.player.getMainHandStack()) != null) {
+				if (!EvoScreen.findStack(client.player).isEmpty()) {
 					client.setScreen(new EvoScreen());
 				} else {
 					client.player.sendMessage(Text.translatable("message.evotool.hold_tool").formatted(Formatting.RED), true);
@@ -66,7 +66,8 @@ public class EvoToolClient implements ClientModInitializer {
 				}
 			}
 			lines.add(index++, Text.translatable(profile.counter().translationKey(), data.count()).formatted(Formatting.DARK_GRAY));
-			lines.add(index, Text.translatable("tooltip.evotool.hint").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
+			lines.add(index, Text.translatable(profile.isArmor() ? "tooltip.evotool.armor_hint" : "tooltip.evotool.hint")
+					.formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
 		});
 	}
 }

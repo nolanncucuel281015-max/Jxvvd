@@ -828,6 +828,377 @@ def tool_model(item, stage):
     return model
 
 
+# --------------------------------------------------------------------------- armure de chevalier
+
+def horn_texture(st, seed):
+    """Corne : ivoire teinté par la couleur de la forme, avec des anneaux."""
+    base = lerp(hexc("e8dcc0"), st["metal"], 0.35)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        ring = 0.78 if y % 4 == 0 else 1.0
+        for x in range(16):
+            f = ring * (1.12 - 0.3 * (x / 15.0)) + r.uniform(-0.04, 0.04)
+            img.putpixel((x, y), shade(base, f))
+    return img
+
+
+def visor_texture():
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            img.putpixel((x, y), (14 + (x * 3 + y) % 6, 10, 20 + (x + y) % 8, 255))
+    return img
+
+
+def mirror_x(add):
+    """Ajoute un élément et son symétrique de l'autre côté du casque (x -> 16 - x, angle z inversé)."""
+    def both(frm, to, tex, rot=None):
+        add(frm, to, tex, rot)
+        mfrm = [16 - to[0], frm[1], frm[2]]
+        mto = [16 - frm[0], to[1], to[2]]
+        mrot = None
+        if rot:
+            axis, angle, origin = rot
+            mrot = [axis, -angle if axis in ("z", "y") else angle, [16 - origin[0], origin[1], origin[2]]]
+        add(mfrm, mto, tex, mrot)
+    return both
+
+
+def helmet_elements(stage):
+    """Heaume de chevalier à cornes, face avant = nord. 16 unités du modèle ~ 1,25 tête une fois porté."""
+    E, add = builder()
+    sym = mirror_x(add)
+    add([1, 0.5, 1], [15, 14.5, 15], "metal")                        # coque
+    add([2, 14.5, 2], [14, 16, 14], "metal")                         # dôme
+    add([1.5, 0.5, 0.5], [14.5, 13.5, 1], "metal")                   # plaque frontale
+    add([2.5, 8, 0.25], [13.5, 9.25, 0.5], "gem" if stage >= 12 else "visor")   # fente des yeux
+    for x in (9.5, 11, 12.5):                                        # trous d'aération
+        for y in (3, 4.75):
+            add([x, y, 0.25], [x + 0.75, y + 0.75, 0.5], "visor")
+    add([7.5, 9.25, 0.25], [8.5, 13.5, 0.5], "metal")                # arête du nez
+    add([7.5, 0.5, 0.25], [8.5, 8, 0.5], "metal")
+    # cornes : base, segment montant, puis (plus tard) pointe recourbée et bout en gemme
+    sym([-1.75, 9.75, 6.5], [1, 12.75, 9.5], "horn")
+    sym([-4.75, 11, 6.9], [-1.5, 13.25, 9.1], "horn", ["z", -22.5, [-1.5, 12.1, 8]])
+    if stage >= 1:   # bandeau
+        add([0.75, 9.5, 0.75], [15.25, 10, 15.25], "metal")
+    if stage >= 2:   # protège-joues
+        sym([0.5, 1, 2], [1, 8, 10], "metal")
+    if stage >= 3:   # gemme frontale
+        add([7, 10.5, -0.25], [9, 12.5, 0.25], "gem")
+    if stage >= 4:   # cornes plus longues
+        sym([-6, 12.5, 7.2], [-3.75, 17.5, 8.8], "horn", ["z", 22.5, [-4.9, 12.5, 8]])
+    if stage >= 5:   # rivets sertis
+        for z in (4, 11):
+            sym([0.75, 12, z], [1, 13, z + 1], "gem")
+    if stage >= 6:   # crête
+        add([7.25, 16, 3], [8.75, 17.5, 13], "metal")
+    if stage >= 7:   # protège-nuque
+        add([1.5, 0, 15], [14.5, 4, 15.75], "metal")
+    if stage >= 8:   # pointes sur la crête
+        for z in (5, 8, 11):
+            add([7.5, 17.5, z], [8.5, 19 + (0.5 if z == 8 else 0), z + 1], "metal")
+    if stage >= 10:  # bouts de cornes en gemme
+        sym([-7.25, 17, 7.5], [-5.75, 20, 8.5], "gem", ["z", 45, [-6.5, 17, 8]])
+    if stage >= 11:  # petites cornes frontales
+        sym([3, 14, 1.5], [4, 16.5, 2.5], "horn", ["z", 22.5, [3.5, 14, 2]])
+    if stage >= 15:  # ailes
+        sym([-1, 13, 9.5], [1, 18, 10], "metal", ["z", 22.5, [1, 13, 9.75]])
+    if stage >= 18:  # couronne de gemmes
+        for (x, z) in ((3, 3), (12, 3), (3, 12), (12, 12)):
+            add([x, 16, z], [x + 1, 17, z + 1], "gem")
+    if stage >= 19:  # diadème
+        add([2, 13.5, 0.25], [14, 14, 0.5], "gem")
+    crystals = [(-1, 20), (17, 20), (8, 23), (-6, 9), (22, 9), (-4, 3), (20, 3)]
+    if stage >= 14:
+        for c in crystals[0:2]:
+            crystal(add, *c)
+    if stage >= 16:
+        crystal(add, *crystals[2])
+    if stage >= 17:
+        for c in crystals[3:5]:
+            crystal(add, *c)
+    if stage >= 20:
+        for c in crystals[5:7]:
+            crystal(add, *c)
+    return E
+
+
+def helmet_model(stage):
+    st = f"{MOD}:item/pickaxe/stage{stage}_"
+    return {
+        "credit": "Evo Tool - heaume 3D généré par tools/generate_assets.py",
+        "gui_light": "side",
+        "textures": {
+            "particle": st + "metal",
+            "metal": st + "metal",
+            "gem": st + "gem",
+            "horn": f"{MOD}:item/armor/stage{stage}_horn",
+            "visor": f"{MOD}:item/armor/visor",
+        },
+        "elements": helmet_elements(stage),
+        "display": {
+            # Porté : rendu sur la tête comme une citrouille sculptée (face avant = nord).
+            "head": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+            "gui": {"rotation": [20, 200, 0], "translation": [0, 0, 0], "scale": [0.48, 0.48, 0.48]},
+            "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.3, 0.3, 0.3]},
+            "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [0.5, 0.5, 0.5]},
+            "thirdperson_righthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
+            "thirdperson_lefthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
+            "firstperson_righthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
+            "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
+        },
+    }
+
+
+# Disposition de la texture d'armure (64x32) : (u, v, largeur, hauteur, profondeur) de chaque boîte.
+BODY = (16, 16, 8, 12, 4)
+ARM = (40, 16, 4, 12, 4)
+LEG = (0, 16, 4, 12, 4)
+
+
+def box_faces(box):
+    u, v, w, h, d = box
+    return {
+        "top": (u + d, v, w, d), "bottom": (u + d + w, v, w, d),
+        "right": (u, v + d, d, h), "front": (u + d, v + d, w, h),
+        "left": (u + d + w, v + d, d, h), "back": (u + d + w + d, v + d, w, h),
+    }
+
+
+def plate_pixel(st, x, y, w, h, r, light=1.0):
+    """Plaque de métal : dégradé vertical, bords plus sombres, léger bruit."""
+    f = light * (1.12 - 0.28 * (y / max(1, h - 1))) + r.uniform(-0.04, 0.04)
+    if x == 0 or x == w - 1:
+        f *= 0.82
+    return shade(st["metal"], f)
+
+
+def paint_side(img, rect, st, r, rows, kind, stage, face):
+    """Peint une face (x0, y0, w, h) d'une boîte, uniquement sur les lignes « rows » (relatives)."""
+    x0, y0, w, h = rect
+    dark = shade(st["metal"], 0.45)
+    trim = st["gem"][2] if stage >= 9 else shade(st["metal"], 1.35)
+    cloth = st["grip"]
+    for y in rows:
+        for x in range(w):
+            c = plate_pixel(st, x, y, w, h, r, 1.08 if face in ("top", "front") else 0.95)
+            if kind == "chest":
+                if y in (7, 9):                                  # lames de la braconnière
+                    c = dark
+                elif y == 11:
+                    c = trim
+                elif face == "front" and y < 7 and x in (3, 4):  # arête centrale du plastron
+                    c = shade(st["metal"], 1.3)
+            elif kind == "arm":
+                if y == 4:                                       # bas de l'épaulière
+                    c = dark
+                elif 5 <= y <= 7:                                # cotte de mailles
+                    c = shade(cloth, 0.9 if (x + y) % 2 else 0.6)
+                elif y == 8:
+                    c = trim
+            elif kind == "belt":
+                c = shade(cloth, 1.0 - 0.15 * ((x + y) % 2))
+                if y == 0 or y == 4:
+                    c = shade(cloth, 0.6)
+            elif kind == "thigh":
+                if y in (3, 9):
+                    c = dark
+                elif 5 <= y <= 7 and face == "front":            # genouillère
+                    c = shade(st["metal"], 1.35 if y == 6 else 1.15)
+            elif kind == "boot":
+                if y == 6:
+                    c = trim
+                elif y == 11:
+                    c = dark                                     # semelle
+                elif face == "front" and y >= 9:
+                    c = shade(st["metal"], 1.3)                  # bout ferré
+            img.putpixel((x0 + x, y0 + y), c)
+
+
+def paint_box(img, box, st, stage, kind, rows_main, seed):
+    r = random.Random(seed)
+    for face, (x0, y0, w, h) in box_faces(box).items():
+        if face in ("top", "bottom"):
+            continue
+        paint_side(img, (x0, y0, w, h), st, r, [y for y in rows_main if y < h], kind, stage, face)
+
+
+def armor_textures(stage):
+    st = STAGES[stage]
+    gem = st["gem"]
+    humanoid = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    leggings = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+
+    # --- Plastron : corps + bras complets
+    paint_box(humanoid, BODY, st, stage, "chest", range(12), 1)
+    paint_box(humanoid, ARM, st, stage, "arm", range(12), 2)
+    for box, light in ((BODY, 1.2), (ARM, 1.3)):
+        faces = box_faces(box)
+        for face in ("top", "bottom"):
+            x0, y0, w, h = faces[face]
+            for y in range(h):
+                for x in range(w):
+                    humanoid.putpixel((x0 + x, y0 + y), shade(st["metal"], light if face == "top" else 0.6))
+    fx, fy, _, _ = box_faces(BODY)["front"]
+    # gemme au centre du plastron, qui grandit avec les formes
+    size = 1 if stage < 3 else 2
+    for dx in range(size):
+        for dy in range(size):
+            humanoid.putpixel((fx + 3 + dx + (1 if size == 1 else 0), fy + 2 + dy), gem[2] if dy == 0 else gem[1])
+    if stage >= 3:
+        humanoid.putpixel((fx + 3, fy + 2), gem[4])
+    if stage >= 6:   # épaulières à pointes
+        tx, ty, w, h = box_faces(ARM)["top"]
+        for (x, y) in ((1, 1), (2, 2), (1, 2), (2, 1)):
+            humanoid.putpixel((tx + x, ty + y), shade(st["metal"], 1.6))
+        lx, ly, _, _ = box_faces(ARM)["right"]
+        for (x, y) in ((1, 1), (2, 0), (2, 1), (1, 2)):
+            humanoid.putpixel((lx + x, ly + y), shade(st["metal"], 1.55))
+    if stage >= 12:  # runes lumineuses sur le plastron
+        for (x, y) in ((1, 4), (6, 4), (1, 5), (6, 5)):
+            humanoid.putpixel((fx + x, fy + y), gem[3])
+    if stage >= 15:  # ailes gravées dans le dos
+        bx, by, _, _ = box_faces(BODY)["back"]
+        for i in range(4):
+            humanoid.putpixel((bx + 3 - i, by + 1 + i), gem[2])
+            humanoid.putpixel((bx + 4 + i, by + 1 + i), gem[2])
+    if stage >= 18:  # bordures en gemme
+        for face in ("front", "back"):
+            x0, y0, w, h = box_faces(BODY)[face]
+            for y in range(7):
+                humanoid.putpixel((x0, y0 + y), gem[2])
+                humanoid.putpixel((x0 + w - 1, y0 + y), gem[2])
+
+    # --- Bottes (même texture, jambes) : 6 lignes du bas
+    paint_box(humanoid, LEG, st, stage, "boot", range(6, 12), 3)
+    bx, by, w, h = box_faces(LEG)["bottom"]
+    for y in range(h):
+        for x in range(w):
+            humanoid.putpixel((bx + x, by + y), shade(st["metal"], 0.4))
+    if stage >= 10:  # éperon en gemme
+        x0, y0, _, _ = box_faces(LEG)["back"]
+        humanoid.putpixel((x0 + 1, y0 + 9), gem[2])
+        humanoid.putpixel((x0 + 2, y0 + 9), gem[2])
+
+    # --- Jambières : ceinture (bas du corps) + cuissardes / genouillères
+    paint_box(leggings, BODY, st, stage, "belt", range(7, 12), 4)
+    fx, fy, _, _ = box_faces(BODY)["front"]
+    for (x, y) in ((3, 8), (4, 8), (3, 9), (4, 9)):
+        leggings.putpixel((fx + x, fy + y), gem[2] if y == 8 else gem[1])  # boucle
+    paint_box(leggings, LEG, st, stage, "thigh", range(0, 10), 5)
+    tx, ty, w, h = box_faces(LEG)["top"]
+    for y in range(h):
+        for x in range(w):
+            leggings.putpixel((tx + x, ty + y), shade(st["metal"], 1.1))
+    if stage >= 12:
+        x0, y0, _, _ = box_faces(LEG)["front"]
+        leggings.putpixel((x0 + 1, y0 + 6), gem[3])
+        leggings.putpixel((x0 + 2, y0 + 6), gem[3])
+    return humanoid, leggings
+
+
+ICONS = {
+    "evolving_chestplate": [
+        "................",
+        "..ooo......ooo..",
+        ".olllo....olllo.",
+        ".ollmmoooommllo.",
+        ".olmmmmttmmmmlo.",
+        ".ommmmmggmmmmmo.",
+        ".odmmmmggmmmmdo.",
+        "..oommmttmmmoo..",
+        "....ommmmmmo....",
+        "....ommmmmmo....",
+        "....oddddddo....",
+        "....ommmmmmo....",
+        "....oddddddo....",
+        "....otttttto....",
+        ".....oooooo.....",
+        "................",
+    ],
+    "evolving_leggings": [
+        "................",
+        "...oooooooooo...",
+        "...otttggttto...",
+        "...oooooooooo...",
+        "...ommmmmmmmo...",
+        "...omlmmmmlmo...",
+        "...ommmoommmo...",
+        "...ommo..ommo...",
+        "...oddo..oddo...",
+        "...ollo..ollo...",
+        "...ommo..ommo...",
+        "...ommo..ommo...",
+        "...ommo..ommo...",
+        "...oddo..oddo...",
+        "...oooo..oooo...",
+        "................",
+    ],
+    "evolving_boots": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..oooo....oooo..",
+        "..ommo....ommo..",
+        "..olmo....olmo..",
+        "..ttto....ttto..",
+        "..ommo....ommo..",
+        "..ommoo...ommoo.",
+        "..ommllo..ommllo",
+        "..ommmmo..ommmmo",
+        "..oddddo..oddddo",
+        "..oooooo..oooooo",
+        "................",
+    ],
+}
+
+
+def armor_icon(item, stage):
+    st = STAGES[stage]
+    rows = ICONS[item]
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    trim = st["gem"][2] if stage >= 9 else st["grip"]
+    colors = {"o": shade(st["metal"], 0.3), "m": st["metal"], "l": shade(st["metal"], 1.35),
+              "d": shade(st["metal"], 0.65), "g": st["gem"][2], "t": trim}
+    for y, row in enumerate(rows):
+        assert len(row) == 16, (item, y, row)
+        for x, ch in enumerate(row):
+            if ch in colors:
+                img.putpixel((x, y), colors[ch])
+    if stage >= 12 and img.getpixel((7, 5))[3] > 0:
+        img.putpixel((7, 5), st["gem"][4])
+    return img
+
+
+ARMOR_ITEMS = ["evolving_helmet", "evolving_chestplate", "evolving_leggings", "evolving_boots"]
+
+
+def gen_armor():
+    save_png(visor_texture(), "item", "armor", "visor")
+    for i, st in enumerate(STAGES):
+        save_png(horn_texture(st, i), "item", "armor", f"stage{i}_horn")
+        humanoid, leggings = armor_textures(i)
+        save_png(humanoid, "entity", "equipment", "humanoid", f"evolium_stage{i}")
+        save_png(leggings, "entity", "equipment", "humanoid_leggings", f"evolium_stage{i}")
+        write_json(os.path.join(ASSETS, "equipment", f"evolium_stage{i}.json"), {
+            "layers": {
+                "humanoid": [{"texture": f"{MOD}:evolium_stage{i}"}],
+                "humanoid_leggings": [{"texture": f"{MOD}:evolium_stage{i}"}],
+            }
+        })
+        write_json(os.path.join(ASSETS, "models", "item", f"evolving_helmet_stage{i}.json"), helmet_model(i))
+        for item in ARMOR_ITEMS[1:]:
+            save_png(armor_icon(item, i), "item", "armor", f"{item}_stage{i}")
+            write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"),
+                       {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/armor/{item}_stage{i}"}})
+    for item in ARMOR_ITEMS:
+        write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item))
+
+
 def mod_icon():
     """Icône 128x128 : sprite de pioche dessiné en pixel art, agrandi."""
     st = STAGES[10]
@@ -986,6 +1357,17 @@ def gen_data():
             "key": {"E": f"{MOD}:evolium", "|": "minecraft:stick"},
             "result": {"id": f"{MOD}:{item}", "count": 1},
         })
+    for item, pattern in (("evolving_helmet", ["EEE", "E E"]),
+                          ("evolving_chestplate", ["E E", "EEE", "EEE"]),
+                          ("evolving_leggings", ["EEE", "E E", "E E"]),
+                          ("evolving_boots", ["E E", "E E"])):
+        write_json(os.path.join(rec, f"{item}.json"), {
+            "type": "minecraft:crafting_shaped",
+            "category": "equipment",
+            "pattern": pattern,
+            "key": {"E": f"{MOD}:evolium"},
+            "result": {"id": f"{MOD}:{item}", "count": 1},
+        })
     write_json(os.path.join(rec, "evolium_mace.json"), {
         "type": "minecraft:crafting_shaped",
         "category": "equipment",
@@ -1044,7 +1426,9 @@ def gen_data():
     write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "mace.json"),
                {"replace": False, "values": [f"{MOD}:evolium_mace"]})
     for tag, item in (("pickaxes", "evolving_pickaxe"), ("swords", "evolving_sword"), ("axes", "evolving_axe"),
-                      ("shovels", "evolving_shovel"), ("hoes", "evolving_hoe")):
+                      ("shovels", "evolving_shovel"), ("hoes", "evolving_hoe"),
+                      ("head_armor", "evolving_helmet"), ("chest_armor", "evolving_chestplate"),
+                      ("leg_armor", "evolving_leggings"), ("foot_armor", "evolving_boots")):
         write_json(os.path.join(tags, "minecraft", "tags", "item", f"{tag}.json"),
                    {"replace": False, "values": [f"{MOD}:{item}"]})
 
@@ -1096,5 +1480,6 @@ def gen_data():
 if __name__ == "__main__":
     gen_textures()
     gen_models()
+    gen_armor()
     gen_data()
     print("Ressources générées dans", os.path.normpath(ROOT))

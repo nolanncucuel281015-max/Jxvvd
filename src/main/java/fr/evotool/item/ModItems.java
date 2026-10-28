@@ -5,18 +5,26 @@ import fr.evotool.component.EvoData;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.EquippableComponent;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.MaceItem;
 import net.minecraft.item.ToolMaterial;
+import net.minecraft.item.equipment.ArmorMaterial;
+import net.minecraft.item.equipment.EquipmentAsset;
+import net.minecraft.item.equipment.EquipmentAssetKeys;
+import net.minecraft.item.equipment.EquipmentType;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.Unit;
 
@@ -55,8 +63,34 @@ public final class ModItems {
 					.repairable(EVOLIUM_REPAIR)
 					.enchantable(20));
 
+	/**
+	 * Armure en évolium : valeurs de la netherite. La texture portée dépend de la forme
+	 * (evotool:evolium_stage0 à evolium_stage20, voir {@link #equippable}).
+	 */
+	public static final ArmorMaterial EVOLIUM_ARMOR = new ArmorMaterial(4096,
+			Map.of(EquipmentType.HELMET, 3, EquipmentType.CHESTPLATE, 8, EquipmentType.LEGGINGS, 6,
+					EquipmentType.BOOTS, 3, EquipmentType.BODY, 11),
+			22, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE, 3.0F, 0.1F, EVOLIUM_REPAIR, equipmentAsset(0));
+
+	/**
+	 * Le casque n'a pas de texture d'armure : il est rendu sur la tête avec son modèle 3D
+	 * (casque de chevalier à cornes), comme une citrouille sculptée.
+	 */
+	public static final Item EVOLVING_HELMET = register("evolving_helmet",
+			s -> new EvolvingArmorItem(EvoKind.HELMET, s),
+			evolving().armor(EVOLIUM_ARMOR, EquipmentType.HELMET)
+					.component(DataComponentTypes.EQUIPPABLE, EquippableComponent.builder(EquipmentSlot.HEAD)
+							.equipSound(SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE).build()));
+	public static final Item EVOLVING_CHESTPLATE = register("evolving_chestplate",
+			s -> new EvolvingArmorItem(EvoKind.CHESTPLATE, s), evolving().armor(EVOLIUM_ARMOR, EquipmentType.CHESTPLATE));
+	public static final Item EVOLVING_LEGGINGS = register("evolving_leggings",
+			s -> new EvolvingArmorItem(EvoKind.LEGGINGS, s), evolving().armor(EVOLIUM_ARMOR, EquipmentType.LEGGINGS));
+	public static final Item EVOLVING_BOOTS = register("evolving_boots",
+			s -> new EvolvingArmorItem(EvoKind.BOOTS, s), evolving().armor(EVOLIUM_ARMOR, EquipmentType.BOOTS));
+
 	public static final List<Item> EVOLVING_ITEMS = List.of(
-			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLIUM_MACE);
+			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLIUM_MACE,
+			EVOLVING_HELMET, EVOLVING_CHESTPLATE, EVOLVING_LEGGINGS, EVOLVING_BOOTS);
 
 	private ModItems() {
 	}
@@ -69,7 +103,23 @@ public final class ModItems {
 			case HOE -> EVOLVING_HOE;
 			case SWORD -> EVOLVING_SWORD;
 			case MACE -> EVOLIUM_MACE;
+			case HELMET -> EVOLVING_HELMET;
+			case CHESTPLATE -> EVOLVING_CHESTPLATE;
+			case LEGGINGS -> EVOLVING_LEGGINGS;
+			case BOOTS -> EVOLVING_BOOTS;
 		};
+	}
+
+	public static RegistryKey<EquipmentAsset> equipmentAsset(int stage) {
+		return RegistryKey.of(EquipmentAssetKeys.REGISTRY_KEY, EvoTool.id("evolium_stage" + stage));
+	}
+
+	/** Composant « équipable » d'une pièce d'armure portée, avec la texture de la forme voulue. */
+	public static EquippableComponent equippable(EquipmentSlot slot, int stage) {
+		return EquippableComponent.builder(slot)
+				.equipSound(SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE)
+				.model(equipmentAsset(stage))
+				.build();
 	}
 
 	/** Réglages communs : incassable, résiste à la lave, données d'évolution. */

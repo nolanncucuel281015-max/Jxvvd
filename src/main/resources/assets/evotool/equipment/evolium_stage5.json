@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "evotool:evolium_stage5"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "evotool:evolium_stage5"
+      }
+    ]
+  }
+}

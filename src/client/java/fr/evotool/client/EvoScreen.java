@@ -1,5 +1,6 @@
 package fr.evotool.client;
 
+import fr.evotool.armor.ArmorSet;
 import fr.evotool.component.EvoData;
 import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
@@ -13,6 +14,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -44,7 +47,7 @@ public class EvoScreen extends Screen {
 
 	@Override
 	protected void init() {
-		ItemStack stack = client == null || client.player == null ? ItemStack.EMPTY : client.player.getMainHandStack();
+		ItemStack stack = client == null || client.player == null ? ItemStack.EMPTY : findStack(client.player);
 		EvoKind kind = EvoProgression.kindOf(stack);
 		if (kind == null) {
 			close();
@@ -113,6 +116,19 @@ public class EvoScreen extends Screen {
 		bonusTop = y + 8;
 	}
 
+	/** L'outil évolutif en main, sinon la première pièce d'armure évolutive portée. */
+	public static ItemStack findStack(PlayerEntity player) {
+		if (EvoProgression.kindOf(player.getMainHandStack()) != null) {
+			return player.getMainHandStack();
+		}
+		for (EquipmentSlot slot : ArmorSet.SLOTS) {
+			if (ArmorSet.isEvolvingArmor(player.getEquippedStack(slot), slot)) {
+				return player.getEquippedStack(slot);
+			}
+		}
+		return ItemStack.EMPTY;
+	}
+
 	private void send() {
 		ClientPlayNetworking.send(new EvoSettingsPayload(selectedMode, flags));
 		clearAndInit();
@@ -121,6 +137,13 @@ public class EvoScreen extends Screen {
 	/** Enchantements gagnés et pouvoirs permanents déjà débloqués. */
 	private List<Text> activeBonuses(int level) {
 		List<Text> bonuses = new ArrayList<>();
+		if (profile.isArmor() && client != null && client.player != null) {
+			// Les bonus de l'armure dépendent de tout l'ensemble porté.
+			int setLevel = ArmorSet.setLevel(client.player);
+			bonuses.add(Text.translatable("armor.evotool.set_level", setLevel).formatted(Formatting.AQUA));
+			bonuses.addAll(ArmorSet.describe(setLevel));
+			return bonuses;
+		}
 		if (profile.damageBonus()) {
 			bonuses.add(Text.translatable("screen.evotool.damage_bonus", String.format("%.1f", EvoProgression.damageBonus(level))));
 		}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "evotool:item/armor/evolving_leggings_stage13"
+  }
+}
