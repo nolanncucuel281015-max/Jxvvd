@@ -16,30 +16,50 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 /**
- * Bonus de l'ensemble d'armure évolutive.
+ * Bonus de l'ensemble d'armure évolutive : un nouveau bonus <b>tous les 5 niveaux</b>.
  *
  * <p>Le niveau d'ensemble = somme des niveaux des 4 pièces portées / 4 (une pièce manquante compte 0),
- * il faut donc porter l'armure complète pour tout avoir. Les effets sont permanents tant qu'on la porte :
- * <ul>
- *   <li>Résistance I à V : niveaux 10 / 30 / 50 / 75 / 100</li>
- *   <li>Vitesse I à III : niveaux 15 / 45 / 70</li>
- *   <li>Régénération I à III : niveaux 20 / 55 / 90</li>
- *   <li>Cœurs en plus : +4 au niveau 80, +10 au niveau 100</li>
- * </ul>
+ * il faut donc porter l'armure complète pour tout avoir. Les effets sont permanents tant qu'on la porte.
+ * Maximum : Résistance V, Vitesse III, Régénération III, Hâte II et +10 cœurs.
  */
 public final class ArmorSet {
 	public static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 
-	private static final Map<RegistryEntry<StatusEffect>, int[]> EFFECTS = new LinkedHashMap<>();
+	/** Points de vie par palier de cœurs (4 points = 2 cœurs). */
+	private static final double HEALTH_PER_STEP = 4.0;
 
-	static {
-		EFFECTS.put(StatusEffects.RESISTANCE, new int[] {10, 30, 50, 75, 100});
-		EFFECTS.put(StatusEffects.SPEED, new int[] {15, 45, 70});
-		EFFECTS.put(StatusEffects.REGENERATION, new int[] {20, 55, 90});
+	/**
+	 * Un palier : soit un effet (amplificateur 0 = niveau I), soit des cœurs en plus (effect == null).
+	 */
+	public record Step(int level, RegistryEntry<StatusEffect> effect, int amplifier) {
+		public boolean isHearts() {
+			return effect == null;
+		}
 	}
 
-	public static final int HEARTS_LEVEL_1 = 80;
-	public static final int HEARTS_LEVEL_2 = 100;
+	public static final List<Step> STEPS = List.of(
+			new Step(5, StatusEffects.RESISTANCE, 0),
+			new Step(10, StatusEffects.SPEED, 0),
+			new Step(15, StatusEffects.REGENERATION, 0),
+			new Step(20, StatusEffects.NIGHT_VISION, 0),
+			new Step(25, StatusEffects.RESISTANCE, 1),
+			new Step(30, StatusEffects.SPEED, 1),
+			new Step(35, StatusEffects.FIRE_RESISTANCE, 0),
+			new Step(40, StatusEffects.REGENERATION, 1),
+			new Step(45, StatusEffects.RESISTANCE, 2),
+			new Step(50, StatusEffects.WATER_BREATHING, 0),
+			new Step(55, StatusEffects.HASTE, 0),
+			new Step(60, StatusEffects.SPEED, 2),
+			new Step(65, StatusEffects.RESISTANCE, 3),
+			new Step(70, StatusEffects.REGENERATION, 2),
+			new Step(75, StatusEffects.HASTE, 1),
+			// Les cœurs : les paliers les plus durs (niveaux 80 à 100).
+			new Step(80, null, 0),
+			new Step(85, null, 0),
+			new Step(90, null, 0),
+			new Step(95, null, 0),
+			new Step(100, null, 0),
+			new Step(100, StatusEffects.RESISTANCE, 4));
 
 	private ArmorSet() {
 	}
@@ -60,33 +80,41 @@ public final class ArmorSet {
 		return sum / SLOTS.length;
 	}
 
-	/** Effets voulus à ce niveau d'ensemble : effet → amplificateur (0 = niveau I). */
+	/** Effets voulus à ce niveau d'ensemble : effet → amplificateur le plus haut atteint. */
 	public static Map<RegistryEntry<StatusEffect>, Integer> effects(int setLevel) {
 		Map<RegistryEntry<StatusEffect>, Integer> result = new LinkedHashMap<>();
-		EFFECTS.forEach((effect, thresholds) -> {
-			int count = countReached(setLevel, thresholds);
-			if (count > 0) {
-				result.put(effect, count - 1);
+		for (Step step : STEPS) {
+			if (!step.isHearts() && setLevel >= step.level()) {
+				result.merge(step.effect(), step.amplifier(), Math::max);
 			}
-		});
+		}
 		return result;
 	}
 
-	/** Points de vie en plus (2 points = 1 cœur). */
+	/** Points de vie en plus (2 points = 1 cœur) : +2 cœurs aux niveaux 80, 85, 90, 95 et 100. */
 	public static double bonusHealth(int setLevel) {
-		if (setLevel >= HEARTS_LEVEL_2) {
-			return 20.0;
+		double health = 0;
+		for (Step step : STEPS) {
+			if (step.isHearts() && setLevel >= step.level()) {
+				health += HEALTH_PER_STEP;
+			}
 		}
-		return setLevel >= HEARTS_LEVEL_1 ? 8.0 : 0.0;
+		return health;
 	}
 
-	/** Lignes « bonus actifs » pour le menu. */
+	/** Lignes « bonus actifs » pour le menu, plus le prochain palier. */
 	public static List<Text> describe(int setLevel) {
 		List<Text> lines = new ArrayList<>();
-		effects(setLevel).forEach((effect, amplifier) -> lines.add(effectText(effect, amplifier + 1)));
+		effects(setLevel).forEach((effect, amplifier) -> lines.add(effectText(effect, amplifier)));
 		double health = bonusHealth(setLevel);
 		if (health > 0) {
-			lines.add(Text.translatable("armor.evotool.hearts", (int) (health / 2)));
+			lines.add(heartsText(health));
+		}
+		for (Step step : STEPS) {
+			if (step.level() > setLevel) {
+				lines.add(Text.translatable("armor.evotool.next", step.level(), stepText(step)));
+				break;
+			}
 		}
 		return lines;
 	}
@@ -94,31 +122,26 @@ public final class ArmorSet {
 	/** Ce qui se débloque exactement à ce niveau d'ensemble. */
 	public static List<Text> unlocksAt(int setLevel) {
 		List<Text> lines = new ArrayList<>();
-		EFFECTS.forEach((effect, thresholds) -> {
-			for (int i = 0; i < thresholds.length; i++) {
-				if (thresholds[i] == setLevel) {
-					lines.add(effectText(effect, i + 1));
-				}
+		for (Step step : STEPS) {
+			if (step.level() == setLevel) {
+				lines.add(stepText(step));
 			}
-		});
-		if (setLevel == HEARTS_LEVEL_1 || setLevel == HEARTS_LEVEL_2) {
-			lines.add(Text.translatable("armor.evotool.hearts", (int) (bonusHealth(setLevel) / 2)));
 		}
 		return lines;
 	}
 
-	private static MutableText effectText(RegistryEntry<StatusEffect> effect, int level) {
-		return Text.translatable(effect.value().getTranslationKey()).append(" ")
-				.append(Text.translatable("enchantment.level." + level));
+	private static Text stepText(Step step) {
+		return step.isHearts()
+				? Text.translatable("armor.evotool.more_hearts", (int) (HEALTH_PER_STEP / 2), (int) (bonusHealth(step.level()) / 2))
+				: effectText(step.effect(), step.amplifier());
 	}
 
-	private static int countReached(int level, int[] thresholds) {
-		int count = 0;
-		for (int threshold : thresholds) {
-			if (level >= threshold) {
-				count++;
-			}
-		}
-		return count;
+	private static Text heartsText(double health) {
+		return Text.translatable("armor.evotool.hearts", (int) (health / 2));
+	}
+
+	private static MutableText effectText(RegistryEntry<StatusEffect> effect, int amplifier) {
+		return Text.translatable(effect.value().getTranslationKey()).append(" ")
+				.append(Text.translatable("enchantment.level." + (amplifier + 1)));
 	}
 }

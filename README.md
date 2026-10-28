@@ -67,15 +67,20 @@ ne fasse pas tout monter d'un coup). C'est **long** : environ 4 min pour le nive
 niveau 80 et **2 h 30 de coups en continu** pour le niveau 100.
 
 Les bonus dépendent du **niveau de l'ensemble** = moyenne des 4 pièces (une pièce manquante compte 0),
-donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'on la porte :
+donc il faut porter l'armure complète. **Un nouveau bonus tous les 5 niveaux**, permanent tant qu'on la porte :
 
-| Niveau d'ensemble | Bonus |
-|------------------:|-------|
-| 10 / 30 / 50 / 75 / 100 | Résistance I à **V** |
-| 15 / 45 / 70 | Vitesse I à **III** |
-| 20 / 55 / 90 | Régénération I à **III** |
-| 80  | **+4 cœurs** |
-| 100 | **+10 cœurs** au total |
+| Niv. | Bonus | Niv. | Bonus |
+|----:|-------|----:|-------|
+| 5  | Résistance I        | 55  | Hâte I |
+| 10 | Vitesse I           | 60  | Vitesse III |
+| 15 | Régénération I      | 65  | Résistance IV |
+| 20 | Vision nocturne     | 70  | Régénération III |
+| 25 | Résistance II       | 75  | Hâte II |
+| 30 | Vitesse II          | 80  | **+2 cœurs** |
+| 35 | Résistance au feu   | 85  | **+2 cœurs** (4 au total) |
+| 40 | Régénération II     | 90  | **+2 cœurs** (6 au total) |
+| 45 | Résistance III      | 95  | **+2 cœurs** (8 au total) |
+| 50 | Respiration aquatique | 100 | **+2 cœurs** (10 au total) + **Résistance V** |
 
 Résistance V = plus aucun dégât (sauf /kill et le vide).
 
