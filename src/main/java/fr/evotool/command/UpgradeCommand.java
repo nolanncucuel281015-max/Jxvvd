@@ -48,7 +48,7 @@ public final class UpgradeCommand {
 
 	private static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
 		LiteralArgumentBuilder<ServerCommandSource> root = CommandManager.literal("upgrade")
-				.requires(source -> source.hasPermissionLevel(2));
+				.requires(source -> source.getServer() != null); // TEMPORAIRE : vérification opérateur à remettre
 		for (EvoKind kind : EvoKind.values()) {
 			for (String name : NAMES[kind.ordinal()]) {
 				root.then(CommandManager.literal(name)
