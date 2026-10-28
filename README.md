@@ -45,12 +45,26 @@ La vitesse de minage augmente aussi un peu à chaque niveau.
 
 Chaque gemme a son bloc de stockage (9 gemmes).
 
-## Recette de la pioche
+## Recettes
+
+**Pioche Évolutive** (comme une pioche en diamant) :
+
+```
+[Évolium][Évolium][Évolium]
+[       ][ Bâton ][       ]
+[       ][ Bâton ][       ]
+```
+
+**Masse en évolium** (mace) : un bloc d'évolium au-dessus d'un bâton.
 
 ```
 [Bloc d'évolium]
 [    Bâton     ]
 ```
+
+La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal),
+avec 8 de dégâts de base, 2 500 de durabilité (réparable avec de l'évolium), résiste à la lave
+et accepte Densité, Brèche et Charge de vent. Elle a aussi son modèle 3D.
 
 ## Modèle 3D — 21 formes
 

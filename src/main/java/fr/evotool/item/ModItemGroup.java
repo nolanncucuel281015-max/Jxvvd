@@ -16,6 +16,7 @@ public final class ModItemGroup {
 					.displayName(Text.translatable("itemGroup.evotool.main"))
 					.entries((context, entries) -> {
 						entries.add(ModItems.EVOLVING_PICKAXE);
+						entries.add(ModItems.EVOLIUM_MACE);
 						entries.add(ModItems.EVOLIUM);
 						entries.add(ModBlocks.EVOLIUM_BLOCK);
 						entries.add(ModBlocks.DEEPSLATE_EVOLIUM_ORE);

@@ -472,6 +472,52 @@ def pickaxe_model(stage):
     }
 
 
+def mace_model():
+    E = []
+    n = 0
+
+    def add(frm, to, tex, rot=None):
+        nonlocal n
+        n += 1
+        E.append(element(frm, to, tex, rot, n))
+
+    # manche
+    add([7.25, -3, 7.25], [8.75, 10, 8.75], "handle")
+    add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")
+    add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
+    for y in (-2.25, -0.25, 1.75, 3.75):
+        add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
+    add([7.1, -2.5, 7.1], [8.9, 5.5, 8.9], "grip")
+    add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
+    add([6.5, 9, 6.5], [9.5, 10.5, 9.5], "metal")
+    # tête : bloc lourd, coeur d'évolium sur chaque face, collerettes
+    add([4.5, 10.5, 4.5], [11.5, 17.5, 11.5], "metal")
+    add([5.5, 11.5, 4], [10.5, 16.5, 12], "gem")
+    add([4, 11.5, 5.5], [12, 16.5, 10.5], "gem")
+    add([4, 10, 4], [12, 11, 12], "metal")
+    add([4, 17, 4], [12, 18, 12], "metal")
+    # pointes en losange sur les 4 côtés et au sommet
+    for (x, z) in ((2.5, 8), (13.5, 8), (8, 2.5), (8, 13.5)):
+        add([x - 1, 13, z - 1], [x + 1, 15, z + 1], "metal", ["y", 45, [x, 14, z]])
+    add([7, 18, 7], [9, 21, 9], "gem", ["y", 45, [8, 19.5, 8]])
+    # pointes diagonales en haut
+    add([3.5, 17, 7.5], [5, 20, 8.5], "metal", ["z", 22.5, [5, 17, 8]])
+    add([11, 17, 7.5], [12.5, 20, 8.5], "metal", ["z", -22.5, [11, 17, 8]])
+
+    st = f"{MOD}:item/pickaxe/stage"
+    model = pickaxe_model(0)
+    model["credit"] = "Evo Tool - mace 3D générée par tools/generate_assets.py"
+    model["textures"] = {
+        "particle": st + "8_metal",
+        "handle": st + "10_handle",
+        "grip": st + "10_grip",
+        "metal": st + "8_metal",
+        "gem": st + "10_gem",
+    }
+    model["elements"] = E
+    return model
+
+
 def mod_icon():
     """Icône 128x128 : sprite de pioche dessiné en pixel art, agrandi."""
     st = STAGES[10]
@@ -544,6 +590,10 @@ def gen_models():
     for i in range(len(STAGES)):
         write_json(os.path.join(ASSETS, "models", "item", f"evolving_pickaxe_stage{i}.json"), pickaxe_model(i))
 
+    write_json(os.path.join(ASSETS, "models", "item", "evolium_mace.json"), mace_model())
+    write_json(os.path.join(ASSETS, "items", "evolium_mace.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/evolium_mace"}})
+
     # L'apparence change selon le palier (custom_model_data floats[0], mis à jour par le mod).
     def ref(i):
         return {"type": "minecraft:model", "model": f"{MOD}:item/evolving_pickaxe_stage{i}"}
@@ -603,9 +653,16 @@ def gen_data():
     write_json(os.path.join(rec, "evolving_pickaxe.json"), {
         "type": "minecraft:crafting_shaped",
         "category": "equipment",
+        "pattern": ["EEE", " | ", " | "],
+        "key": {"E": f"{MOD}:evolium", "|": "minecraft:stick"},
+        "result": {"id": f"{MOD}:evolving_pickaxe", "count": 1},
+    })
+    write_json(os.path.join(rec, "evolium_mace.json"), {
+        "type": "minecraft:crafting_shaped",
+        "category": "equipment",
         "pattern": ["B", "|"],
         "key": {"B": f"{MOD}:evolium_block", "|": "minecraft:stick"},
-        "result": {"id": f"{MOD}:evolving_pickaxe", "count": 1},
+        "result": {"id": f"{MOD}:evolium_mace", "count": 1},
     })
     for g in GEMS:
         write_json(os.path.join(rec, f"{g}_block.json"), {
@@ -656,6 +713,9 @@ def gen_data():
                {"replace": False, "values": [o for o in ore_ids if "evolium" not in o]})
     write_json(os.path.join(DATA, "tags", "item", "evolium_tool_materials.json"),
                {"replace": False, "values": [f"{MOD}:evolium"]})
+    # la mace accepte Densité, Brèche et Charge de vent comme la mace vanilla
+    write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "mace.json"),
+               {"replace": False, "values": [f"{MOD}:evolium_mace"]})
     write_json(os.path.join(tags, "minecraft", "tags", "item", "pickaxes.json"),
                {"replace": False, "values": [f"{MOD}:evolving_pickaxe"]})
 

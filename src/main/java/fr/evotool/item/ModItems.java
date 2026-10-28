@@ -7,6 +7,7 @@ import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Item;
+import net.minecraft.item.MaceItem;
 import net.minecraft.item.ToolMaterial;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -41,6 +42,16 @@ public final class ModItems {
 					.fireproof()
 					.rarity(Rarity.EPIC)
 					.maxCount(1));
+
+	public static final Item EVOLIUM_MACE = register("evolium_mace", EvoliumMaceItem::new,
+			new Item.Settings()
+					.maxDamage(2500)
+					.component(DataComponentTypes.TOOL, MaceItem.createToolComponent())
+					.attributeModifiers(EvoliumMaceItem.createEvoliumAttributeModifiers())
+					.repairable(EVOLIUM_REPAIR)
+					.enchantable(20)
+					.fireproof()
+					.rarity(Rarity.EPIC));
 
 	private ModItems() {
 	}

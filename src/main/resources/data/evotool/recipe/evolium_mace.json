@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "B",
+    "|"
+  ],
+  "key": {
+    "B": "evotool:evolium_block",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "evotool:evolium_mace",
+    "count": 1
+  }
+}
