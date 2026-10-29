@@ -47,6 +47,15 @@ public enum EvoKind {
 			.enchant(Enchantments.SWEEPING_EDGE, "sweeping_edge", 35, 55, 70)
 			.enchant(Enchantments.FIRE_ASPECT, "fire_aspect", 65, 85)),
 
+	/** Lance (1.21.11) : évolue en tuant des monstres. Tranchant, Élan, Butin, onde de choc, foudre, exécution. */
+	SPEAR(new EvoProfile()
+			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
+			.power(Power.LIFESTEAL, 10).power(Power.SHOCKWAVE, 30).power(Power.LIGHTNING, 50)
+			.power(Power.WIDE_SHOCKWAVE, 75).power(Power.EXECUTION, 100)
+			.enchant(Enchantments.SHARPNESS, "sharpness", 15, 25, 35, 45, 55)
+			.enchant(Enchantments.LUNGE, "lunge", 20, 40, 60)
+			.enchant(Enchantments.LOOTING, "looting", 30, 50, 70)),
+
 	/** Évolue en tuant des monstres : Densité, Brèche, Charge de vent, onde de choc, foudre, exécution. */
 	MACE(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()

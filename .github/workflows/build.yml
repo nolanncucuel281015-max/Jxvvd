@@ -59,7 +59,7 @@ jobs:
           set +e
           ALL=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' ! -name '*sources*' 2>/dev/null)
           for JAR in $ALL; do
-            for f in assets/minecraft/items/netherite_spear.json assets/minecraft/models/item/netherite_spear.json assets/minecraft/models/item/netherite_spear_in_hand.json data/minecraft/enchantment/lunge.json data/minecraft/recipe/netherite_spear_smithing.json; do
+            for f in assets/minecraft/items/netherite_spear.json assets/minecraft/models/item/netherite_spear.json assets/minecraft/models/item/netherite_spear_in_hand.json data/minecraft/enchantment/lunge.json data/minecraft/recipe/netherite_spear_smithing.json assets/minecraft/models/item/spear_in_hand.json data/minecraft/recipe/diamond_spear.json; do
               if unzip -l "$JAR" "$f" >/dev/null 2>&1; then echo "=== $f ($JAR)"; unzip -p "$JAR" "$f"; echo; fi
             done
             unzip -l "$JAR" | awk '{print $4}' | grep -i -E 'spear|lunge' | grep -v -E '^net/' | head -40

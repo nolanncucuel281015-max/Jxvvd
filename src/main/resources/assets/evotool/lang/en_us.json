@@ -115,5 +115,9 @@
   "upgrade.evotool.celestial_legs": "Celestial Legs",
   "upgrade.evotool.celestial_legs.desc": "Step up blocks without jumping, no more fall damage.",
   "upgrade.evotool.magic_cloud": "Magic Cloud",
-  "upgrade.evotool.magic_cloud.desc": "Double jump: fly on a magic cloud, like in creative mode."
+  "upgrade.evotool.magic_cloud.desc": "Double jump: fly on a magic cloud, like in creative mode.",
+  "item.evotool.evolving_spear": "Evolving Spear",
+  "upgrade.evotool.lightning_charge": "Lightning Charge",
+  "upgrade.evotool.lightning_charge.desc": "While charging: Speed III, and every hit strikes the target with lightning.",
+  "tooltip.evotool.sword_hint": "Sneak + right-click: celestial explosion (20 blocks)"
 }

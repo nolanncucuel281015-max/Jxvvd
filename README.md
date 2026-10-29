@@ -40,10 +40,18 @@ La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne cas
 | 20 / 40 / 60 / 80 | Labour **et** récolte en zone 3x3, 5x5, 7x7, 9x9 |
 | 100 | **Pousse instantanée** : les cultures replantées sont déjà mûres |
 
-## Épée et masse — en tuant des monstres
+## Épée, lance et masse — en tuant des monstres
 
 XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
 Les animaux ne rapportent rien. Chaque niveau donne +0,1 dégât (+10 au niveau 100).
+
+**Épée — explosion céleste** : accroupi + clic droit, une énorme explosion part de toi et s'étend sur
+**20 blocs** (onde de choc animée). Elle blesse et repousse les monstres (plus fort près de toi, et plus fort
+avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 10 secondes.
+
+**Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre, exécution),
+avec Tranchant I à V (15/25/35/45/55), **Élan** I à III (20/40/60) et Butin I à III (30/50/70).
+Elle garde la charge et les estocs de la lance en netherite.
 
 | Niveau | Épée | Masse |
 |-------:|------|-------|
@@ -118,6 +126,7 @@ avec un pouvoir magique :
 |-------|---------|
 | Pioche, pelle, hache, houe | **Télékinésie** : les objets cassés vont directement dans l'inventaire |
 | Épée | **Slash magique** : clic droit, une vague tranchante frappe tout sur 8 blocs devant toi |
+| Lance | **Charge fulgurante** : pendant la charge, Vitesse III et chaque coup foudroie la cible |
 | Masse | **Envol** : clic droit, bond dans les airs sans dégâts de chute (parfait pour l'attaque écrasante) |
 | Casque | **Vue du chevalier** : les monstres à 24 blocs brillent à travers les murs |
 | Plastron | **Bouclier magique** : 4 cœurs dorés permanents qui se rechargent hors combat |
@@ -142,8 +151,8 @@ Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 
 /upgrade <outil> <niveau>
 ```
 
-- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `mace`, `helmet`, `chestplate`, `leggings`, `boots`
-  (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `masse`, `casque`, `plastron`, `jambieres`, `bottes`)
+- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `spear`, `mace`, `helmet`, `chestplate`, `leggings`, `boots`
+  (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `lance`, `masse`, `casque`, `plastron`, `jambieres`, `bottes`)
 - `armor` / `armure` : les 4 pièces d'armure d'un coup (ex. `/upgrade armor 100`)
 - `<niveau>` : de 0 à 100
 
@@ -165,6 +174,7 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 
 Comme les outils en diamant, avec de l'**évolium** à la place du diamant :
 pioche (3 + 2 bâtons), pelle (1 + 2), hache (3 + 2), houe (2 + 2), épée (2 + 1),
+lance (1 évolium en haut à droite + 2 bâtons en diagonale),
 casque (5), plastron (8), jambières (7), bottes (4).
 
 La **masse** : un bloc d'évolium au-dessus d'un bâton.

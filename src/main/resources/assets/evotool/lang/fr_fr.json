@@ -115,5 +115,9 @@
   "upgrade.evotool.celestial_legs": "Jambes célestes",
   "upgrade.evotool.celestial_legs.desc": "Monte les blocs sans sauter, plus aucun dégât de chute.",
   "upgrade.evotool.magic_cloud": "Nuage magique",
-  "upgrade.evotool.magic_cloud.desc": "Double saut : tu t'envoles sur un nuage magique, comme en créatif."
+  "upgrade.evotool.magic_cloud.desc": "Double saut : tu t'envoles sur un nuage magique, comme en créatif.",
+  "item.evotool.evolving_spear": "Lance Évolutive",
+  "upgrade.evotool.lightning_charge": "Charge fulgurante",
+  "upgrade.evotool.lightning_charge.desc": "Pendant la charge : vitesse III, et chaque coup foudroie la cible.",
+  "tooltip.evotool.sword_hint": "Accroupi + clic droit : explosion céleste (20 blocs)"
 }

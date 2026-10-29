@@ -73,6 +73,9 @@ public class EvoToolClient implements ClientModInitializer {
 				lines.add(index++, Text.translatable(upgrade.descriptionKey()).formatted(Formatting.DARK_AQUA));
 			}
 			lines.add(index++, Text.translatable(profile.counter().translationKey(), data.count()).formatted(Formatting.DARK_GRAY));
+			if (kind == EvoKind.SWORD) {
+				lines.add(index++, Text.translatable("tooltip.evotool.sword_hint").formatted(Formatting.RED));
+			}
 			lines.add(index, Text.translatable(profile.isArmor() ? "tooltip.evotool.armor_hint" : "tooltip.evotool.hint")
 					.formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
 		});

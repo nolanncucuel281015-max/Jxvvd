@@ -5,6 +5,7 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
+import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
@@ -58,6 +59,10 @@ public final class CombatHandler {
 				}
 				if (EvoProgression.isActive(profile, data, Power.LIGHTNING) && entity.isAlive()
 						&& world.getRandom().nextFloat() < LIGHTNING_CHANCE) {
+					lightning(world, entity, data.level());
+				}
+				// Lance améliorée à l'évolite : chaque coup porté pendant la charge foudroie la cible.
+				if (EvoliteUpgrade.has(weapon, EvoliteUpgrade.Upgrade.LIGHTNING_CHARGE) && player.isUsingItem() && entity.isAlive()) {
 					lightning(world, entity, data.level());
 				}
 				if (EvoProgression.isActive(profile, data, Power.EXECUTION) && entity.isAlive()

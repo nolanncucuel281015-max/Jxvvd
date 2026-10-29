@@ -954,7 +954,7 @@ TOOL_MODELS = {
     "evolving_axe": (axe_elements, 28),
     "evolving_shovel": (shovel_elements, 30),
     "evolving_hoe": (hoe_elements, 27),
-    "evolving_spear": (spear_elements, 44),
+    "evolving_spear": (spear_elements, 36),
 }
 
 
@@ -1571,7 +1571,8 @@ def gen_data():
     for item, pattern in (("evolving_sword", ["E", "E", "|"]),
                           ("evolving_axe", ["EE", "E|", " |"]),
                           ("evolving_shovel", ["E", "|", "|"]),
-                          ("evolving_hoe", ["EE", " |", " |"])):
+                          ("evolving_hoe", ["EE", " |", " |"]),
+                          ("evolving_spear", ["  E", " | ", "|  "])):
         write_json(os.path.join(rec, f"{item}.json"), {
             "type": "minecraft:crafting_shaped",
             "category": "equipment",
@@ -1666,7 +1667,7 @@ def gen_data():
     write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "mace.json"),
                {"replace": False, "values": [f"{MOD}:evolium_mace"]})
     for tag, item in (("pickaxes", "evolving_pickaxe"), ("swords", "evolving_sword"), ("axes", "evolving_axe"),
-                      ("shovels", "evolving_shovel"), ("hoes", "evolving_hoe"),
+                      ("shovels", "evolving_shovel"), ("hoes", "evolving_hoe"), ("spears", "evolving_spear"),
                       ("head_armor", "evolving_helmet"), ("chest_armor", "evolving_chestplate"),
                       ("leg_armor", "evolving_leggings"), ("foot_armor", "evolving_boots")):
         write_json(os.path.join(tags, "minecraft", "tags", "item", f"{tag}.json"),

@@ -1,8 +1,13 @@
 package fr.evotool.upgrade;
 
 import fr.evotool.armor.ArmorSet;
+import fr.evotool.evo.EvoKind;
+import fr.evotool.evo.EvoProgression;
 import fr.evotool.upgrade.EvoliteUpgrade.Upgrade;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -46,6 +51,17 @@ public final class MagicPowers {
 	/** Tag posé sur le joueur quand c'est le nuage magique qui lui donne le vol (sauvegardé avec le joueur). */
 	private static final String CLOUD_TAG = "evotool_magic_cloud";
 
+	/** Explosion céleste de l'épée (accroupi + clic droit). */
+	private static final double EXPLOSION_RADIUS = 20.0;
+	private static final double EXPLOSION_WAVE_SPEED = 2.0;
+	private static final int EXPLOSION_COOLDOWN = 200;
+
+	/** Une onde d'explosion qui s'étend de 2 blocs par tick jusqu'à 20 blocs. */
+	private record ExplosionWave(ServerWorld world, ServerPlayerEntity player, Vec3d center, int startTick, float damage) {
+	}
+
+	private static final List<ExplosionWave> WAVES = new ArrayList<>();
+
 	private static final Map<UUID, Integer> LAST_HURT = new HashMap<>();
 	private static final Map<UUID, Integer> SOAR_IMMUNITY_UNTIL = new HashMap<>();
 
@@ -72,9 +88,13 @@ public final class MagicPowers {
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			int tick = server.getTicks();
+			tickExplosionWaves(tick);
 			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 				if (tick % 2 == 0) {
 					cloudParticles(player);
+				}
+				if (tick % 5 == 0) {
+					lightningCharge(player);
 				}
 				if (tick % 20 == 0) {
 					magicCloud(player);
@@ -99,6 +119,18 @@ public final class MagicPowers {
 
 	private static ActionResult onUseItem(PlayerEntity player, net.minecraft.world.World world, Hand hand) {
 		ItemStack stack = player.getStackInHand(hand);
+		// Accroupi + clic droit avec l'épée évolutive : explosion céleste de 20 blocs.
+		if (player.isSneaking() && EvoProgression.kindOf(stack) == EvoKind.SWORD) {
+			if (player.getItemCooldownManager().isCoolingDown(stack)) {
+				return ActionResult.FAIL;
+			}
+			player.getItemCooldownManager().set(stack, EXPLOSION_COOLDOWN);
+			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
+				celestialExplosion(serverWorld, serverPlayer, EvoProgression.get(stack).level());
+			}
+			player.swingHand(hand);
+			return ActionResult.SUCCESS;
+		}
 		boolean slash = EvoliteUpgrade.has(stack, Upgrade.MAGIC_SLASH);
 		boolean soar = EvoliteUpgrade.has(stack, Upgrade.SOAR);
 		if (!slash && !soar) {
@@ -158,6 +190,52 @@ public final class MagicPowers {
 		}
 	}
 
+	// ------------------------------------------------------------------ épée : explosion céleste
+
+	private static void celestialExplosion(ServerWorld world, ServerPlayerEntity player, int level) {
+		Vec3d center = new Vec3d(player.getX(), player.getY() + 0.5, player.getZ());
+		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z, 3, 1.0, 0.5, 1.0, 0.0);
+		world.spawnParticles(ParticleTypes.SONIC_BOOM, center.x, center.y + 1, center.z, 1, 0, 0, 0, 0);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 4.0F, 0.6F);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.PLAYERS, 2.0F, 0.8F);
+		float damage = 20.0F + level * 0.3F;
+		WAVES.add(new ExplosionWave(world, player, center, world.getServer().getTicks(), damage));
+	}
+
+	/** Fait avancer chaque onde : anneau de particules + dégâts et recul aux monstres qu'elle atteint. */
+	private static void tickExplosionWaves(int tick) {
+		for (Iterator<ExplosionWave> it = WAVES.iterator(); it.hasNext(); ) {
+			ExplosionWave wave = it.next();
+			int age = tick - wave.startTick();
+			double outer = Math.min(EXPLOSION_RADIUS, (age + 1) * EXPLOSION_WAVE_SPEED);
+			double inner = age * EXPLOSION_WAVE_SPEED;
+			if (inner >= EXPLOSION_RADIUS || wave.player().isRemoved()) {
+				it.remove();
+				continue;
+			}
+			ServerWorld world = wave.world();
+			Vec3d c = wave.center();
+			int points = (int) (outer * 5);
+			for (int i = 0; i < points; i++) {
+				double angle = 2 * Math.PI * i / points;
+				double x = c.x + Math.cos(angle) * outer;
+				double z = c.z + Math.sin(angle) * outer;
+				world.spawnParticles(i % 3 == 0 ? ParticleTypes.EXPLOSION : ParticleTypes.CLOUD, x, c.y, z, 1, 0.2, 0.3, 0.2, 0.02);
+			}
+			Box band = new Box(c.x - outer, c.y - 6, c.z - outer, c.x + outer, c.y + 6, c.z + outer);
+			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, band,
+					e -> e instanceof Monster && e.isAlive())) {
+				double dist = Math.sqrt(target.squaredDistanceTo(c.x, target.getY(), c.z));
+				if (dist < inner || dist > outer) {
+					continue;
+				}
+				float falloff = (float) (1.0 - dist / (EXPLOSION_RADIUS + 4.0));
+				target.damage(world, wave.player().getDamageSources().playerAttack(wave.player()), wave.damage() * falloff);
+				target.takeKnockback(2.5 * falloff, c.x - target.getX(), c.z - target.getZ());
+			}
+		}
+	}
+
 	// ------------------------------------------------------------------ bottes : nuage magique
 
 	/**
@@ -186,6 +264,16 @@ public final class MagicPowers {
 		if (player.getAbilities().flying && !player.isCreative() && player.getCommandTags().contains(CLOUD_TAG)) {
 			ServerWorld world = (ServerWorld) player.getEntityWorld();
 			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() - 0.2, player.getZ(), 4, 0.4, 0.05, 0.4, 0.0);
+		}
+	}
+
+	// ------------------------------------------------------------------ lance : charge fulgurante
+
+	private static void lightningCharge(ServerPlayerEntity player) {
+		if (player.isUsingItem() && EvoliteUpgrade.has(player.getActiveItem(), Upgrade.LIGHTNING_CHARGE)) {
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 10, 2, true, false, false));
+			ServerWorld world = (ServerWorld) player.getEntityWorld();
+			world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 1, player.getZ(), 6, 0.4, 0.5, 0.4, 0.1);
 		}
 	}
 
