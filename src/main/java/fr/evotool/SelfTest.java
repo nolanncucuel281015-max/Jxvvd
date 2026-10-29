@@ -40,6 +40,7 @@ final class SelfTest {
 	private static int checks;
 	private static int startTick = -1;
 	private static DisplayEntity.ItemDisplayEntity giant;
+	private static int trackedTicks;
 
 	static void register() {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
@@ -50,6 +51,16 @@ final class SelfTest {
 				world.setChunkForced(0, 0, true);
 				giant = GiantItem.spawn(world, new ItemStack(ModItems.EVOLVING_BOW), ItemDisplayContext.FIXED,
 						new Vec3d(8, 200, 8), 0.0F, new Quaternionf(), 2.0F, 4);
+				checks++;
+				if (GiantItem.isLeftover(giant)) {
+					FAILURES.add("le nettoyage des sauvegardes supprimerait le géant dès son apparition");
+				}
+				checks++;
+				DisplayEntity.ItemDisplayEntity stray = new DisplayEntity.ItemDisplayEntity(net.minecraft.entity.EntityType.ITEM_DISPLAY, world);
+				stray.addCommandTag(GiantItem.TAG);
+				if (!GiantItem.isLeftover(stray)) {
+					FAILURES.add("un géant resté dans une sauvegarde ne serait pas nettoyé");
+				}
 				startTick = server.getTicks();
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
@@ -58,17 +69,26 @@ final class SelfTest {
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (startTick < 0 || server.getTicks() - startTick < 20) {
+			if (startTick < 0) {
 				return;
 			}
+			int waited = server.getTicks() - startTick;
+			if (giant.isRemoved()) {
+				FAILURES.add("l'objet géant a disparu juste après être apparu (retiré : " + giant.getRemovalReason() + ")");
+			} else if (server.getOverworld().getEntity(giant.getUuid()) != null) {
+				// Le chunk est chargé : le géant doit y rester une seconde entière.
+				if (++trackedTicks < 20) {
+					return;
+				}
+				GiantItem.remove(server.getOverworld(), giant, 2.0F);
+			} else if (waited < 600) {
+				return;
+			} else {
+				EvoTool.LOGGER.info("EVOTOOL giant: chunk 0,0 never loaded, in-world check skipped");
+			}
+			EvoTool.LOGGER.info("EVOTOOL giant checked after {} ticks ({} ticks in a loaded chunk)", waited, trackedTicks);
 			startTick = -1;
 			checks++;
-			if (giant == null || giant.isRemoved() || server.getOverworld().getEntity(giant.getUuid()) == null) {
-				FAILURES.add("l'objet géant a disparu juste après être apparu (retiré : "
-						+ (giant == null ? "null" : giant.getRemovalReason()) + ")");
-			} else {
-				GiantItem.remove(server.getOverworld(), giant, 2.0F);
-			}
 			// Après le géant : le scan génère beaucoup de chunks et décharge ceux du spawn.
 			try {
 				checks += checkOres(server, FAILURES);

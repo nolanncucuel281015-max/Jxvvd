@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.Brightness;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -24,7 +25,7 @@ import org.joml.Vector3f;
  * qui apparaît et disparaît dans un « pfff ».
  */
 public final class GiantItem {
-	private static final String TAG = "evotool_giant";
+	public static final String TAG = "evotool_giant";
 	private static final String OLD_TAG = "evotool_celestial_bow";
 	/** Géants en cours : ceux qu'on trouve au chargement sans être dans cette liste viennent d'une sauvegarde. */
 	private static final Set<UUID> ACTIVE = new HashSet<>();
@@ -34,11 +35,16 @@ public final class GiantItem {
 
 	public static void init() {
 		ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-			boolean tagged = entity.getCommandTags().contains(TAG) || entity.getCommandTags().contains(OLD_TAG);
-			if (tagged && !ACTIVE.contains(entity.getUuid())) {
+			if (isLeftover(entity)) {
 				entity.discard();
 			}
 		});
+	}
+
+	/** Un géant chargé depuis une sauvegarde (son attaque est finie) : il faut le retirer. */
+	public static boolean isLeftover(Entity entity) {
+		boolean tagged = entity.getCommandTags().contains(TAG) || entity.getCommandTags().contains(OLD_TAG);
+		return tagged && !ACTIVE.contains(entity.getUuid());
 	}
 
 	/**
