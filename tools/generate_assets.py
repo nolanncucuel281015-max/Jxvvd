@@ -948,6 +948,189 @@ def spear_elements(stage):
     return E
 
 
+# --------------------------------------------------------------------------- arc (même disposition que l'arc vanilla)
+
+BOW_DEPTH = {  # profondeur de chaque matière (z de / à)
+    "L": (7.25, 8.75), "M": (7.0, 9.0), "G": (7.0, 9.0), "S": (7.8, 8.2),
+    "A": (7.6, 8.4), "H": (7.4, 8.6), "F": (7.5, 8.5), "D": (6.75, 9.25),
+}
+BOW_T1 = (14.5, 1.5)   # pointe du haut (coordonnées pixel, y vers le bas)
+BOW_T2 = (1.5, 14.5)   # pointe du bas
+BOW_C = (1.0, 1.0)     # point de contrôle : l'arc bombe vers le haut à gauche, comme l'arc vanilla
+
+
+def bow_arc(t):
+    a, b, c = (1 - t) ** 2, 2 * (1 - t) * t, t ** 2
+    return (a * BOW_T1[0] + b * BOW_C[0] + c * BOW_T2[0], a * BOW_T1[1] + b * BOW_C[1] + c * BOW_T2[1])
+
+
+def bow_line(grid, p, q, mat, override=False):
+    n = int(max(abs(q[0] - p[0]), abs(q[1] - p[1])) * 4) + 1
+    for i in range(n + 1):
+        x = p[0] + (q[0] - p[0]) * i / n
+        y = p[1] + (q[1] - p[1]) * i / n
+        cell = (int(x), int(y))
+        if 0 <= cell[0] < 16 and 0 <= cell[1] < 16 and (override or cell not in grid):
+            grid[cell] = mat
+
+
+def bow_grid(stage, pull):
+    """Grille 16x16 de l'arc. pull = None (au repos), 0, 1 ou 2 (tension croissante)."""
+    grid = {}
+
+    def arc_cell(t, out=0):
+        x, y = bow_arc(t)
+        ox, oy = (0, -out) if t < 0.5 else (-out, 0)      # vers l'extérieur : en haut / à gauche
+        return int(x) + ox, int(y) + oy
+
+    steps = 200
+    for i in range(steps + 1):
+        t = i / steps
+        mat = "M" if t < 0.07 or t > 0.93 else "G" if 0.42 < t < 0.58 else "L"
+        x, y = bow_arc(t)
+        for cx, cy in ((int(x), int(y)), (int(x + 0.8), int(y + 0.8))):
+            if 0 <= cx < 16 and 0 <= cy < 16:
+                grid[(cx, cy)] = mat
+        if stage >= 7 and 0.1 < t < 0.9:                     # niv. 35 : branches plus épaisses
+            c = arc_cell(t, 1)
+            grid.setdefault(c, "L")
+
+    def put(cell, mat):
+        if 0 <= cell[0] < 16 and 0 <= cell[1] < 16:
+            grid[cell] = mat
+
+    if stage >= 1:   # niv. 5 : pointes renforcées
+        put((15, 1), "M")
+        put((1, 15), "M")
+    if stage >= 3:   # niv. 15 : gemme sur la poignée
+        put(arc_cell(0.5), "D")
+    if stage >= 4:   # niv. 20 : incrustations
+        put(arc_cell(0.25), "D")
+        put(arc_cell(0.75), "D")
+    if stage >= 5:   # niv. 25 : bagues de métal
+        put(arc_cell(0.35), "M")
+        put(arc_cell(0.65), "M")
+    if stage >= 6:   # niv. 30 : pointes acérées
+        put((14, 0), "M")
+        put((0, 14), "M")
+    if stage >= 8:   # niv. 40 : lames sur le dos de l'arc
+        for t in (0.17, 0.22, 0.27, 0.73, 0.78, 0.83):
+            put(arc_cell(t, 2 if stage >= 7 else 1), "M")
+    if stage >= 10:  # niv. 50 : gros cristal derrière la poignée
+        put(arc_cell(0.5, 1), "D")
+        put(arc_cell(0.5, 2), "D")
+    if stage >= 11:  # niv. 55 : runes
+        put(arc_cell(0.12), "D")
+        put(arc_cell(0.88), "D")
+    if stage >= 12:  # niv. 60 : pointes en gemme
+        put((14, 1), "D")
+        put((1, 14), "D")
+    if stage >= 15:  # niv. 75 : ailes aux extrémités
+        for t, out in ((0.08, 2), (0.12, 3), (0.92, 2), (0.88, 3)):
+            put(arc_cell(t, out), "M")
+    if stage >= 18:  # niv. 90 : branches serties
+        for t in (0.2, 0.3, 0.4, 0.6, 0.7, 0.8):
+            put(arc_cell(t), "D")
+
+    # corde : droite au repos, tirée vers le bas à droite quand on bande l'arc
+    if pull is None:
+        bow_line(grid, BOW_T1, BOW_T2, "S")
+    else:
+        d = (1.5, 2.5, 3.5)[pull]
+        nock = (8 + d, 8 + d)
+        bow_line(grid, BOW_T1, nock, "S")
+        bow_line(grid, nock, BOW_T2, "S")
+        # flèche : de l'encoche vers le coin en haut à gauche
+        k = int(nock[0])
+        for i in range(2, k):
+            grid[(i, i)] = "A"
+        for cell in ((1, 1), (2, 1), (1, 2)):
+            grid[cell] = "H"
+        for cell in ((k, k), (k - 1, k), (k, k - 1)):
+            if 0 <= cell[0] < 16 and 0 <= cell[1] < 16:
+                grid[cell] = "F"
+    return grid
+
+
+def bow_elements(stage, pull):
+    E, add = builder()
+    grid = bow_grid(stage, pull)
+    tex = {"L": "handle", "M": "metal", "G": "grip", "S": "gem" if stage >= 2 else "string",
+           "A": "handle", "H": "gem" if stage >= 9 else "metal", "F": "gem" if stage >= 13 else "grip", "D": "gem"}
+    for y in range(16):
+        x = 0
+        while x < 16:
+            mat = grid.get((x, y))
+            if mat is None:
+                x += 1
+                continue
+            end = x
+            while end + 1 < 16 and grid.get((end + 1, y)) == mat:
+                end += 1
+            z0, z1 = BOW_DEPTH[mat]
+            add([x, 15 - y, z0], [end + 1, 16 - y, z1], tex[mat])
+            x = end + 1
+    for (cx, cy, s) in ((-1.5, 17.5, 14), (17.5, -1.5, 14), (-2.5, 13, 16), (13, 18.5, 17), (18.5, 3, 17), (6, 20, 20), (20, 6, 20)):
+        if stage >= s:
+            crystal(add, cx, cy)
+    return E
+
+
+def bow_model(stage, pull):
+    st = f"{MOD}:item/pickaxe/stage{stage}_"
+    return {
+        "credit": "Evo Tool - arc 3D généré par tools/generate_assets.py",
+        "gui_light": "front",
+        "textures": {"particle": st + "handle", "handle": st + "handle", "grip": st + "grip",
+                     "metal": st + "metal", "gem": st + "gem", "string": f"{MOD}:item/bow/string"},
+        "elements": bow_elements(stage, pull),
+        # mêmes transformations que l'arc vanilla (models/item/bow.json + item/generated)
+        "display": {
+            "thirdperson_righthand": {"rotation": [-80, 260, -40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
+            "thirdperson_lefthand": {"rotation": [-80, -280, 40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
+            "firstperson_righthand": {"rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68]},
+            "firstperson_lefthand": {"rotation": [0, 90, -25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68]},
+            "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
+            "head": {"rotation": [0, 180, 0], "translation": [0, 13, 7], "scale": [1, 1, 1]},
+            "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+            "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+        },
+    }
+
+
+def gen_bow():
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            v = 228 - ((x + y) % 3) * 10
+            img.putpixel((x, y), (v, v, v + 4, 255))
+    save_png(img, "item", "bow", "string")
+    names = {None: "rest", 0: "pulling_0", 1: "pulling_1", 2: "pulling_2"}
+
+    def ref(i, pull):
+        return {"type": "minecraft:model", "model": f"{MOD}:item/evolving_bow_stage{i}_{names[pull]}"}
+
+    for i in range(len(STAGES)):
+        for pull in names:
+            write_json(os.path.join(ASSETS, "models", "item", f"evolving_bow_stage{i}_{names[pull]}.json"), bow_model(i, pull))
+
+    def by_stage(i):
+        # comme items/bow.json : au repos, puis 3 étapes de tension selon la durée d'utilisation
+        return {
+            "type": "minecraft:condition", "property": "minecraft:using_item",
+            "on_false": ref(i, None),
+            "on_true": {"type": "minecraft:range_dispatch", "property": "minecraft:use_duration", "scale": 0.05,
+                        "fallback": ref(i, 0),
+                        "entries": [{"threshold": 0.65, "model": ref(i, 1)}, {"threshold": 0.9, "model": ref(i, 2)}]},
+        }
+
+    write_json(os.path.join(ASSETS, "items", "evolving_bow.json"), {
+        "model": {"type": "minecraft:range_dispatch", "property": "minecraft:custom_model_data", "index": 0,
+                  "fallback": by_stage(0),
+                  "entries": [{"threshold": i, "model": by_stage(i)} for i in range(len(STAGES))]}
+    })
+
+
 TOOL_MODELS = {
     # id: (éléments, hauteur approximative pour l'échelle d'affichage)
     "evolving_sword": (sword_elements, 34),
@@ -1608,6 +1791,12 @@ def gen_data():
             "key": {"E": f"{MOD}:evolium"},
             "result": {"id": f"{MOD}:{item}", "count": 1},
         })
+    write_json(os.path.join(rec, "evolving_bow.json"), {
+        "type": "minecraft:crafting_shaped", "category": "equipment",
+        "pattern": [" EX", "E X", " EX"],
+        "key": {"E": f"{MOD}:evolium", "X": "minecraft:string"},
+        "result": {"id": f"{MOD}:evolving_bow", "count": 1},
+    })
     write_json(os.path.join(rec, "evolium_mace.json"), {
         "type": "minecraft:crafting_shaped",
         "category": "equipment",
@@ -1680,6 +1869,9 @@ def gen_data():
                {"replace": False, "values": [o for o in ore_ids if "evolium" not in o]})
     write_json(os.path.join(DATA, "tags", "item", "evolium_tool_materials.json"),
                {"replace": False, "values": [f"{MOD}:evolium"]})
+    # l'arc accepte les enchantements d'arc (Puissance, Frappe, Flamme, Infinité…)
+    write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "bow.json"),
+               {"replace": False, "values": [f"{MOD}:evolving_bow"]})
     # la mace accepte Densité, Brèche et Charge de vent comme la mace vanilla
     write_json(os.path.join(tags, "minecraft", "tags", "item", "enchantable", "mace.json"),
                {"replace": False, "values": [f"{MOD}:evolium_mace"]})
@@ -1785,5 +1977,6 @@ if __name__ == "__main__":
     gen_textures()
     gen_models()
     gen_armor()
+    gen_bow()
     gen_data()
     print("Ressources générées dans", os.path.normpath(ROOT))

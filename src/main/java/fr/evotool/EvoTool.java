@@ -10,6 +10,7 @@ import fr.evotool.mining.AxeLaser;
 import fr.evotool.mining.EvoMiningHandler;
 import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
+import fr.evotool.upgrade.CelestialBow;
 import fr.evotool.upgrade.MagicPowers;
 import fr.evotool.weapon.CombatHandler;
 import fr.evotool.world.ModWorldGen;
@@ -42,6 +43,7 @@ public class EvoTool implements ModInitializer {
 		CombatHandler.init();
 		ArmorHandler.init();
 		MagicPowers.init();
+		CelestialBow.init();
 		if (Boolean.getBoolean("evotool.selftest")) {
 			SelfTest.register();
 		}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " EX",
+    "E X",
+    " EX"
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "X": "minecraft:string"
+  },
+  "result": {
+    "id": "evotool:evolving_bow",
+    "count": 1
+  }
+}

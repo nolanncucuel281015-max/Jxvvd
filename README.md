@@ -47,6 +47,23 @@ coupé est replanté. Recharge : 10 secondes.
 | 20 / 40 / 60 / 80 | Labour **et** récolte en zone 3x3, 5x5, 7x7, 9x9 |
 | 100 | **Pousse instantanée** : les cultures replantées sont déjà mûres |
 
+## Arc — en tuant des monstres avec ses flèches
+
+Craft comme l'arc normal : 3 évolium + 3 ficelles. Un monstre tué par une flèche de l'Arc Évolutif lui donne de l'XP
+(même courbe que l'épée). Il change de forme tous les 5 niveaux (21 formes 3D, avec l'animation de tension).
+
+| Niveau | Bonus |
+|-------:|-------|
+| 10 | Vol de vie |
+| 15 / 25 / 35 / 45 / 55 | Puissance I à V |
+| 20 / 40 | Frappe I et II |
+| 30 | Flamme |
+| 50 | Infinité + foudre (20 % de chance par flèche) |
+| 100 | Exécution |
+
+**Arc céleste** (niveau 100 + amélioré à l'évolite) : clic droit, un **arc géant** apparaît devant toi et tire
+**48 flèches** en une demi-seconde, droit sur les monstres à 48 blocs. Recharge : 3 secondes.
+
 ## Épée, lance et masse — en tuant des monstres
 
 XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
@@ -137,6 +154,7 @@ avec un pouvoir magique :
 | Pioche, pelle, hache, houe | **Télékinésie** : les objets cassés vont directement dans l'inventaire |
 | Épée | **Slash magique** : clic droit, une vague tranchante frappe tout sur 8 blocs devant toi |
 | Lance | **Charge fulgurante** : pendant la charge, Vitesse III et chaque coup foudroie la cible |
+| Arc | **Arc céleste** (au niveau 100) : clic droit, un arc géant tire une pluie de flèches sur les monstres |
 | Masse | **Envol** : clic droit, bond dans les airs sans dégâts de chute (parfait pour l'attaque écrasante) |
 | Casque | **Vue du chevalier** : les monstres à 24 blocs brillent à travers les murs |
 | Plastron | **Bouclier magique** : 4 cœurs dorés permanents qui se rechargent hors combat |
@@ -161,8 +179,8 @@ Blocs : 1 XP par bloc minable avec l'outil, 6 par minerai, 15 par rubis/saphir, 
 /upgrade <outil> <niveau>
 ```
 
-- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `spear`, `mace`, `helmet`, `chestplate`, `leggings`, `boots`
-  (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `lance`, `masse`, `casque`, `plastron`, `jambieres`, `bottes`)
+- `<outil>` : `pickaxe`, `shovel`, `axe`, `hoe`, `sword`, `spear`, `bow`, `mace`, `helmet`, `chestplate`, `leggings`, `boots`
+  (ou en français : `pioche`, `pelle`, `hache`, `houe`, `epee`, `lance`, `arc`, `masse`, `casque`, `plastron`, `jambieres`, `bottes`)
 - `armor` / `armure` : les 4 pièces d'armure d'un coup (ex. `/upgrade armor 100`)
 - `<niveau>` : de 0 à 100
 
@@ -184,7 +202,7 @@ Chaque gemme a son bloc de stockage (9 gemmes).
 
 Comme les outils en diamant, avec de l'**évolium** à la place du diamant :
 pioche (3 + 2 bâtons), pelle (1 + 2), hache (3 + 2), houe (2 + 2), épée (2 + 1),
-lance (1 évolium en haut à droite + 2 bâtons en diagonale),
+lance (1 évolium en haut à droite + 2 bâtons en diagonale), arc (3 évolium + 3 ficelles),
 casque (5), plastron (8), jambières (7), bottes (4).
 
 La **masse** : un bloc d'évolium au-dessus d'un bâton.
