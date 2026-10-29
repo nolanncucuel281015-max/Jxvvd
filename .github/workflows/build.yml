@@ -63,6 +63,9 @@ jobs:
               if unzip -l "$JAR" "$f" >/dev/null 2>&1; then echo "=== $f ($JAR)"; unzip -p "$JAR" "$f"; echo; fi
             done
             unzip -l "$JAR" | awk '{print $4}' | grep -i -E 'spear|lunge' | grep -v -E '^net/' | head -40
+            for png in assets/minecraft/textures/item/netherite_spear_in_hand.png assets/minecraft/textures/item/netherite_spear.png assets/minecraft/textures/item/netherite_sword.png; do
+              if unzip -l "$JAR" "$png" >/dev/null 2>&1; then echo "PNGB64 $png $(unzip -p "$JAR" "$png" | base64 -w0)"; fi
+            done
             for t in $(unzip -l "$JAR" | awk '{print $4}' | grep 'data/minecraft/tags/item/enchantable/'); do
               if unzip -p "$JAR" "$t" | grep -q -i spear; then echo "=== $t"; unzip -p "$JAR" "$t"; echo; fi
             done
