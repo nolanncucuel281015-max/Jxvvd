@@ -64,8 +64,9 @@ anneau runique (90) et couronne de pointes de lumière (100).
 | 50 | Infinité + foudre (20 % de chance par flèche) |
 | 100 | Exécution |
 
-**Arc céleste** (niveau 100 + amélioré à l'évolite) : clic droit, un **arc géant** apparaît devant toi et tire
-**48 flèches** en une demi-seconde, droit sur les monstres à 48 blocs. Recharge : 3 secondes.
+**Arc céleste** (niveau 100 + amélioré à l'évolite) : clic droit, **ton arc apparaît en géant** devant toi
+(« pfff », 6 blocs de haut, bandé) et suit ton regard. Il tire **une flèche toutes les demi-secondes** (20 flèches),
+droit sur les monstres à 48 blocs, puis disparaît. Recharge : 12 secondes en tout.
 
 ## Épée, lance et masse — en tuant des monstres
 
@@ -157,7 +158,7 @@ avec un pouvoir magique :
 | Pioche, pelle, hache, houe | **Télékinésie** : les objets cassés vont directement dans l'inventaire |
 | Épée | **Slash magique** : clic droit, une vague tranchante frappe tout sur 8 blocs devant toi |
 | Lance | **Charge fulgurante** : pendant la charge, Vitesse III et chaque coup foudroie la cible |
-| Arc | **Arc céleste** (au niveau 100) : clic droit, un arc géant tire une pluie de flèches sur les monstres |
+| Arc | **Arc céleste** (au niveau 100) : clic droit, ton arc apparaît en géant et tire une flèche toutes les demi-secondes sur les monstres |
 | Masse | **Envol** : clic droit, bond dans les airs sans dégâts de chute (parfait pour l'attaque écrasante) |
 | Casque | **Vue du chevalier** : les monstres à 24 blocs brillent à travers les murs |
 | Plastron | **Bouclier magique** : 4 cœurs dorés permanents qui se rechargent hors combat |

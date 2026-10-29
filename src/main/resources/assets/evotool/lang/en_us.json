@@ -124,6 +124,6 @@
   "tooltip.evotool.axe_hint": "Right-click (not on a log): lumberjack laser, cuts trees within 50 blocks",
   "item.evotool.evolving_bow": "Evolving Bow",
   "upgrade.evotool.celestial_bow": "Celestial Bow",
-  "upgrade.evotool.celestial_bow.desc": "At level 100: right-click, a giant bow fires a rain of arrows straight at monsters.",
+  "upgrade.evotool.celestial_bow.desc": "At level 100: right-click, your bow appears giant-sized and fires an arrow every half second at monsters.",
   "tooltip.evotool.bow_hint": "Level 100 + evolite: right-click = celestial bow"
 }

@@ -124,6 +124,6 @@
   "tooltip.evotool.axe_hint": "Clic droit (pas sur un tronc) : laser bûcheron, coupe les arbres à 50 blocs",
   "item.evotool.evolving_bow": "Arc Évolutif",
   "upgrade.evotool.celestial_bow": "Arc céleste",
-  "upgrade.evotool.celestial_bow.desc": "Au niveau 100 : clic droit, un arc géant tire une pluie de flèches droit sur les monstres.",
+  "upgrade.evotool.celestial_bow.desc": "Au niveau 100 : clic droit, ton arc apparaît en géant et tire une flèche toutes les demi-secondes sur les monstres.",
   "tooltip.evotool.bow_hint": "Niveau 100 + évolite : clic droit = arc céleste"
 }
