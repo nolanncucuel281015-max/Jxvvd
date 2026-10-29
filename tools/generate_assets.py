@@ -958,12 +958,24 @@ TOOL_MODELS = {
 }
 
 
+def spear_display():
+    """Reprend la tenue de la lance vanilla (item/spear_in_hand), conçue pour un sprite en diagonale.
+    Notre modèle est vertical : on ajoute -45° autour de Z (rotation appliquée en premier),
+    et on adapte l'échelle (sprite de ~22,6 unités en diagonale, notre lance mesure ~45 unités)."""
+    d = display(36)
+    d["thirdperson_righthand"] = {"rotation": [5, 270, -85], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
+    d["thirdperson_lefthand"] = {"rotation": [5, -270, 85], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
+    d["firstperson_righthand"] = {"rotation": [-20, 90, -80], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
+    d["firstperson_lefthand"] = {"rotation": [-20, -90, 80], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
+    return d
+
+
 def tool_model(item, stage):
     elements, height = TOOL_MODELS[item]
     model = pickaxe_model(stage)
     model["credit"] = "Evo Tool - modèle 3D généré par tools/generate_assets.py"
     model["elements"] = elements(stage)
-    model["display"] = display(height)
+    model["display"] = spear_display() if item == "evolving_spear" else display(height)
     return model
 
 
@@ -1515,7 +1527,10 @@ def gen_models():
     for item in TOOL_MODELS:
         for i in range(len(STAGES)):
             write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"), tool_model(item, i))
-        write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item))
+        definition = stage_dispatch(item)
+        if item == "evolving_spear":
+            definition["swap_animation_scale"] = 1.95                # comme les lances vanilla
+        write_json(os.path.join(ASSETS, "items", f"{item}.json"), definition)
 
     write_json(os.path.join(ASSETS, "items", "evolving_pickaxe.json"), stage_dispatch("evolving_pickaxe"))
 

@@ -156,5 +156,6 @@
         }
       }
     ]
-  }
+  },
+  "swap_animation_scale": 1.95
 }
