@@ -48,8 +48,6 @@ final class SelfTest {
 				// Objet géant : il doit rester dans le monde (bug corrigé : il était supprimé dès son apparition).
 				ServerWorld world = server.getOverworld();
 				world.setChunkForced(0, 0, true);
-				// Le scan des minerais prend du temps : on recharge le chunk avant d'y faire apparaître le géant.
-				world.getChunk(0, 0);
 				giant = GiantItem.spawn(world, new ItemStack(ModItems.EVOLVING_BOW), ItemDisplayContext.FIXED,
 						new Vec3d(8, 200, 8), 0.0F, new Quaternionf(), 2.0F, 4);
 				startTick = server.getTicks();
@@ -71,6 +69,13 @@ final class SelfTest {
 			} else {
 				GiantItem.remove(server.getOverworld(), giant, 2.0F);
 			}
+			// Après le géant : le scan génère beaucoup de chunks et décharge ceux du spawn.
+			try {
+				checks += checkOres(server, FAILURES);
+			} catch (Throwable t) {
+				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
+				FAILURES.add("crash: " + t);
+			}
 			finish(server);
 		});
 	}
@@ -83,6 +88,48 @@ final class SelfTest {
 			EvoTool.LOGGER.error("EVOTOOL SELFTEST FAILED ({} failures / {} checks)", FAILURES.size(), checks);
 		}
 		server.stop(false);
+	}
+
+	private static int checkOres(MinecraftServer server, List<String> failures) {
+		int checks = 0;
+		// Génération des minerais : on génère 64 chunks et on compte les minerais du mod sous terre.
+		checks++;
+		ServerWorld overworld = server.getOverworld();
+		int evolium = 0;
+		int ruby = 0;
+		int sapphire = 0;
+		int diamond = 0;
+		for (int cx = 40; cx < 48; cx++) {
+			for (int cz = 40; cz < 48; cz++) {
+				net.minecraft.world.chunk.Chunk chunk = overworld.getChunk(cx, cz);
+				for (int x = 0; x < 16; x++) {
+					for (int z = 0; z < 16; z++) {
+						for (int y = -64; y < 64; y++) {
+							net.minecraft.block.BlockState state = chunk.getBlockState(new net.minecraft.util.math.BlockPos(cx * 16 + x, y, cz * 16 + z));
+							if (state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_EVOLIUM_ORE)) {
+								evolium++;
+							} else if (state.isOf(fr.evotool.block.ModBlocks.RUBY_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_RUBY_ORE)) {
+								ruby++;
+							} else if (state.isOf(fr.evotool.block.ModBlocks.SAPPHIRE_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_SAPPHIRE_ORE)) {
+								sapphire++;
+							} else if (state.isOf(net.minecraft.block.Blocks.DIAMOND_ORE) || state.isOf(net.minecraft.block.Blocks.DEEPSLATE_DIAMOND_ORE)) {
+								diamond++;
+							}
+						}
+					}
+				}
+			}
+		}
+		EvoTool.LOGGER.info("EVOTOOL ORES in 64 chunks: evolium={} diamond={} ruby={} sapphire={}", evolium, diamond, ruby, sapphire);
+		if (evolium == 0 || ruby == 0 || sapphire == 0) {
+			failures.add("minerais absents de la génération : évolium=" + evolium + " rubis=" + ruby + " saphir=" + sapphire);
+		}
+		// L'évolium doit rester plus rare que le diamant, mais pas introuvable.
+		checks++;
+		if (evolium >= diamond || evolium * 4 < diamond) {
+			failures.add("rareté de l'évolium : " + evolium + " blocs pour " + diamond + " diamants (attendu entre 1/4 et 1 fois le diamant)");
+		}
+		return checks;
 	}
 
 	private static int run(MinecraftServer server, List<String> failures) {
@@ -125,44 +172,6 @@ final class SelfTest {
 			if (size < expected || size > expected * 1.6) {
 				failures.add("tranchée de la pioche (yaw " + yaw + ") : " + size + " colonnes au lieu d'environ " + expected);
 			}
-		}
-
-		// Génération des minerais : on génère 64 chunks et on compte les minerais du mod sous terre.
-		checks++;
-		ServerWorld overworld = server.getOverworld();
-		int evolium = 0;
-		int ruby = 0;
-		int sapphire = 0;
-		int diamond = 0;
-		for (int cx = 40; cx < 48; cx++) {
-			for (int cz = 40; cz < 48; cz++) {
-				net.minecraft.world.chunk.Chunk chunk = overworld.getChunk(cx, cz);
-				for (int x = 0; x < 16; x++) {
-					for (int z = 0; z < 16; z++) {
-						for (int y = -64; y < 64; y++) {
-							net.minecraft.block.BlockState state = chunk.getBlockState(new net.minecraft.util.math.BlockPos(cx * 16 + x, y, cz * 16 + z));
-							if (state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_EVOLIUM_ORE)) {
-								evolium++;
-							} else if (state.isOf(fr.evotool.block.ModBlocks.RUBY_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_RUBY_ORE)) {
-								ruby++;
-							} else if (state.isOf(fr.evotool.block.ModBlocks.SAPPHIRE_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_SAPPHIRE_ORE)) {
-								sapphire++;
-							} else if (state.isOf(net.minecraft.block.Blocks.DIAMOND_ORE) || state.isOf(net.minecraft.block.Blocks.DEEPSLATE_DIAMOND_ORE)) {
-								diamond++;
-							}
-						}
-					}
-				}
-			}
-		}
-		EvoTool.LOGGER.info("EVOTOOL ORES in 64 chunks: evolium={} diamond={} ruby={} sapphire={}", evolium, diamond, ruby, sapphire);
-		if (evolium == 0 || ruby == 0 || sapphire == 0) {
-			failures.add("minerais absents de la génération : évolium=" + evolium + " rubis=" + ruby + " saphir=" + sapphire);
-		}
-		// L'évolium doit rester plus rare que le diamant, mais pas introuvable.
-		checks++;
-		if (evolium >= diamond || evolium * 4 < diamond) {
-			failures.add("rareté de l'évolium : " + evolium + " blocs pour " + diamond + " diamants (attendu entre 1/4 et 1 fois le diamant)");
 		}
 
 		// Génération des minerais.
