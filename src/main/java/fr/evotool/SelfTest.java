@@ -112,10 +112,16 @@ final class SelfTest {
 			failures.add("Élan vanilla non converti sur la lance");
 		}
 
-		// Taille du puits de la pioche géante selon le niveau.
-		checks++;
-		if (PickaxeSlam.radius(0) != 0 || PickaxeSlam.radius(20) != 1 || PickaxeSlam.radius(50) != 2 || PickaxeSlam.radius(100) != 3) {
-			failures.add("taille du puits de la pioche géante");
+		// Tranchée du slash de la pioche : 100 x 7 x 7, quelle que soit la direction (sans trous en diagonale).
+		for (float yaw : new float[] {0.0F, 37.0F, 45.0F, 90.0F, 200.0F}) {
+			checks++;
+			Vec3d forward = PickaxeSlam.horizontal(yaw);
+			Vec3d right = new Vec3d(-forward.z, 0, forward.x);
+			int size = PickaxeSlam.trench(net.minecraft.util.math.BlockPos.ORIGIN, forward, right, 2, 2 + PickaxeSlam.LENGTH).size();
+			int expected = PickaxeSlam.LENGTH * PickaxeSlam.WIDTH * PickaxeSlam.HEIGHT;
+			if (size < expected || size > expected * 1.6) {
+				failures.add("tranchée de la pioche (yaw " + yaw + ") : " + size + " blocs au lieu d'environ " + expected);
+			}
 		}
 
 		// Génération des minerais.

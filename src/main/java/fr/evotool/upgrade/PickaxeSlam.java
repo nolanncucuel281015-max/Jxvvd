@@ -4,7 +4,9 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProgression;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
@@ -18,7 +20,6 @@ import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -26,63 +27,59 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
- * Pioche Évolutive, clic droit : la pioche du joueur apparaît en géant au-dessus de l'endroit visé,
- * s'abat dans le sol et creuse un puits jusqu'à la bedrock (1x1, puis 3x3, 5x5 et 7x7 en évoluant).
- * Seuls les minerais rapportent quelque chose (dans l'inventaire avec la télékinésie).
+ * Pioche Évolutive niveau 100 améliorée à l'évolite, clic droit : la pioche du joueur apparaît en géant,
+ * se lève au-dessus de lui puis s'abat vers l'avant (slash). Une onde tranchante creuse alors une tranchée
+ * de 100 blocs de long, 7 de large et 7 de haut droit devant. Seuls les minerais rapportent quelque chose.
  */
 public final class PickaxeSlam {
+	public static final int LENGTH = 100;
+	public static final int WIDTH = 7;
+	public static final int HEIGHT = 7;
+	private static final int START_DISTANCE = 2;
+	private static final int BLOCKS_PER_TICK = 5;
+
 	private static final int COOLDOWN = 300;
 	private static final int GROW_TICKS = 8;
-	private static final int SLAM_TICK = 14;
-	private static final int FALL_TICKS = 4;
-	private static final int IMPACT_TICK = SLAM_TICK + FALL_TICKS;
-	private static final int VANISH_TICK = IMPACT_TICK + 30;
+	private static final int SWING_TICK = 12;
+	private static final int SWING_TICKS = 4;
+	private static final int IMPACT_TICK = SWING_TICK + SWING_TICKS;
+	private static final int VANISH_TICK = IMPACT_TICK + 24;
 	private static final float SCALE = 5.0F;
-	private static final double RAISED = 14.0;
-	/** Distance du centre de la pioche géante à la pointe de son fer (pioche à l'envers), en blocs. */
-	private static final double HEAD_OFFSET = 2.9;
-	private static final int LAYERS_PER_TICK = 6;
-	private static final double REACH = 32.0;
-	/** Pioche à l'envers : le fer vers le sol. */
-	private static final Quaternionf UPSIDE_DOWN = new Quaternionf().rotationZ((float) Math.PI);
+	/** Distance du centre du modèle de pioche au bas du manche, avant mise à l'échelle (en blocs). */
+	private static final float HANDLE_BOTTOM = 0.8F;
 
-	private static final class Slam {
+	private static final class Slash {
 		final ServerWorld world;
 		final ServerPlayerEntity player;
 		final ItemStack pickaxe;
-		final BlockPos target;
-		final int radius;
+		final BlockPos origin;
+		final Vec3d forward;
+		final Vec3d right;
 		final int startTick;
-		final boolean telekinesis;
 		final DisplayEntity.ItemDisplayEntity giant;
-		int digY;
-		boolean digging;
-		boolean done;
+		int carved;
 		int xp;
 
-		Slam(ServerWorld world, ServerPlayerEntity player, ItemStack pickaxe, BlockPos target, int radius, int startTick,
-				DisplayEntity.ItemDisplayEntity giant) {
+		Slash(ServerWorld world, ServerPlayerEntity player, ItemStack pickaxe, int startTick, DisplayEntity.ItemDisplayEntity giant) {
 			this.world = world;
 			this.player = player;
 			this.pickaxe = pickaxe;
-			this.target = target;
-			this.radius = radius;
+			this.origin = player.getBlockPos();
+			this.forward = horizontal(player.getYaw());
+			this.right = new Vec3d(-forward.z, 0, forward.x);
 			this.startTick = startTick;
-			this.telekinesis = EvoliteUpgrade.has(pickaxe, EvoliteUpgrade.Upgrade.TELEKINESIS);
 			this.giant = giant;
-			this.digY = target.getY();
 		}
 	}
 
-	private static final List<Slam> SLAMS = new ArrayList<>();
+	private static final List<Slash> SLASHES = new ArrayList<>();
 
 	private PickaxeSlam() {
 	}
@@ -92,171 +89,162 @@ public final class PickaxeSlam {
 		ServerTickEvents.END_SERVER_TICK.register(server -> tick(server.getTicks()));
 	}
 
-	/** Taille du puits selon le niveau : 1x1, 3x3 (niv. 20), 5x5 (niv. 50), 7x7 (niv. 100). */
-	public static int radius(int level) {
-		if (level >= EvoProgression.MAX_LEVEL) {
-			return 3;
+	public static boolean isReady(ItemStack stack) {
+		return EvoProgression.kindOf(stack) == EvoKind.PICKAXE
+				&& EvoliteUpgrade.isUpgraded(stack)
+				&& EvoProgression.get(stack).level() >= EvoProgression.MAX_LEVEL;
+	}
+
+	/** Direction horizontale du regard (yaw Minecraft : 0 = sud, +Z). */
+	public static Vec3d horizontal(float yaw) {
+		double rad = Math.toRadians(yaw);
+		return new Vec3d(-Math.sin(rad), 0, Math.cos(rad));
+	}
+
+	/** Les blocs de la tranchée situés entre deux distances (en blocs) devant le joueur. */
+	public static Set<BlockPos> trench(BlockPos origin, Vec3d forward, Vec3d right, double from, double to) {
+		Set<BlockPos> positions = new LinkedHashSet<>();
+		double half = (WIDTH - 1) / 2.0;
+		for (double d = from; d < to; d += 0.5) {
+			for (double w = -half - 0.25; w <= half + 0.25; w += 0.5) {
+				double x = origin.getX() + 0.5 + forward.x * d + right.x * w;
+				double z = origin.getZ() + 0.5 + forward.z * d + right.z * w;
+				for (int h = 0; h < HEIGHT; h++) {
+					positions.add(BlockPos.ofFloored(x, origin.getY() + h, z));
+				}
+			}
 		}
-		return level >= 50 ? 2 : level >= 20 ? 1 : 0;
+		return positions;
 	}
 
 	private static ActionResult onUse(PlayerEntity player, World world, Hand hand) {
 		ItemStack pickaxe = player.getStackInHand(hand);
-		if (EvoProgression.kindOf(pickaxe) != EvoKind.PICKAXE) {
+		if (!isReady(pickaxe)) {
 			return ActionResult.PASS;
 		}
 		if (player.getItemCooldownManager().isCoolingDown(pickaxe)) {
 			return ActionResult.FAIL;
 		}
-		if (!(world instanceof ServerWorld serverWorld) || !(player instanceof ServerPlayerEntity serverPlayer)) {
-			return ActionResult.SUCCESS;
-		}
-		BlockPos target = findTarget(serverWorld, serverPlayer);
-		if (target == null) {
-			return ActionResult.PASS;
-		}
 		player.getItemCooldownManager().set(pickaxe, COOLDOWN);
-
-		ItemStack shown = pickaxe.copyWithCount(1);
-		shown.remove(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE);
-		float stage = EvoProgression.stage(EvoProgression.get(pickaxe).level());
-		shown.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(List.of(stage), List.of(), List.of(), List.of()));
-		Vec3d raised = Vec3d.ofBottomCenter(target).add(0, 1 + HEAD_OFFSET + RAISED, 0);
-		DisplayEntity.ItemDisplayEntity giant = GiantItem.spawn(serverWorld, shown, ItemDisplayContext.NONE, raised,
-				player.getYaw(), UPSIDE_DOWN, SCALE, GROW_TICKS);
-		serverWorld.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.5F, 0.7F);
-		SLAMS.add(new Slam(serverWorld, serverPlayer, pickaxe, target, radius(EvoProgression.get(pickaxe).level()),
-				serverWorld.getServer().getTicks(), giant));
+		if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
+			ItemStack shown = pickaxe.copyWithCount(1);
+			shown.remove(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE);
+			float stage = EvoProgression.stage(EvoProgression.get(pickaxe).level());
+			shown.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(List.of(stage), List.of(), List.of(), List.of()));
+			Vec3d pivot = pivot(serverPlayer);
+			DisplayEntity.ItemDisplayEntity giant = GiantItem.spawn(serverWorld, shown, ItemDisplayContext.NONE, pivot,
+					serverPlayer.getYaw(), new Quaternionf(), 0.2F, 1);
+			// Levée au-dessus du joueur (fer légèrement en arrière), en grandissant.
+			pose(giant, -35, SCALE, GROW_TICKS);
+			serverWorld.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.5F, 0.7F);
+			SLASHES.add(new Slash(serverWorld, serverPlayer, pickaxe, serverWorld.getServer().getTicks(), giant));
+		}
 		player.swingHand(hand);
 		return ActionResult.SUCCESS;
 	}
 
-	/** Le bloc visé (jusqu'à 32 blocs), sinon le sol 3 blocs devant le joueur. */
-	private static BlockPos findTarget(ServerWorld world, ServerPlayerEntity player) {
-		HitResult hit = player.raycast(REACH, 0.0F, false);
-		if (hit instanceof BlockHitResult blockHit && hit.getType() == HitResult.Type.BLOCK) {
-			return blockHit.getBlockPos();
-		}
-		Vec3d look = player.getRotationVector();
-		BlockPos pos = BlockPos.ofFloored(player.getX() + look.x * 3, player.getY() - 1, player.getZ() + look.z * 3);
-		for (int i = 0; i < 6 && world.getBlockState(pos).isAir(); i++) {
-			pos = pos.down();
-		}
-		return world.getBlockState(pos).isAir() ? null : pos;
+	/** Le point où l'on « tient » la pioche géante : au-dessus et un peu devant le joueur. */
+	private static Vec3d pivot(ServerPlayerEntity player) {
+		Vec3d f = horizontal(player.getYaw());
+		return new Vec3d(player.getX() + f.x * 1.5, player.getY() + 2.0, player.getZ() + f.z * 1.5);
+	}
+
+	/**
+	 * Oriente la pioche géante en la faisant pivoter autour du bas de son manche.
+	 * {@code angle} : 0 = verticale, positif = le fer bascule vers l'avant.
+	 */
+	private static void pose(DisplayEntity.ItemDisplayEntity giant, float angle, float scale, int ticks) {
+		Quaternionf rotation = new Quaternionf().rotationX((float) Math.toRadians(angle));
+		// translation = -R·(S·h) avec h le bas du manche : le bas du manche reste sur la position de l'entité.
+		Vector3f handle = new Vector3f(0, -HANDLE_BOTTOM * scale, 0);
+		rotation.transform(handle);
+		giant.setInterpolationDuration(ticks);
+		giant.setStartInterpolation(0);
+		giant.setTransformation(new net.minecraft.util.math.AffineTransformation(handle.negate(), rotation,
+				new Vector3f(scale, scale, scale), new Quaternionf()));
 	}
 
 	private static void tick(int tick) {
-		for (Iterator<Slam> it = SLAMS.iterator(); it.hasNext(); ) {
-			Slam slam = it.next();
-			int step = tick - slam.startTick;
-			if (slam.player.isRemoved() && !slam.digging) {
-				GiantItem.remove(slam.world, slam.giant, SCALE);
-				it.remove();
-				continue;
-			}
-			if (step == SLAM_TICK) {
-				// La pioche s'abat : déplacement interpolé côté client (durée de téléportation).
-				slam.giant.setTeleportDuration(FALL_TICKS);
-				Vec3d impact = Vec3d.ofBottomCenter(slam.target).add(0, 1 + HEAD_OFFSET, 0);
-				slam.giant.refreshPositionAndAngles(impact.x, impact.y, impact.z, slam.giant.getYaw(), 0.0F);
-				slam.world.playSound(null, slam.target, SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.PLAYERS, 2.0F, 0.5F);
+		for (Iterator<Slash> it = SLASHES.iterator(); it.hasNext(); ) {
+			Slash slash = it.next();
+			int step = tick - slash.startTick;
+			if (step == SWING_TICK) {
+				// Le slash : la pioche s'abat vers l'avant.
+				pose(slash.giant, 115, SCALE, SWING_TICKS);
+				slash.world.playSound(null, slash.origin, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 2.0F, 0.5F);
 			}
 			if (step == IMPACT_TICK) {
-				impact(slam);
-				slam.digging = true;
+				impact(slash);
 			}
-			if (slam.digging && !slam.done) {
-				dig(slam);
+			if (step >= IMPACT_TICK && slash.carved < LENGTH) {
+				carve(slash);
 			}
 			if (step == VANISH_TICK) {
-				GiantItem.remove(slam.world, slam.giant, SCALE);
+				GiantItem.remove(slash.world, slash.giant, SCALE);
 			}
-			if (step >= VANISH_TICK && slam.done) {
-				if (slam.xp > 0 && !slam.player.isCreative() && !slam.player.isRemoved()) {
-					EvoProgression.addXp(slam.pickaxe, slam.xp, 0, slam.player, slam.world);
+			if (step >= VANISH_TICK && slash.carved >= LENGTH) {
+				if (slash.xp > 0 && !slash.player.isCreative() && !slash.player.isRemoved()) {
+					EvoProgression.addXp(slash.pickaxe, slash.xp, 0, slash.player, slash.world);
 				}
 				it.remove();
 			}
 		}
 	}
 
-	/** Le choc : explosion, onde de choc au sol et débris. */
-	private static void impact(Slam slam) {
-		ServerWorld world = slam.world;
-		Vec3d c = Vec3d.ofBottomCenter(slam.target).add(0, 1, 0);
-		BlockState ground = world.getBlockState(slam.target);
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y, c.z, 2, 0.5, 0.2, 0.5, 0.0);
-		if (!ground.isAir()) {
-			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), c.x, c.y, c.z, 250, 2.0, 0.6, 2.0, 0.3);
-		}
-		for (int ring = 1; ring <= 3; ring++) {
-			double r = ring * 1.8;
-			for (int i = 0; i < 24 * ring; i++) {
-				double a = 2 * Math.PI * i / (24 * ring);
-				world.spawnParticles(ParticleTypes.CLOUD, c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r, 1, 0, 0.05, 0, 0.02);
-			}
-		}
-		world.playSound(null, slam.target, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 3.0F, 0.6F);
-		world.playSound(null, slam.target, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 2.0F, 0.5F);
+	/** POW : explosion et choc à l'endroit où la pioche touche. */
+	private static void impact(Slash slash) {
+		ServerWorld world = slash.world;
+		Vec3d c = Vec3d.ofBottomCenter(slash.origin).add(slash.forward.multiply(5.0));
+		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y + 0.5, c.z, 2, 0.5, 0.2, 0.5, 0.0);
+		world.spawnParticles(ParticleTypes.SONIC_BOOM, c.x, c.y + 1.5, c.z, 1, 0, 0, 0, 0);
+		world.playSound(null, BlockPos.ofFloored(c), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 3.0F, 0.6F);
+		world.playSound(null, BlockPos.ofFloored(c), SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 2.0F, 0.5F);
 	}
 
-	/** Creuse quelques couches par tick, de l'impact jusqu'à la bedrock. */
-	private static void dig(Slam slam) {
-		ServerWorld world = slam.world;
+	/** L'onde tranchante avance de quelques blocs par tick en creusant la tranchée. */
+	private static void carve(Slash slash) {
+		ServerWorld world = slash.world;
+		double from = START_DISTANCE + slash.carved;
+		int advance = Math.min(BLOCKS_PER_TICK, LENGTH - slash.carved);
+		double to = from + advance;
 		List<ItemStack> drops = new ArrayList<>();
-		for (int layer = 0; layer < LAYERS_PER_TICK; layer++) {
-			int y = slam.digY;
-			if (y < world.getBottomY()) {
-				slam.done = true;
-				break;
+		for (BlockPos pos : trench(slash.origin, slash.forward, slash.right, from, to)) {
+			BlockState state = world.getBlockState(pos);
+			if (state.isAir() || state.getHardness(world, pos) < 0 || !state.getFluidState().isEmpty()
+					|| world.getBlockEntity(pos) != null
+					|| slash.player.isBlockBreakingRestricted(world, pos, slash.player.interactionManager.getGameMode())) {
+				continue;
 			}
-			boolean bedrockOnly = true;
-			for (int dx = -slam.radius; dx <= slam.radius; dx++) {
-				for (int dz = -slam.radius; dz <= slam.radius; dz++) {
-					BlockPos pos = new BlockPos(slam.target.getX() + dx, y, slam.target.getZ() + dz);
-					BlockState state = world.getBlockState(pos);
-					float hardness = state.getHardness(world, pos);
-					if (hardness >= 0) {
-						bedrockOnly = false;
-					}
-					if (state.isAir() || hardness < 0 || !state.getFluidState().isEmpty() || world.getBlockEntity(pos) != null
-							|| slam.player.isBlockBreakingRestricted(world, pos, slam.player.interactionManager.getGameMode())) {
-						continue;
-					}
-					if (state.isIn(ConventionalBlockTags.ORES)) {
-						drops.addAll(Block.getDroppedStacks(state, world, pos, null, slam.player, slam.pickaxe));
-						slam.xp += EvoProgression.xpForBlock(state);
-					}
-					world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
-				}
+			if (state.isIn(ConventionalBlockTags.ORES)) {
+				drops.addAll(Block.getDroppedStacks(state, world, pos, null, slash.player, slash.pickaxe));
+				slash.xp += EvoProgression.xpForBlock(state);
 			}
-			if (layer == 0) {
-				Vec3d p = new Vec3d(slam.target.getX() + 0.5, y + 0.5, slam.target.getZ() + 0.5);
-				world.spawnParticles(ParticleTypes.EXPLOSION, p.x, p.y, p.z, 2, slam.radius, 0.5, slam.radius, 0.0);
-			}
-			slam.digY--;
-			if (bedrockOnly) {
-				slam.done = true;
-				break;
-			}
+			world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
 		}
-		if (world.getServer().getTicks() % 4 == 0) {
-			world.playSound(null, slam.target, SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS, 1.5F, 0.6F);
+		slash.carved += advance;
+
+		// L'onde : un mur de particules qui file vers l'avant.
+		Vec3d front = Vec3d.ofBottomCenter(slash.origin).add(slash.forward.multiply(to));
+		for (double w = -3.5; w <= 3.5; w += 0.7) {
+			Vec3d p = front.add(slash.right.multiply(w));
+			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, p.x, p.y + 3.5, p.z, 1, 0, 2.5, 0, 0);
+			world.spawnParticles(ParticleTypes.EXPLOSION, p.x, p.y + 1.0, p.z, 1, 0.2, 1.5, 0.2, 0);
 		}
-		deliver(slam, drops);
+		world.playSound(null, BlockPos.ofFloored(front), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.BLOCKS, 1.2F, 1.2F);
+		deliver(slash, drops);
 	}
 
-	private static void deliver(Slam slam, List<ItemStack> drops) {
-		ServerPlayerEntity player = slam.player;
+	private static void deliver(Slash slash, List<ItemStack> drops) {
+		ServerPlayerEntity player = slash.player;
+		boolean telekinesis = EvoliteUpgrade.has(slash.pickaxe, EvoliteUpgrade.Upgrade.TELEKINESIS);
 		for (ItemStack stack : drops) {
-			if (slam.telekinesis && !player.isRemoved()) {
+			if (telekinesis && !player.isRemoved()) {
 				player.getInventory().insertStack(stack);
 			}
-			if (!stack.isEmpty()) {
-				Vec3d at = player.isRemoved() ? Vec3d.ofCenter(slam.target) : new Vec3d(player.getX(), player.getY() + 0.5, player.getZ());
-				ItemEntity item = new ItemEntity(slam.world, at.x, at.y, at.z, stack);
+			if (!stack.isEmpty() && !player.isRemoved()) {
+				ItemEntity item = new ItemEntity(slash.world, player.getX(), player.getY() + 0.5, player.getZ(), stack);
 				item.setPickupDelay(0);
-				slam.world.spawnEntity(item);
+				slash.world.spawnEntity(item);
 			}
 		}
 	}
