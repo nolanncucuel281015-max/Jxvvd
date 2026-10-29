@@ -5,23 +5,17 @@ ALL=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' ! -name
 YARN=$(echo "$ALL" | tr ' ' '\n' | grep -i yarn | grep -v intermediary)
 
 for JAR in $YARN; do
+	if ! unzip -l "$JAR" 'net/minecraft/client/render/model/json/ModelElementRotation$OfEuler.class' >/dev/null 2>&1; then
+		continue
+	fi
 	echo "##### $JAR"
-	unzip -l "$JAR" | awk '{print $4}' | grep -i -E 'model/json/ModelElement|ElementRotation|model/json/.*Rotation' | head -20
-	for c in net.minecraft.client.render.model.json.ModelElementRotation 'net.minecraft.client.render.model.json.ModelElement$Deserializer' \
-		net.minecraft.client.render.model.json.ModelElement ; do
+	for c in 'net.minecraft.client.render.model.json.ModelElementRotation$OfEuler' \
+		'net.minecraft.client.render.model.json.ModelElementRotation$OfAxisAngle' \
+		'net.minecraft.client.render.model.json.ModelElementRotation$RotationValue' ; do
 		echo "=== $c"
-		javap -p -c -cp "$JAR" "$c" 2>/dev/null | grep -E 'Method|ldc|fcmp|invoke|Exception|public|private|static' | grep -v -E 'getstatic' | head -150
+		javap -p -c -cp "$JAR" "$c" 2>/dev/null | grep -v -E 'hashCode|toString|equals' | head -80
 	done
-	for c in net.minecraft.world.gen.feature.Feature net.minecraft.world.gen.feature.util.FeatureContext \
-		net.minecraft.world.gen.feature.DefaultFeatureConfig net.minecraft.text.ClickEvent 'net.minecraft.text.ClickEvent$RunCommand' \
-		'net.minecraft.text.ClickEvent$SuggestCommand' net.minecraft.text.HoverEvent ; do
-		echo "=== $c"
-		javap -cp "$JAR" "$c" 2>/dev/null | head -60
-	done
-	javap -cp "$JAR" net.minecraft.item.Item 2>/dev/null | grep -i -E 'ItemBar|inventoryTick|appendTooltip|use\(|finishUsing|getMaxUseTime|onStoppedUsing|usageTick|getUseAction'
-	javap -cp "$JAR" net.minecraft.block.AbstractBlock 2>/dev/null | grep -i -E 'onUse|onUseWithItem|getOutlineShape|randomDisplayTick'
-	javap -cp "$JAR" net.minecraft.server.world.ServerWorld 2>/dev/null | head -3
-	javap -cp "$JAR" net.minecraft.entity.Entity 2>/dev/null | grep -i -E 'teleport|requestTeleport|timeUntilRegen|setNoGravity|hasNoGravity'
-	javap -cp "$JAR" net.minecraft.entity.decoration.DisplayEntity\$ItemDisplayEntity 2>/dev/null | grep -i -E 'ItemStack|Transformation'
-	javap -cp "$JAR" net.minecraft.entity.decoration.DisplayEntity 2>/dev/null | grep -i -E 'Glow|Brightness|ViewRange|Billboard|Shadow'
+	javap -p -c -cp "$JAR" net.minecraft.client.render.model.BakedQuadFactory 2>/dev/null | grep -E 'Method|rotat|Rotation' | head -40
+	javap -p -c -cp "$JAR" net.minecraft.client.render.model.json.ModelElement 2>/dev/null | grep -E 'Method|Rotation' | head -20
+	break
 done
