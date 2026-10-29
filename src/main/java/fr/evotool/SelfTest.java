@@ -224,6 +224,7 @@ final class SelfTest {
 
 		// Portail : un cadre de rubis 4x5 s'allume au briquet, un cadre incomplet non.
 		ServerWorld overworld = server.getOverworld();
+		overworld.getChunk(2000 >> 4, 2000 >> 4);
 		int surface = overworld.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, 2000, 2000) + 2;
 		BlockPos base = new BlockPos(2000, surface, 2000);
 		BlockPos broken = base.add(10, 0, 0);

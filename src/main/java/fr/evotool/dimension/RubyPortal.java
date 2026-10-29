@@ -145,6 +145,7 @@ public final class RubyPortal {
 	public static BlockPos findOrBuild(ServerWorld world, BlockPos near) {
 		int x0 = near.getX();
 		int z0 = near.getZ();
+		world.getChunk(x0 >> 4, z0 >> 4);   // la hauteur du sol n'est connue qu'une fois le chunk chargé
 		int surface = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x0, z0);
 		int minY = Math.max(world.getBottomY() + 1, Math.min(near.getY(), surface) - 24);
 		int maxY = Math.min(world.getTopYInclusive() - 1, Math.max(near.getY(), surface) + 24);
@@ -170,6 +171,7 @@ public final class RubyPortal {
 
 	/** Construit un cadre de rubis 4x5 allumé (axe X), sur une petite plateforme si le sol manque. */
 	public static BlockPos build(ServerWorld world, int x, int z) {
+		world.getChunk(x >> 4, z >> 4);
 		int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
 		boolean noGround = y <= world.getBottomY() + 2;
 		if (noGround || y > world.getTopYInclusive() - 10) {

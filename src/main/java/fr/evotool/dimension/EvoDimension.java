@@ -258,6 +258,9 @@ public final class EvoDimension {
 		double angle = world.getRandom().nextDouble() * Math.PI * 2;
 		int x = (int) Math.floor(player.getX() + Math.cos(angle) * 18);
 		int z = (int) Math.floor(player.getZ() + Math.sin(angle) * 18);
+		if (!world.isChunkLoaded(x >> 4, z >> 4)) {
+			return;
+		}
 		int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
 		if (y <= world.getBottomY() + 2) {
 			return;
