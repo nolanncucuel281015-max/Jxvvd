@@ -31,6 +31,13 @@ La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne cas
 | 60  | Onde de choc |
 | 100 | Minage instantané + exécution |
 
+**Laser bûcheron** : clic droit avec la Hache Évolutive (dans le vide ou sur un bloc qui ne s'écorce pas ;
+viser un tronc l'écorce toujours, comme une hache normale). Un rayon laser fait le tour de toi en 2 secondes et
+coupe **tous les arbres à 50 blocs** (troncs et feuilles). Tout le bois revient à tes pieds, ou **directement dans
+ton inventaire** si la hache est améliorée à l'évolite (télékinésie). Les maisons en bûches ne sont pas touchées
+(seuls les troncs avec des feuilles naturelles autour comptent). Avec la replantation (niveau 30), chaque arbre
+coupé est replanté. Recharge : 10 secondes.
+
 ## Houe — en labourant et en récoltant
 
 | Niveau | Déblocage |

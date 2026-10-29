@@ -171,7 +171,7 @@ public final class EvoMiningHandler {
 	}
 
 	/** Reprend ServerPlayerInteractionManager#tryBreakBlock, mais en récupérant les drops. */
-	private static boolean breakBlock(ServerWorld world, ServerPlayerEntity player, BlockPos pos, BlockState state,
+	public static boolean breakBlock(ServerWorld world, ServerPlayerEntity player, BlockPos pos, BlockState state,
 			ItemStack tool, List<ItemStack> drops) {
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		Block block = state.getBlock();
@@ -309,7 +309,7 @@ public final class EvoMiningHandler {
 		}
 	}
 
-	private static boolean isNaturalLeaves(BlockState state) {
+	public static boolean isNaturalLeaves(BlockState state) {
 		return state.isIn(BlockTags.LEAVES) && state.contains(LeavesBlock.PERSISTENT) && !state.get(LeavesBlock.PERSISTENT);
 	}
 

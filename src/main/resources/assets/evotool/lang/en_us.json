@@ -120,5 +120,6 @@
   "upgrade.evotool.lightning_charge": "Lightning Charge",
   "upgrade.evotool.lightning_charge.desc": "While charging: Speed III, and every hit strikes the target with lightning.",
   "tooltip.evotool.sword_hint": "Sneak + right-click: celestial explosion (20 blocks)",
-  "enchantment.evotool.evolving_lunge": "Evolving Lunge"
+  "enchantment.evotool.evolving_lunge": "Evolving Lunge",
+  "tooltip.evotool.axe_hint": "Right-click (not on a log): lumberjack laser, cuts trees within 50 blocks"
 }

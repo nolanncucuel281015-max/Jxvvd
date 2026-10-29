@@ -6,6 +6,7 @@ import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
+import fr.evotool.mining.AxeLaser;
 import fr.evotool.mining.EvoMiningHandler;
 import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
@@ -37,6 +38,7 @@ public class EvoTool implements ModInitializer {
 		UpgradeCommand.init();
 		EvoMiningHandler.init();
 		FarmingHandler.init();
+		AxeLaser.init();
 		CombatHandler.init();
 		ArmorHandler.init();
 		MagicPowers.init();

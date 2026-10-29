@@ -120,5 +120,6 @@
   "upgrade.evotool.lightning_charge": "Charge fulgurante",
   "upgrade.evotool.lightning_charge.desc": "Pendant la charge : vitesse III, et chaque coup foudroie la cible.",
   "tooltip.evotool.sword_hint": "Accroupi + clic droit : explosion céleste (20 blocs)",
-  "enchantment.evotool.evolving_lunge": "Élan évolutif"
+  "enchantment.evotool.evolving_lunge": "Élan évolutif",
+  "tooltip.evotool.axe_hint": "Clic droit (pas sur un tronc) : laser bûcheron, coupe les arbres à 50 blocs"
 }
