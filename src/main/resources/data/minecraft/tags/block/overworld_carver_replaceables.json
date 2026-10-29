@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "evotool:evolving_stone",
+    "evotool:evolving_dirt",
+    "evotool:evolving_grass",
+    "evotool:evolving_ore"
+  ]
+}

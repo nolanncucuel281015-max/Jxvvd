@@ -85,6 +85,12 @@ public final class GiantItem {
 		giant.discard();
 	}
 
+	/** Retire l'objet sans effet (déchargement du monde). */
+	public static void discard(DisplayEntity.ItemDisplayEntity giant) {
+		ACTIVE.remove(giant.getUuid());
+		giant.discard();
+	}
+
 	public static AffineTransformation transformation(Quaternionf rotation, float scale) {
 		return new AffineTransformation(new Vector3f(), new Quaternionf(rotation), new Vector3f(scale, scale, scale), new Quaternionf());
 	}

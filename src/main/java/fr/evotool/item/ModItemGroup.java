@@ -30,6 +30,14 @@ public final class ModItemGroup {
 						entries.add(ModBlocks.SAPPHIRE_BLOCK);
 						entries.add(ModBlocks.SAPPHIRE_ORE);
 						entries.add(ModBlocks.DEEPSLATE_SAPPHIRE_ORE);
+						entries.add(ModItems.EVOLIUM_LIGHTER);
+						entries.add(ModBlocks.EVOLVING_STONE);
+						entries.add(ModBlocks.EVOLVING_DIRT);
+						entries.add(ModBlocks.EVOLVING_GRASS);
+						entries.add(ModBlocks.EVOLVING_LOG);
+						entries.add(ModBlocks.EVOLVING_LEAVES);
+						entries.add(ModBlocks.EVOLVING_CRYSTAL);
+						entries.add(ModBlocks.EVOLVING_ORE);
 					})
 					.build());
 

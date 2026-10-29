@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "evotool:block/evolving/evolving_dirt_all_4"
+  }
+}

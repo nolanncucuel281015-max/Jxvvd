@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "evolution=0": {
+      "model": "evotool:block/evolving/evolving_leaves_0"
+    },
+    "evolution=1": {
+      "model": "evotool:block/evolving/evolving_leaves_1"
+    },
+    "evolution=2": {
+      "model": "evotool:block/evolving/evolving_leaves_2"
+    },
+    "evolution=3": {
+      "model": "evotool:block/evolving/evolving_leaves_3"
+    },
+    "evolution=4": {
+      "model": "evotool:block/evolving/evolving_leaves_4"
+    },
+    "evolution=5": {
+      "model": "evotool:block/evolving/evolving_leaves_5"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "evotool:block/evolution_portal_ns"
+    },
+    "axis=z": {
+      "model": "evotool:block/evolution_portal_ew"
+    }
+  }
+}

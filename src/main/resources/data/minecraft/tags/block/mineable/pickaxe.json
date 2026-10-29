@@ -10,6 +10,9 @@
     "evotool:ruby_block",
     "evotool:sapphire_block",
     "evotool:evolite_ore",
-    "evotool:evolite_block"
+    "evotool:evolite_block",
+    "evotool:evolving_stone",
+    "evotool:evolving_crystal",
+    "evotool:evolving_ore"
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "textures": {
+    "particle": "evotool:block/evolution_portal",
+    "portal": "evotool:block/evolution_portal"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        6
+      ],
+      "to": [
+        16,
+        16,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#portal"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#portal"
+        }
+      },
+      "light_emission": 15,
+      "shade": false
+    }
+  ]
+}

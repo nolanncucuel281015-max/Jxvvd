@@ -2119,6 +2119,737 @@ class ArmorPainter:
                 self.set(box, face, x * HD + hx, y * HD + hy + 1, shade(m, 1.5))
 
 
+# --------------------------------------------------------------------------- dimension évolutive
+
+EVOLUTIONS = 6   # niveaux d'évolution des blocs (0 à 5), une évolution toutes les 10 minutes passées dans la dimension
+EVO_COLORS = [None, hexc("a64dff"), hexc("2fe6e8"), hexc("3cf07a"), hexc("ffd23a"), hexc("ffffff")]
+EVO_BLOCKS = ["evolving_stone", "evolving_dirt", "evolving_grass", "evolving_log", "evolving_leaves",
+              "evolving_crystal", "evolving_ore"]
+
+
+def evo_color(e, x=0, y=0):
+    """Couleur des veines d'énergie d'une évolution (arc-en-ciel à la dernière)."""
+    if e >= 5:
+        h = ((x + y) / 20.0) % 1.0
+        rr, gg, bb = colorsys.hsv_to_rgb(h, 0.45, 1.0)
+        return (int(rr * 255), int(gg * 255), int(bb * 255), 255)
+    return EVO_COLORS[e]
+
+
+def evo_stone(e, seed=7):
+    base = hexc("4a3f5c")
+    n = value_noise(16, 16, 4, seed)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 0.85 + (n[y][x] - 0.5) * 0.5 + r.uniform(-0.05, 0.05)
+            img.putpixel((x, y), shade(base, f))
+    if e >= 1:   # veines d'énergie
+        r = random.Random(seed + 1)
+        for v in range(1 + e):
+            x, y = r.randrange(16), 0
+            while y < 16:
+                img.putpixel((x % 16, y), evo_color(e, x, y))
+                if e >= 2 and r.random() < 0.35:
+                    img.putpixel(((x + 1) % 16, y), lerp(evo_color(e, x, y), base, 0.45))
+                x += r.choice((-1, 0, 0, 1))
+                y += 1
+    if e >= 3:   # éclats de cristal
+        r = random.Random(seed + 2)
+        for _ in range(e * 2):
+            x, y = r.randrange(1, 15), r.randrange(1, 15)
+            img.putpixel((x, y), shade(evo_color(e, x, y), 1.4))
+    if e >= 4:   # filigrane doré
+        for x in range(16):
+            if x % 4 != 3:
+                img.putpixel((x, 0), shade(hexc("ffd23a"), 1.0 - 0.2 * (x % 2)))
+                img.putpixel((x, 15), shade(hexc("ffd23a"), 0.8))
+    return img
+
+
+def evo_dirt(e, seed=8):
+    base = hexc("4b2f45")
+    n = value_noise(16, 16, 3, seed)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 0.9 + (n[y][x] - 0.5) * 0.45 + r.uniform(-0.08, 0.08)
+            img.putpixel((x, y), shade(base, f))
+    for _ in range(e * 3):
+        x, y = r.randrange(16), r.randrange(16)
+        img.putpixel((x, y), evo_color(max(1, e), x, y))
+    return img
+
+
+def evo_grass_top(e, seed=9):
+    base = lerp(hexc("6b3fa8"), hexc("2fbfa0"), e / 5.0)
+    n = value_noise(16, 16, 3, seed)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 0.9 + (n[y][x] - 0.5) * 0.5 + r.uniform(-0.1, 0.1)
+            img.putpixel((x, y), shade(base, f))
+    for _ in range(2 + e * 3):   # petites fleurs / étincelles
+        x, y = r.randrange(16), r.randrange(16)
+        img.putpixel((x, y), evo_color(max(1, e), x, y) if e else hexc("d9a8ff"))
+    return img
+
+
+def evo_grass_side(e):
+    img = evo_dirt(e, 10)
+    top = evo_grass_top(e, 11)
+    r = random.Random(12)
+    for x in range(16):
+        depth = 3 + r.randrange(3)
+        for y in range(depth):
+            img.putpixel((x, y), top.getpixel((x, y)))
+    return img
+
+
+def evo_log_side(e):
+    base = hexc("3a2448")
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(13)
+    for x in range(16):
+        stripe = 0.8 + 0.3 * math.sin(x * 1.9)
+        for y in range(16):
+            f = stripe + r.uniform(-0.06, 0.06)
+            img.putpixel((x, y), shade(base, f))
+    if e >= 1:   # sillons lumineux dans l'écorce
+        for x in (3, 8, 12)[: min(3, e)]:
+            for y in range(16):
+                if (y + x) % 7 != 0:
+                    img.putpixel((x, y), lerp(evo_color(e, x, y), base, 0.25))
+    return img
+
+
+def evo_log_top(e):
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - 7.5, y - 7.5)
+            c = shade(hexc("6a4a7a"), 0.9 + 0.15 * math.sin(d * 1.8))
+            if d > 6.5:
+                c = shade(hexc("3a2448"), 1.0)
+            elif e >= 1 and int(d) in (2, 5):
+                c = lerp(evo_color(e, x, y), c, 0.3)
+            img.putpixel((x, y), c)
+    return img
+
+
+def evo_leaves(e):
+    base = lerp(hexc("8a3fd0"), hexc("ff7ad8"), e / 5.0)
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    r = random.Random(14)
+    for y in range(16):
+        for x in range(16):
+            if r.random() < 0.18:
+                continue   # trous (rendu en découpe)
+            f = 0.75 + r.uniform(0, 0.5)
+            img.putpixel((x, y), shade(base, f))
+    for _ in range(e * 3):
+        x, y = r.randrange(16), r.randrange(16)
+        img.putpixel((x, y), evo_color(max(1, e), x, y))
+    return img
+
+
+def evo_crystal(e):
+    c = evo_color(e) if e else hexc("c8a8ff")
+    pal = [shade(c, 0.35), shade(c, 0.7), c, shade(c, 1.4), hexc("ffffff")]
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            u, v = (x % 8) - 3.5, (y % 8) - 3.5
+            facet = (u > 0) * 1 + (v > 0) * 2
+            col = (pal[3], pal[2], pal[1], pal[0])[facet]
+            if e >= 5:
+                col = lerp(col, evo_color(5, x, y), 0.5)
+            img.putpixel((x, y), col)
+    for p in ((2, 2), (10, 10), (10, 2), (2, 10)):
+        img.putpixel(p, pal[4])
+    return img
+
+
+def evo_ore(e):
+    img = evo_stone(e, 15)
+    return ore_texture(img, GEMS["evolium"], glow=e >= 2)
+
+
+def portal_frames():
+    """Portail évolutif : tourbillon rouge rubis et violet, animé."""
+    frames = 16
+    img = Image.new("RGBA", (16, 16 * frames))
+    for f in range(frames):
+        for y in range(16):
+            for x in range(16):
+                dx, dy = x - 7.5, y - 7.5
+                a = math.atan2(dy, dx)
+                d = math.hypot(dx, dy)
+                v = 0.5 + 0.5 * math.sin(a * 3 + d * 0.9 - f * 2 * math.pi / frames)
+                c = lerp(hexc("6a0f2a"), hexc("ff3a6a"), v)
+                c = lerp(c, hexc("b04dff"), 0.35 + 0.25 * math.sin(d * 0.7 + f * 0.4))
+                if v > 0.92:
+                    c = lerp(c, hexc("ffffff"), 0.6)
+                img.putpixel((x, y + 16 * f), c[:3] + (200,))
+    return img
+
+
+def lighter_sprite():
+    """Briquet d'évolium : corps en évolium serti, silex sur le dessus."""
+    gem = GEMS["evolium"]
+    rows = [
+        "................",
+        "................",
+        "........ff......",
+        ".......ffff.....",
+        "......ffffs.....",
+        ".......ff.......",
+        "......oooo......",
+        ".....ollllo.....",
+        ".....olgglo.....",
+        ".....olgmlo.....",
+        ".....omggmo.....",
+        ".....ommmmo.....",
+        ".....odmmdo.....",
+        ".....odddd o....",
+        "......oooo......",
+        "................",
+    ]
+    colors = {"o": shade(gem[0], 0.7), "l": gem[2], "m": gem[1], "d": gem[0], "g": gem[3],
+              "f": hexc("3a3a40"), "s": hexc("ffffff")}
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row[:16]):
+            if ch in colors:
+                img.putpixel((x, y), colors[ch])
+    img.putpixel((9, 3), hexc("ff9a3a"))
+    return img
+
+
+def gen_dimension_assets():
+    makers = {
+        "evolving_stone": lambda e: {"all": evo_stone(e)},
+        "evolving_dirt": lambda e: {"all": evo_dirt(e)},
+        "evolving_grass": lambda e: {"top": evo_grass_top(e), "side": evo_grass_side(e), "bottom": evo_dirt(e)},
+        "evolving_log": lambda e: {"side": evo_log_side(e), "end": evo_log_top(e)},
+        "evolving_leaves": lambda e: {"all": evo_leaves(e)},
+        "evolving_crystal": lambda e: {"all": evo_crystal(e)},
+        "evolving_ore": lambda e: {"all": evo_ore(e)},
+    }
+    for block, make in makers.items():
+        variants = {}
+        for e in range(EVOLUTIONS):
+            tex = make(e)
+            refs = {}
+            for k, img in tex.items():
+                save_png(img, "block", "evolving", f"{block}_{k}_{e}")
+                refs[k] = f"{MOD}:block/evolving/{block}_{k}_{e}"
+            model = f"{MOD}:block/evolving/{block}_{e}"
+            if block == "evolving_grass":
+                body = {"parent": "minecraft:block/cube_bottom_top", "textures": refs}
+            elif block == "evolving_log":
+                body = {"parent": "minecraft:block/cube_column", "textures": refs}
+            elif block == "evolving_leaves":
+                body = {"parent": "minecraft:block/leaves", "textures": refs}
+            else:
+                body = {"parent": "minecraft:block/cube_all", "textures": refs}
+            write_json(os.path.join(ASSETS, "models", "block", "evolving", f"{block}_{e}.json"), body)
+            if block == "evolving_log":
+                variants[f"axis=y,evolution={e}"] = {"model": model}
+                variants[f"axis=z,evolution={e}"] = {"model": model, "x": 90}
+                variants[f"axis=x,evolution={e}"] = {"model": model, "x": 90, "y": 90}
+            else:
+                variants[f"evolution={e}"] = {"model": model}
+        write_json(os.path.join(ASSETS, "blockstates", f"{block}.json"), {"variants": variants})
+        write_json(os.path.join(ASSETS, "items", f"{block}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:block/evolving/{block}_0"}})
+
+    # portail
+    save_animated(portal_frames(), 2, "block", "evolution_portal")
+    for name, frm, to in (("ns", [0, 0, 6], [16, 16, 10]), ("ew", [6, 0, 0], [10, 16, 16])):
+        faces = ({"north": {"uv": [0, 0, 16, 16], "texture": "#portal"}, "south": {"uv": [0, 0, 16, 16], "texture": "#portal"}}
+                 if name == "ns" else
+                 {"east": {"uv": [0, 0, 16, 16], "texture": "#portal"}, "west": {"uv": [0, 0, 16, 16], "texture": "#portal"}})
+        write_json(os.path.join(ASSETS, "models", "block", f"evolution_portal_{name}.json"), {
+            "textures": {"particle": f"{MOD}:block/evolution_portal", "portal": f"{MOD}:block/evolution_portal"},
+            "elements": [{"from": frm, "to": to, "faces": faces, "light_emission": 15, "shade": False}],
+        })
+    write_json(os.path.join(ASSETS, "blockstates", "evolution_portal.json"), {"variants": {
+        "axis=x": {"model": f"{MOD}:block/evolution_portal_ns"},
+        "axis=z": {"model": f"{MOD}:block/evolution_portal_ew"},
+    }})
+
+    # briquet
+    save_png(lighter_sprite(), "item", "evolium_lighter")
+    write_json(os.path.join(ASSETS, "models", "item", "evolium_lighter.json"),
+               {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/evolium_lighter"}})
+    write_json(os.path.join(ASSETS, "items", "evolium_lighter.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/evolium_lighter"}})
+    gen_boss_assets()
+
+
+def evo_state(block, e=0, **props):
+    p = {"evolution": str(e)}
+    p.update({k: str(v) for k, v in props.items()})
+    return {"Name": f"{MOD}:{block}", "Properties": p}
+
+
+def gen_dimension_data():
+    # --- butin des blocs évolutifs
+    silk = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+    shears = {"condition": "minecraft:match_tool", "predicate": {"items": "minecraft:shears"}}
+
+    def self_drop(b):
+        return {"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{MOD}:{b}"}],
+                "conditions": [{"condition": "minecraft:survives_explosion"}]}
+
+    def at_evolution(e):
+        return {"condition": "minecraft:block_state_property", "block": f"{MOD}:evolving_stone",
+                "properties": {"evolution": str(e)}}
+
+    tables = {
+        "evolving_stone": [self_drop("evolving_stone"),
+                           {"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{MOD}:evolium"}],
+                            "conditions": [at_evolution(5), {"condition": "minecraft:random_chance", "chance": 0.04},
+                                           {"condition": "minecraft:inverted", "term": silk}]}],
+        "evolving_dirt": [self_drop("evolving_dirt")],
+        "evolving_grass": [{"rolls": 1, "entries": [{"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": f"{MOD}:evolving_grass", "conditions": [silk]},
+            {"type": "minecraft:item", "name": f"{MOD}:evolving_dirt"}]}]}],
+        "evolving_log": [self_drop("evolving_log")],
+        "evolving_leaves": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{MOD}:evolving_leaves"}],
+                             "conditions": [{"condition": "minecraft:any_of", "terms": [silk, shears]}]}],
+        "evolving_crystal": [self_drop("evolving_crystal")],
+    }
+    # minerai évolutif : 1 évolium par niveau d'évolution en plus (+ Fortune)
+    ore_children = [{"type": "minecraft:item", "name": f"{MOD}:evolving_ore", "conditions": [silk]}]
+    for e in range(EVOLUTIONS - 1, -1, -1):
+        ore_children.append({
+            "type": "minecraft:item", "name": f"{MOD}:evolium",
+            "conditions": [{"condition": "minecraft:block_state_property", "block": f"{MOD}:evolving_ore",
+                            "properties": {"evolution": str(e)}}],
+            "functions": [{"function": "minecraft:set_count", "count": 1 + e},
+                          {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune",
+                           "formula": "minecraft:ore_drops"},
+                          {"function": "minecraft:explosion_decay"}],
+        })
+    tables["evolving_ore"] = [{"rolls": 1, "entries": [{"type": "minecraft:alternatives", "children": ore_children}]}]
+    for b, pools in tables.items():
+        write_json(os.path.join(DATA, "loot_table", "blocks", f"{b}.json"),
+                   {"type": "minecraft:block", "pools": [dict(p, bonus_rolls=0) for p in pools],
+                    "random_sequence": f"{MOD}:blocks/{b}"})
+
+    # --- tags
+    tags = os.path.join(ROOT, "data")
+    ids = lambda names: [f"{MOD}:{n}" for n in names]
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
+               {"replace": False, "values": [f"{MOD}:{o}" for o in ORES] + [f"{MOD}:{g}_block" for g in GEMS]
+                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "shovel.json"),
+               {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "axe.json"),
+               {"replace": False, "values": ids(["evolving_log"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "hoe.json"),
+               {"replace": False, "values": ids(["evolving_leaves"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "dirt.json"),
+               {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "logs.json"),
+               {"replace": False, "values": ids(["evolving_log"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "overworld_carver_replaceables.json"),
+               {"replace": False, "values": ids(["evolving_stone", "evolving_dirt", "evolving_grass", "evolving_ore"])})
+    write_json(os.path.join(tags, "minecraft", "tags", "block", "base_stone_overworld.json"),
+               {"replace": False, "values": ids(["evolving_stone"])})
+
+    # --- briquet d'évolium
+    write_json(os.path.join(DATA, "recipe", "evolium_lighter.json"), {
+        "type": "minecraft:crafting_shapeless", "category": "equipment",
+        "ingredients": [f"{MOD}:evolium", "minecraft:flint"],
+        "result": {"id": f"{MOD}:evolium_lighter", "count": 1},
+    })
+
+    # --- type de dimension : ciel violet, cycle jour / nuit normal
+    sky = {
+        "minecraft:audio/background_music": {"default": {"max_delay": 24000, "min_delay": 6000,
+                                                          "sound": "minecraft:music.overworld.cherry_grove"}},
+        "minecraft:gameplay/bed_rule": {"can_set_spawn": "always", "can_sleep": "when_dark",
+                                        "error_message": {"translate": "block.minecraft.bed.no_sleep"}},
+        "minecraft:gameplay/respawn_anchor_works": False,
+        "minecraft:visual/cloud_color": "#ccf0c8ff",
+        "minecraft:visual/cloud_height": 210.33,
+        "minecraft:visual/fog_color": "#b48cff",
+        "minecraft:visual/sky_color": "#7a4ad8",
+    }
+    write_json(os.path.join(DATA, "dimension_type", "evolutive.json"), {
+        "ambient_light": 0.08,
+        "attributes": sky,
+        "coordinate_scale": 1.0,
+        "has_ceiling": False,
+        "has_skylight": True,
+        "height": 384,
+        "infiniburn": "#minecraft:infiniburn_overworld",
+        "logical_height": 384,
+        "min_y": -64,
+        "monster_spawn_block_light_limit": 0,
+        "monster_spawn_light_level": {"type": "minecraft:uniform", "max_inclusive": 7, "min_inclusive": 0},
+        "timelines": "#minecraft:in_overworld",
+    })
+
+    # --- relief : grandes collines arrondies avec surplombs (bruit 3D), grottes vanilla
+    wg = os.path.join(DATA, "worldgen")
+    write_json(os.path.join(wg, "noise", "evolutive_terrain.json"),
+               {"firstOctave": -7, "amplitudes": [1.0, 1.0, 0.5, 0.5, 0.25]})
+    write_json(os.path.join(wg, "noise", "evolutive_detail.json"),
+               {"firstOctave": -4, "amplitudes": [1.0, 0.5]})
+    final_density = {
+        "type": "minecraft:interpolated",
+        "argument": {
+            "type": "minecraft:add",
+            "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": -64, "to_y": 220,
+                          "from_value": 2.2, "to_value": -2.2},
+            "argument2": {"type": "minecraft:add",
+                          "argument1": {"type": "minecraft:mul", "argument1": 1.1,
+                                        "argument2": {"type": "minecraft:noise", "noise": f"{MOD}:evolutive_terrain",
+                                                      "xz_scale": 1.0, "y_scale": 0.45}},
+                          "argument2": {"type": "minecraft:mul", "argument1": 0.12,
+                                        "argument2": {"type": "minecraft:noise", "noise": f"{MOD}:evolutive_detail",
+                                                      "xz_scale": 1.0, "y_scale": 1.0}}},
+        },
+    }
+    shifted = lambda noise: {"type": "minecraft:shifted_noise", "noise": noise, "shift_x": "minecraft:shift_x",
+                             "shift_y": 0.0, "shift_z": "minecraft:shift_z", "xz_scale": 0.25, "y_scale": 0.0}
+    floor = lambda depth: {"type": "minecraft:stone_depth", "offset": depth, "surface_type": "floor",
+                           "add_surface_depth": depth > 0, "secondary_depth_range": 0}
+    write_json(os.path.join(wg, "noise_settings", "evolutive.json"), {
+        "aquifers_enabled": False,
+        "default_block": evo_state("evolving_stone"),
+        "default_fluid": {"Name": "minecraft:water", "Properties": {"level": "0"}},
+        "disable_mob_generation": False,
+        "legacy_random_source": False,
+        "noise": {"height": 384, "min_y": -64, "size_horizontal": 1, "size_vertical": 2},
+        "noise_router": {
+            "barrier": 0.0, "continents": 0.0, "depth": 0.0, "erosion": 0.0,
+            "final_density": final_density,
+            "fluid_level_floodedness": 0.0, "fluid_level_spread": 0.0, "lava": 0.0,
+            "preliminary_surface_level": 0.0, "ridges": 0.0,
+            "temperature": shifted("minecraft:temperature"),
+            "vegetation": shifted("minecraft:vegetation"),
+            "vein_gap": 0.0, "vein_ridged": 0.0, "vein_toggle": 0.0,
+        },
+        "ore_veins_enabled": False,
+        "sea_level": 40,
+        "spawn_target": [],
+        "surface_rule": {"type": "minecraft:sequence", "sequence": [
+            {"type": "minecraft:condition",
+             "if_true": {"type": "minecraft:vertical_gradient", "random_name": "minecraft:bedrock_floor",
+                         "true_at_and_below": {"above_bottom": 0}, "false_at_and_above": {"above_bottom": 5}},
+             "then_run": {"type": "minecraft:block", "result_state": {"Name": "minecraft:bedrock"}}},
+            {"type": "minecraft:condition", "if_true": floor(0),
+             "then_run": {"type": "minecraft:block", "result_state": evo_state("evolving_grass")}},
+            {"type": "minecraft:condition", "if_true": floor(0) | {"add_surface_depth": True},
+             "then_run": {"type": "minecraft:block", "result_state": evo_state("evolving_dirt")}},
+        ]},
+    })
+
+    # --- éléments du décor
+    cf, pf = os.path.join(wg, "configured_feature"), os.path.join(wg, "placed_feature")
+    simple = lambda block, e=0, **p: {"type": "minecraft:simple_state_provider", "state": evo_state(block, e, **p)}
+    write_json(os.path.join(cf, "evolving_tree.json"), {"type": "minecraft:tree", "config": {
+        "decorators": [],
+        "dirt_provider": simple("evolving_dirt"),
+        "foliage_placer": {"type": "minecraft:cherry_foliage_placer", "corner_hole_chance": 0.25,
+                           "hanging_leaves_chance": 0.2, "hanging_leaves_extension_chance": 0.33,
+                           "height": 5, "offset": 0, "radius": 4, "wide_bottom_layer_hole_chance": 0.25},
+        "foliage_provider": simple("evolving_leaves"),
+        "force_dirt": False, "ignore_vines": True,
+        "minimum_size": {"type": "minecraft:two_layers_feature_size", "limit": 1, "lower_size": 0, "upper_size": 2},
+        "trunk_placer": {"type": "minecraft:cherry_trunk_placer", "base_height": 8,
+                         "branch_count": {"type": "minecraft:weighted_list", "distribution": [
+                             {"data": 1, "weight": 1}, {"data": 2, "weight": 1}, {"data": 3, "weight": 1}]},
+                         "branch_end_offset_from_top": {"type": "minecraft:uniform", "max_inclusive": 0, "min_inclusive": -1},
+                         "branch_horizontal_length": {"type": "minecraft:uniform", "max_inclusive": 4, "min_inclusive": 2},
+                         "branch_start_offset_from_top": {"max_inclusive": -3, "min_inclusive": -4},
+                         "height_rand_a": 2, "height_rand_b": 1},
+        "trunk_provider": simple("evolving_log", axis="y"),
+    }})
+    write_json(os.path.join(cf, "evolving_crystal_spike.json"), {"type": "minecraft:block_column", "config": {
+        "allowed_placement": {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+        "direction": "up", "prioritize_tip": False,
+        "layers": [{"height": {"type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 4},
+                    "provider": simple("evolving_crystal")}],
+    }})
+    write_json(os.path.join(cf, "evolving_geode.json"), {"type": "minecraft:geode", "config": {
+        "blocks": {
+            "alternate_inner_layer_provider": simple("evolving_ore"),
+            "cannot_replace": "#minecraft:features_cannot_replace",
+            "filling_provider": {"type": "minecraft:simple_state_provider", "state": {"Name": "minecraft:air"}},
+            "inner_layer_provider": simple("evolving_crystal"),
+            "inner_placements": [evo_state("evolving_crystal")],
+            "invalid_blocks": "#minecraft:geode_invalid_blocks",
+            "middle_layer_provider": simple("evolving_dirt"),
+            "outer_layer_provider": simple("evolving_stone"),
+        },
+        "crack": {"base_crack_size": 2.0, "crack_point_offset": 2, "generate_crack_chance": 0.9},
+        "distribution_points": {"type": "minecraft:uniform", "max_inclusive": 4, "min_inclusive": 3},
+        "invalid_blocks_threshold": 1,
+        "layers": {"filling": 1.7, "inner_layer": 2.2, "middle_layer": 3.2, "outer_layer": 4.2},
+        "max_gen_offset": 16, "min_gen_offset": -16, "noise_multiplier": 0.05,
+        "outer_wall_distance": {"type": "minecraft:uniform", "max_inclusive": 6, "min_inclusive": 4},
+        "placements_require_layer0_alternate": True,
+        "point_offset": {"type": "minecraft:uniform", "max_inclusive": 2, "min_inclusive": 1},
+        "use_alternate_layer0_chance": 0.15, "use_potential_placements_chance": 0.35,
+    }})
+    write_json(os.path.join(cf, "ore_evolving.json"), {"type": "minecraft:ore", "config": {
+        "discard_chance_on_air_exposure": 0.0, "size": 6,
+        "targets": [{"target": {"predicate_type": "minecraft:block_match", "block": f"{MOD}:evolving_stone"},
+                     "state": evo_state("evolving_ore")}],
+    }})
+    sapling_ok = {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:would_survive",
+                  "state": {"Name": "minecraft:cherry_sapling", "Properties": {"stage": "0"}}}}
+    for name, count in (("evolving_trees_sparse", 1), ("evolving_trees_dense", 6)):
+        write_json(os.path.join(pf, f"{name}.json"), {"feature": f"{MOD}:evolving_tree", "placement": [
+            {"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+            {"type": "minecraft:surface_water_depth_filter", "max_water_depth": 0},
+            {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"}, {"type": "minecraft:biome"}, sapling_ok]})
+    for name, count in (("evolving_crystal_spikes", 3), ("evolving_crystal_fields", 14)):
+        write_json(os.path.join(pf, f"{name}.json"), {"feature": f"{MOD}:evolving_crystal_spike", "placement": [
+            {"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+            {"type": "minecraft:heightmap", "heightmap": "MOTION_BLOCKING"}, {"type": "minecraft:biome"}]})
+    write_json(os.path.join(pf, "evolving_geode.json"), {"feature": f"{MOD}:evolving_geode", "placement": [
+        {"type": "minecraft:rarity_filter", "chance": 10}, {"type": "minecraft:in_square"},
+        {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform",
+                                                      "min_inclusive": {"absolute": -40}, "max_inclusive": {"absolute": 40}}},
+        {"type": "minecraft:biome"}]})
+    write_json(os.path.join(pf, "ore_evolving.json"), {"feature": f"{MOD}:ore_evolving", "placement": [
+        {"type": "minecraft:count", "count": 10}, {"type": "minecraft:in_square"},
+        {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform",
+                                                      "min_inclusive": {"absolute": -60}, "max_inclusive": {"absolute": 120}}},
+        {"type": "minecraft:biome"}]})
+
+    # --- biomes
+    def biome(trees, crystals, particle, prob, sky_color, fog_color):
+        features = [[] for _ in range(11)]
+        features[2] = [f"{MOD}:evolving_geode"]
+        features[6] = [f"{MOD}:ore_evolving"]
+        features[9] = [f"{MOD}:{trees}", f"{MOD}:{crystals}"]
+        return {
+            "attributes": {
+                "minecraft:visual/sky_color": sky_color,
+                "minecraft:visual/fog_color": fog_color,
+                "minecraft:visual/water_fog_color": "#4a2a8f",
+                "minecraft:visual/ambient_particles": [{"particle": {"type": particle}, "probability": prob}],
+            },
+            "carvers": ["minecraft:cave", "minecraft:cave_extra_underground", "minecraft:canyon"],
+            "downfall": 0.4,
+            "effects": {"water_color": "#8a5aff", "grass_color": "#9a6aff", "foliage_color": "#c07aff"},
+            "features": features,
+            "has_precipitation": False,
+            "spawn_costs": {},
+            "spawners": {
+                "ambient": [], "axolotls": [], "misc": [], "underground_water_creature": [],
+                "water_ambient": [], "water_creature": [],
+                "creature": [{"type": "minecraft:rabbit", "maxCount": 3, "minCount": 2, "weight": 6},
+                             {"type": "minecraft:sheep", "maxCount": 4, "minCount": 2, "weight": 8}],
+                "monster": [{"type": "minecraft:zombie", "maxCount": 4, "minCount": 2, "weight": 60},
+                            {"type": "minecraft:skeleton", "maxCount": 4, "minCount": 2, "weight": 60},
+                            {"type": "minecraft:spider", "maxCount": 3, "minCount": 1, "weight": 40},
+                            {"type": "minecraft:enderman", "maxCount": 2, "minCount": 1, "weight": 15}],
+            },
+            "temperature": 0.7,
+        }
+    biomes = {
+        "evolutive_plains": biome("evolving_trees_sparse", "evolving_crystal_spikes", "minecraft:end_rod", 0.0015,
+                                  "#7a4ad8", "#b48cff"),
+        "crystal_forest": biome("evolving_trees_dense", "evolving_crystal_spikes", "minecraft:glow", 0.004,
+                                "#5a3ab8", "#9a7ae8"),
+        "prism_fields": biome("evolving_trees_sparse", "evolving_crystal_fields", "minecraft:electric_spark", 0.003,
+                              "#8a5af0", "#d0a0ff"),
+    }
+    for name, body in biomes.items():
+        write_json(os.path.join(wg, "biome", f"{name}.json"), body)
+
+    def params(t, h):
+        return {"temperature": t, "humidity": h, "continentalness": 0.0, "erosion": 0.0,
+                "weirdness": 0.0, "depth": 0.0, "offset": 0.0}
+    write_json(os.path.join(DATA, "dimension", "evolutive.json"), {
+        "type": f"{MOD}:evolutive",
+        "generator": {
+            "type": "minecraft:noise",
+            "settings": f"{MOD}:evolutive",
+            "biome_source": {"type": "minecraft:multi_noise", "biomes": [
+                {"biome": f"{MOD}:evolutive_plains", "parameters": params([-1.0, 0.0], [-1.0, 0.1])},
+                {"biome": f"{MOD}:crystal_forest", "parameters": params([-1.0, 0.0], [0.1, 1.0])},
+                {"biome": f"{MOD}:prism_fields", "parameters": params([0.0, 1.0], [-1.0, 1.0])},
+            ]},
+        },
+    })
+
+
+# --------------------------------------------------------------------------- boss : le Slime Cloche
+
+BOSS_PARTS = ["slime_body", "slime_bell", "war_bell", "colossus_bell", "colossus_arm", "colossus_leg",
+              "titan_bell", "titan_crown", "divine_bell", "divine_halo", "divine_wings",
+              "titan_arm", "titan_leg", "divine_arm", "divine_leg"]
+
+
+def gel_texture(base, alpha, seed):
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 1.0 + 0.18 * math.sin((x + y) * 0.7) + r.uniform(-0.05, 0.05)
+            c = shade(base, f)
+            img.putpixel((x, y), c[:3] + (alpha,))
+    for p in ((2, 2), (3, 2), (2, 3), (11, 4)):
+        img.putpixel(p, (255, 255, 255, min(255, alpha + 60)))
+    return img
+
+
+def bell_texture(base, seed):
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 1.15 - 0.35 * (x / 15.0) + 0.06 * math.sin(y * 1.3) + r.uniform(-0.03, 0.03)
+            if y % 5 == 0:
+                f *= 0.75
+            img.putpixel((x, y), shade(base, f))
+    return img
+
+
+def muscle_texture(base, seed):
+    """Peau musclée : reliefs (clair / sombre) en bandes arrondies."""
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            bulge = math.sin(x / 15.0 * math.pi) * (0.8 + 0.2 * math.sin(y * 0.8))
+            f = 0.75 + 0.45 * bulge + r.uniform(-0.03, 0.03)
+            if y % 6 == 5:
+                f *= 0.7
+            img.putpixel((x, y), shade(base, f))
+    return img
+
+
+def eye_texture():
+    img = Image.new("RGBA", (16, 16), (20, 8, 24, 255))
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - 7.5, y - 7.5)
+            if d < 4:
+                img.putpixel((x, y), (255, 240, 120, 255) if d < 2 else (255, 120, 40, 255))
+    return img
+
+
+def boss_elements(part):
+    E, add = builder()
+    sym = sym8(add)
+    face_z = None
+    if part == "slime_body":
+        add([1, 0, 1], [15, 14, 15], "gel")                       # gelée
+        add([5, 3, 5], [11, 9, 11], "core")                       # coeur d'évolium
+        sym([3.5, 8, 15], [6, 10.5, 15.4], "eye")                 # yeux
+        add([6, 4.5, 15], [10, 5.5, 15.3], "mouth")
+        add([2, 13.5, 2], [14, 14.5, 14], "gel")
+    elif part in ("slime_bell", "war_bell", "colossus_bell", "titan_bell", "divine_bell"):
+        skin = {"slime_bell": "gel", "war_bell": "bronze", "colossus_bell": "gel", "titan_bell": "bronze",
+                "divine_bell": "gold"}[part]
+        add([6, 15, 7], [10, 17.5, 9], "trim")                    # anse
+        add([7, 17.5, 7], [9, 18.5, 9], "trim")
+        add([5, 13, 5], [11, 15, 11], skin)                       # dôme
+        add([4, 9, 4], [12, 13, 12], skin)                        # épaules de la cloche
+        add([3, 3, 3], [13, 9, 13], skin)                         # robe
+        add([2, 0, 2], [14, 3, 14], skin)                         # lèvre
+        add([1.8, 2.6, 1.8], [14.2, 3.2, 14.2], "trim")           # bord doré
+        add([6.5, -1.5, 6.5], [9.5, 1.5, 9.5], "core")            # battant lumineux
+        sym([4.5, 9.5, 12], [6.75, 11.5, 12.4], "eye")            # yeux
+        add([6, 5.5, 13], [10, 6.5, 13.3], "mouth")
+        add([3.8, 8.6, 3.8], [12.2, 9.0, 12.2], "energy")         # ceinture d'énergie
+        if part != "slime_bell":
+            for (x, z) in ((3, 8), (13, 8), (8, 3)):              # pointes
+                add([x - 0.6, 4, z - 0.6], [x + 0.6, 7.5, z + 0.6], "trim", ["y", 45, [x, 5.75, z]])
+            add([3.9, 11, 3.9], [12.1, 11.4, 12.1], "energy")     # runes
+            sym([3.2, 10.8, 11.8], [6.9, 11.3, 12.5], "trim")     # sourcils en colère
+        if part == "titan_bell":
+            add([2.8, 5.5, 2.8], [13.2, 6.0, 13.2], "energy")
+        if part == "divine_bell":
+            add([2.8, 5.5, 2.8], [13.2, 6.0, 13.2], "energy")
+            add([3.9, 13.6, 3.9], [12.1, 14.0, 12.1], "energy")
+    elif part.endswith("_arm"):
+        skin = {"colossus_arm": "muscle", "titan_arm": "titan", "divine_arm": "divine"}[part]
+        add([4, 12, 4], [12, 16, 12], skin)                       # épaule
+        add([3.5, 6.5, 3.5], [12.5, 12, 12.5], skin)              # biceps énorme
+        add([5, 2.5, 5], [11, 6.5, 11], skin)                     # avant-bras
+        add([4, -2, 4], [12, 2.5, 12], skin)                      # poing
+        add([3.8, 1.8, 3.8], [12.2, 2.6, 12.2], "trim")           # bracelet
+        add([4.8, 2.6, 4.8], [11.2, 3.0, 11.2], "energy")
+        add([4, 15, 4], [12, 16.5, 12], "trim")                   # épaulière
+    elif part.endswith("_leg"):
+        skin = {"colossus_leg": "muscle", "titan_leg": "titan", "divine_leg": "divine"}[part]
+        add([4.5, 9, 4.5], [11.5, 16, 11.5], skin)                # cuisse
+        add([5, 4, 5], [11, 9, 11], skin)                         # mollet
+        add([4.8, 7.5, 3.8], [11.2, 10, 5], "trim")               # genouillère
+        add([4, 0, 2], [12, 4, 12], skin)                         # pied
+        add([3.8, 0, 1.8], [12.2, 1, 12.2], "trim")               # semelle
+        add([4.6, 3.8, 4.6], [11.4, 4.2, 11.4], "energy")
+    elif part == "titan_crown":
+        add([3, 0, 3], [13, 3, 13], "trim")
+        for (x, z) in ((3, 3), (12, 3), (3, 12), (12, 12), (7.5, 3), (7.5, 12), (3, 7.5), (12, 7.5)):
+            add([x, 3, z], [x + 1, 7, z + 1], "trim")
+            add([x + 0.2, 7, z + 0.2], [x + 0.8, 8.2, z + 0.8], "core")
+        add([2.8, 1.2, 2.8], [13.2, 1.8, 13.2], "energy")
+    elif part == "divine_halo":
+        halo_flat(add, 8, 8, 8, 7.0, tex="core", t=0.45, depth=0.45)
+        halo_flat(add, 8, 8, 8, 6.2, tex="energy", t=0.2, depth=0.3)
+    elif part == "divine_wings":
+        for side in (1, -1):
+            for i in range(5):
+                x0 = 8 + side * (2 + i * 2.5)
+                lo, hi = sorted((x0, x0 + side * 2.4))
+                add([lo, 4 + i * 1.2, 7.6], [hi, 14 - i * 0.3, 8.4], "gold" if i % 2 else "trim")
+                add([lo + 0.6, 5 + i * 1.2, 7.5], [hi - 0.6, 13 - i * 0.3, 8.5], "energy")
+    return E
+
+
+def gen_boss_assets():
+
+    save_png(gel_texture(hexc("8a4adf"), 200, 1), "item", "boss", "gel")
+    save_png(bell_texture(hexc("b87333"), 2), "item", "boss", "bronze")
+    save_png(bell_texture(hexc("ffd23a"), 3), "item", "boss", "gold")
+    save_png(muscle_texture(hexc("9a5ae8"), 4), "item", "boss", "muscle")
+    save_png(muscle_texture(hexc("6a4a3a"), 5), "item", "boss", "titan")
+    save_png(muscle_texture(hexc("ffe08a"), 6), "item", "boss", "divine")
+    save_png(eye_texture(), "item", "boss", "eye")
+    save_png(gel_texture(hexc("1a0a24"), 255, 7), "item", "boss", "mouth")
+    tex = {"particle": f"{MOD}:item/boss/gel"}
+    for name in ("gel", "bronze", "gold", "muscle", "titan", "divine", "eye", "mouth"):
+        tex[name] = f"{MOD}:item/boss/{name}"
+    tex["core"] = f"{MOD}:item/pickaxe/stage10_gem"
+    tex["energy"] = f"{MOD}:item/pickaxe/stage10_energy"
+    tex["trim"] = f"{MOD}:item/pickaxe/stage19_trim"
+    for part in BOSS_PARTS:
+        elements = boss_elements(part)
+        for el in elements:
+            t = next(iter(el["faces"].values()))["texture"]
+            if t in ("#core", "#eye"):
+                el["light_emission"] = 15
+            elif t == "#energy":
+                el["light_emission"] = 15
+                el["shade"] = False
+        write_json(os.path.join(ASSETS, "models", "item", "boss", f"{part}.json"),
+                   {"textures": tex, "elements": elements})
+
+
+    def ref(i):
+        return {"type": "minecraft:model", "model": f"{MOD}:item/boss/{BOSS_PARTS[i]}"}
+    write_json(os.path.join(ASSETS, "items", "bell_boss_part.json"), {"model": {
+        "type": "minecraft:range_dispatch", "property": "minecraft:custom_model_data", "index": 0,
+        "fallback": ref(0), "entries": [{"threshold": i, "model": ref(i)} for i in range(len(BOSS_PARTS))]}})
+
+
 # --------------------------------------------------------------------------- génération
 
 def gen_textures():
@@ -2467,4 +3198,6 @@ if __name__ == "__main__":
     gen_armor()
     gen_bow()
     gen_data()
+    gen_dimension_assets()
+    gen_dimension_data()
     print("Ressources générées dans", os.path.normpath(ROOT))

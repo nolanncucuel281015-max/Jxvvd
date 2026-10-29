@@ -45,6 +45,12 @@ public final class ModItems {
 	public static final Item EVOLITE_INGOT = register("evolite_ingot", Item::new,
 			new Item.Settings().rarity(Rarity.EPIC).fireproof());
 
+	/** Briquet d'évolium (évolium + silex) : allume le portail en blocs de rubis vers la dimension évolutive. */
+	public static final Item EVOLIUM_LIGHTER = register("evolium_lighter", EvoliumLighterItem::new,
+			new Item.Settings().maxDamage(128).rarity(Rarity.RARE));
+	/** Morceaux du modèle du boss (objets d'affichage), pas dans l'inventaire créatif. */
+	public static final Item BELL_BOSS_PART = register("bell_boss_part", Item::new, new Item.Settings().maxCount(1));
+
 	public static final Item EVOLVING_PICKAXE = register("evolving_pickaxe",
 			s -> new EvolvingToolItem(EvoKind.PICKAXE, s),
 			evolving().pickaxe(EVOLIUM_MATERIAL, 1.0F, -2.8F));

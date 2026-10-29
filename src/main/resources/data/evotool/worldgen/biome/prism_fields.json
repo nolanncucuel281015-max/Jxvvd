@@ -1,0 +1,97 @@
+{
+  "attributes": {
+    "minecraft:visual/sky_color": "#8a5af0",
+    "minecraft:visual/fog_color": "#d0a0ff",
+    "minecraft:visual/water_fog_color": "#4a2a8f",
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "minecraft:electric_spark"
+        },
+        "probability": 0.003
+      }
+    ]
+  },
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:cave_extra_underground",
+    "minecraft:canyon"
+  ],
+  "downfall": 0.4,
+  "effects": {
+    "water_color": "#8a5aff",
+    "grass_color": "#9a6aff",
+    "foliage_color": "#c07aff"
+  },
+  "features": [
+    [],
+    [],
+    [
+      "evotool:evolving_geode"
+    ],
+    [],
+    [],
+    [],
+    [
+      "evotool:ore_evolving"
+    ],
+    [],
+    [],
+    [
+      "evotool:evolving_trees_sparse",
+      "evotool:evolving_crystal_fields"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "misc": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": [],
+    "creature": [
+      {
+        "type": "minecraft:rabbit",
+        "maxCount": 3,
+        "minCount": 2,
+        "weight": 6
+      },
+      {
+        "type": "minecraft:sheep",
+        "maxCount": 4,
+        "minCount": 2,
+        "weight": 8
+      }
+    ],
+    "monster": [
+      {
+        "type": "minecraft:zombie",
+        "maxCount": 4,
+        "minCount": 2,
+        "weight": 60
+      },
+      {
+        "type": "minecraft:skeleton",
+        "maxCount": 4,
+        "minCount": 2,
+        "weight": 60
+      },
+      {
+        "type": "minecraft:spider",
+        "maxCount": 3,
+        "minCount": 1,
+        "weight": 40
+      },
+      {
+        "type": "minecraft:enderman",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 15
+      }
+    ]
+  },
+  "temperature": 0.7
+}

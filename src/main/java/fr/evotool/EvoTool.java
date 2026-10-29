@@ -2,8 +2,10 @@ package fr.evotool;
 
 import fr.evotool.armor.ArmorHandler;
 import fr.evotool.block.ModBlocks;
+import fr.evotool.boss.ModEntities;
 import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
+import fr.evotool.dimension.EvoDimension;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
 import fr.evotool.mining.AxeLaser;
@@ -48,6 +50,8 @@ public class EvoTool implements ModInitializer {
 		GiantItem.init();
 		CelestialBow.init();
 		PickaxeSlam.init();
+		ModEntities.init();
+		EvoDimension.init();
 		if (Boolean.getBoolean("evotool.selftest")) {
 			SelfTest.register();
 		}

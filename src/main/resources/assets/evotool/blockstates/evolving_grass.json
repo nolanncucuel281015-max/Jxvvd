@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "evolution=0": {
+      "model": "evotool:block/evolving/evolving_grass_0"
+    },
+    "evolution=1": {
+      "model": "evotool:block/evolving/evolving_grass_1"
+    },
+    "evolution=2": {
+      "model": "evotool:block/evolving/evolving_grass_2"
+    },
+    "evolution=3": {
+      "model": "evotool:block/evolving/evolving_grass_3"
+    },
+    "evolution=4": {
+      "model": "evotool:block/evolving/evolving_grass_4"
+    },
+    "evolution=5": {
+      "model": "evotool:block/evolving/evolving_grass_5"
+    }
+  }
+}

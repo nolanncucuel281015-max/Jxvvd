@@ -243,11 +243,47 @@ Le tableau détaille la pioche ; les autres outils suivent les mêmes thèmes av
 | 45 | Blaze      | garde sur le manche       | 100 | Ultime    | halo complet, cœur surchargé |
 | 50 | Évolium    | pointe de cristal         |     |           | |
 
+**Lignes lumineuses** : toutes les armes, outils et pièces d'armure ont des lignes d'énergie animées
+(gorge de l'épée, tranchants, veines dans les bras de la pioche, runes du manche, yeux du heaume…)
+qui **brillent dans le noir** et coulent comme de l'énergie. Plus la forme est haute, plus elles brillent ;
+les gemmes s'allument aussi. Tranchants polis, métal gravé de filigranes, dorures, halo à la forme 100.
+L'armure portée est peinte en haute définition (4x) : plaques, rivets, cotte de mailles, gemmes serties
+et circuits lumineux ; le plastron, les jambières et les bottes ont aussi une icône 3D.
+
 Les textures et modèles sont générés par `tools/generate_assets.py` (Python 3 + Pillow) :
 
 ```
 python3 tools/generate_assets.py
 ```
+
+## Dimension évolutive
+
+**Y aller** : construis un cadre de **blocs de rubis** comme un portail du Nether (intérieur de 2x3 à 21x21,
+les coins sont facultatifs) et allume-le avec le **briquet d'évolium** (1 évolium + 1 silex). Le portail
+évolutif (rouge rubis et violet) t'emmène dans la dimension évolutive ; un portail de retour est créé à l'arrivée.
+
+**La dimension** : ciel violet, collines, forêts de cristal et champs prismatiques, faits de **blocs évolutifs**
+(pierre, herbe, terre, bois, feuilles, cristal, minerai). Chaque bloc a **6 niveaux d'évolution**.
+
+**Plus tu restes, plus tout évolue** : toutes les **10 minutes** passées dans la dimension (barre violette en haut
+de l'écran), la dimension passe une **phase**. Une onde d'évolution part de toi et les blocs autour de toi
+évoluent (veines d'énergie, cristaux, dorures, puis arc-en-ciel), et ils brillent de plus en plus.
+Le minerai évolutif donne 1 évolium de plus par niveau d'évolution ; la pierre au niveau 5 lâche parfois de l'évolium.
+Le temps repart à zéro quand tu quittes la dimension.
+
+**Le boss : le Slime Cloche**. Il apparaît 30 secondes après ton arrivée et évolue avec toi :
+
+| Temps | Forme | Attaques |
+|------:|-------|----------|
+| 0 min  | Slime Évolutif  | bondit sur toi |
+| 10 min | Slime Cloche    | + onde de son (DONG) qui repousse |
+| 20 min | Cloche de Guerre | + invoque des slimes, pointes et runes |
+| 30 min | Cloche Colosse  | bras et jambes hyper musclés : coups de poing, bonds écrasants |
+| 40 min | Cloche Titan    | + couronne, rayon sonique |
+| 50 min | Cloche Divine   | + halo, ailes, foudre, régénération |
+
+Chaque forme a plus de vie et frappe plus fort. Vaincu, il lâche de l'évolium, des blocs de rubis, une cloche,
+des lingots d'évolite et des blocs d'évolium (selon sa forme) ; un nouveau boss revient 3 minutes plus tard.
 
 ## Compiler
 

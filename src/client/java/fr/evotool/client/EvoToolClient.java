@@ -1,6 +1,8 @@
 package fr.evotool.client;
 
 import fr.evotool.EvoTool;
+import fr.evotool.block.ModBlocks;
+import fr.evotool.boss.ModEntities;
 import fr.evotool.component.EvoData;
 import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
@@ -11,6 +13,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.render.BlockRenderLayer;
+import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -25,6 +31,10 @@ public class EvoToolClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		// Le boss est dessiné par ses objets d'affichage animés (côté serveur) : l'entité elle-même est invisible.
+		EntityRendererRegistry.register(ModEntities.BELL_BOSS, EmptyEntityRenderer::new);
+		BlockRenderLayerMap.putBlock(ModBlocks.EVOLUTION_PORTAL, BlockRenderLayer.TRANSLUCENT);
+		BlockRenderLayerMap.putBlock(ModBlocks.EVOLVING_LEAVES, BlockRenderLayer.CUTOUT);
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (OPEN_MENU.wasPressed()) {
 				if (client.player == null) {

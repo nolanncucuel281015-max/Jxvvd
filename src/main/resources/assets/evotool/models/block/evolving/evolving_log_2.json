@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "evotool:block/evolving/evolving_log_side_2",
+    "end": "evotool:block/evolving/evolving_log_end_2"
+  }
+}

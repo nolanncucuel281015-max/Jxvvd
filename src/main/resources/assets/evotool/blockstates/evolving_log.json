@@ -1,0 +1,76 @@
+{
+  "variants": {
+    "axis=y,evolution=0": {
+      "model": "evotool:block/evolving/evolving_log_0"
+    },
+    "axis=z,evolution=0": {
+      "model": "evotool:block/evolving/evolving_log_0",
+      "x": 90
+    },
+    "axis=x,evolution=0": {
+      "model": "evotool:block/evolving/evolving_log_0",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,evolution=1": {
+      "model": "evotool:block/evolving/evolving_log_1"
+    },
+    "axis=z,evolution=1": {
+      "model": "evotool:block/evolving/evolving_log_1",
+      "x": 90
+    },
+    "axis=x,evolution=1": {
+      "model": "evotool:block/evolving/evolving_log_1",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,evolution=2": {
+      "model": "evotool:block/evolving/evolving_log_2"
+    },
+    "axis=z,evolution=2": {
+      "model": "evotool:block/evolving/evolving_log_2",
+      "x": 90
+    },
+    "axis=x,evolution=2": {
+      "model": "evotool:block/evolving/evolving_log_2",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,evolution=3": {
+      "model": "evotool:block/evolving/evolving_log_3"
+    },
+    "axis=z,evolution=3": {
+      "model": "evotool:block/evolving/evolving_log_3",
+      "x": 90
+    },
+    "axis=x,evolution=3": {
+      "model": "evotool:block/evolving/evolving_log_3",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,evolution=4": {
+      "model": "evotool:block/evolving/evolving_log_4"
+    },
+    "axis=z,evolution=4": {
+      "model": "evotool:block/evolving/evolving_log_4",
+      "x": 90
+    },
+    "axis=x,evolution=4": {
+      "model": "evotool:block/evolving/evolving_log_4",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,evolution=5": {
+      "model": "evotool:block/evolving/evolving_log_5"
+    },
+    "axis=z,evolution=5": {
+      "model": "evotool:block/evolving/evolving_log_5",
+      "x": 90
+    },
+    "axis=x,evolution=5": {
+      "model": "evotool:block/evolving/evolving_log_5",
+      "x": 90,
+      "y": 90
+    }
+  }
+}
