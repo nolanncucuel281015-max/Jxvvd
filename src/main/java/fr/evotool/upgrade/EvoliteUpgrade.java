@@ -29,6 +29,8 @@ public final class EvoliteUpgrade {
 		MAGIC_SLASH,
 		/** Lance : pendant la charge, on court beaucoup plus vite et chaque coup foudroie la cible. */
 		LIGHTNING_CHARGE,
+		/** Arc (niveau 100) : clic droit = arc géant qui tire une pluie de flèches droit sur les monstres. */
+		CELESTIAL_BOW,
 		/** Masse : clic droit = bond dans les airs pour préparer une attaque écrasante, sans dégâts de chute. */
 		SOAR,
 		/** Casque : les monstres proches brillent à travers les murs. */
@@ -57,6 +59,7 @@ public final class EvoliteUpgrade {
 			case PICKAXE, SHOVEL, AXE, HOE -> Upgrade.TELEKINESIS;
 			case SWORD -> Upgrade.MAGIC_SLASH;
 			case SPEAR -> Upgrade.LIGHTNING_CHARGE;
+			case BOW -> Upgrade.CELESTIAL_BOW;
 			case MACE -> Upgrade.SOAR;
 			case HELMET -> Upgrade.KNIGHT_SIGHT;
 			case CHESTPLATE -> Upgrade.MAGIC_SHIELD;

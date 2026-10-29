@@ -21,7 +21,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 
-/** Pouvoirs de combat (épée, hache, masse) et gain d'XP quand l'arme tue un monstre. */
+/** Pouvoirs de combat (épée, lance, hache, masse, arc) et gain d'XP quand l'arme tue un monstre. */
 public final class CombatHandler {
 	private static final float LIFESTEAL_RATIO = 0.10F;
 	private static final float SHOCKWAVE_RATIO = 0.5F;
@@ -38,11 +38,12 @@ public final class CombatHandler {
 			if (applyingBonusDamage || blocked || damageTaken <= 0) {
 				return;
 			}
-			ServerPlayerEntity player = wielder(source);
-			if (player == null) {
+			Wielded wielded = wielded(source);
+			if (wielded == null) {
 				return;
 			}
-			ItemStack weapon = player.getMainHandStack();
+			ServerPlayerEntity player = wielded.player();
+			ItemStack weapon = wielded.weapon();
 			EvoProfile profile = EvoProgression.kindOf(weapon).profile();
 			EvoData data = EvoProgression.get(weapon);
 			ServerWorld world = (ServerWorld) entity.getEntityWorld();
@@ -79,25 +80,56 @@ public final class CombatHandler {
 		});
 
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-			ServerPlayerEntity player = wielder(source);
-			if (player == null || !(entity instanceof Monster) || player.isCreative()) {
+			Wielded wielded = wielded(source);
+			if (wielded == null || !(entity instanceof Monster) || wielded.player().isCreative()) {
 				return;
 			}
-			ItemStack weapon = player.getMainHandStack();
+			ServerPlayerEntity player = wielded.player();
+			ItemStack weapon = wielded.weapon();
 			// Pour la hache, le compteur affiché reste celui des blocs ; pour l'épée et la masse, ce sont les monstres.
 			int countIncrement = EvoProgression.kindOf(weapon).profile().counter() == EvoProfile.Counter.KILLS ? 1 : 0;
 			EvoProgression.addXp(weapon, EvoProgression.xpForKill(entity), countIncrement, player, entity.getEntityWorld());
 		});
 	}
 
-	private static ServerPlayerEntity wielder(DamageSource source) {
-		if (source.getAttacker() instanceof ServerPlayerEntity player) {
-			EvoKind kind = EvoProgression.kindOf(player.getMainHandStack());
-			if (kind != null && kind.profile().gainsKillXp()) {
-				return player;
-			}
+	/** Le joueur et l'arme évolutive qui ont porté le coup. */
+	private record Wielded(ServerPlayerEntity player, ItemStack weapon) {
+	}
+
+	/**
+	 * Arme au corps à corps : celle en main. Flèche tirée par l'Arc Évolutif : l'arc du joueur
+	 * (la flèche ne garde qu'une copie de l'arc, l'XP doit aller au vrai).
+	 */
+	private static Wielded wielded(DamageSource source) {
+		if (!(source.getAttacker() instanceof ServerPlayerEntity player)) {
+			return null;
+		}
+		ItemStack shotFrom = source.getWeaponStack();
+		if (source.getSource() != player && shotFrom != null && EvoProgression.kindOf(shotFrom) == EvoKind.BOW) {
+			ItemStack bow = findBow(player);
+			return bow.isEmpty() ? null : new Wielded(player, bow);
+		}
+		ItemStack main = player.getMainHandStack();
+		EvoKind kind = EvoProgression.kindOf(main);
+		if (kind != null && kind != EvoKind.BOW && kind.profile().gainsKillXp()) {
+			return new Wielded(player, main);
 		}
 		return null;
+	}
+
+	public static ItemStack findBow(ServerPlayerEntity player) {
+		if (EvoProgression.kindOf(player.getMainHandStack()) == EvoKind.BOW) {
+			return player.getMainHandStack();
+		}
+		if (EvoProgression.kindOf(player.getOffHandStack()) == EvoKind.BOW) {
+			return player.getOffHandStack();
+		}
+		for (int i = 0; i < player.getInventory().size(); i++) {
+			if (EvoProgression.kindOf(player.getInventory().getStack(i)) == EvoKind.BOW) {
+				return player.getInventory().getStack(i);
+			}
+		}
+		return ItemStack.EMPTY;
 	}
 
 	private static void shockwave(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, double radius) {

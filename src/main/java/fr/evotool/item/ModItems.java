@@ -65,6 +65,8 @@ public final class ModItems {
 			s -> new EvolvingToolItem(EvoKind.SPEAR, s),
 			evolving().spear(EVOLIUM_MATERIAL, 1.15F, 1.2F, 0.4F, 2.5F, 7.0F, 5.5F, 5.1F, 8.75F, 4.6F)
 					.component(DataComponentTypes.MINIMUM_ATTACK_CHARGE, 0.0F));
+	public static final Item EVOLVING_BOW = register("evolving_bow", EvolvingBowItem::new,
+			evolving().maxDamage(384).enchantable(1));
 	public static final Item EVOLIUM_MACE = register("evolium_mace", EvoliumMaceItem::new,
 			evolving()
 					.maxDamage(2500)
@@ -99,7 +101,7 @@ public final class ModItems {
 			s -> new EvolvingArmorItem(EvoKind.BOOTS, s), evolving().armor(EVOLIUM_ARMOR, EquipmentType.BOOTS));
 
 	public static final List<Item> EVOLVING_ITEMS = List.of(
-			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLVING_SPEAR, EVOLIUM_MACE,
+			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLVING_SPEAR, EVOLVING_BOW, EVOLIUM_MACE,
 			EVOLVING_HELMET, EVOLVING_CHESTPLATE, EVOLVING_LEGGINGS, EVOLVING_BOOTS);
 
 	private ModItems() {
@@ -113,6 +115,7 @@ public final class ModItems {
 			case HOE -> EVOLVING_HOE;
 			case SWORD -> EVOLVING_SWORD;
 			case SPEAR -> EVOLVING_SPEAR;
+			case BOW -> EVOLVING_BOW;
 			case MACE -> EVOLIUM_MACE;
 			case HELMET -> EVOLVING_HELMET;
 			case CHESTPLATE -> EVOLVING_CHESTPLATE;

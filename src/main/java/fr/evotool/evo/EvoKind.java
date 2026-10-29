@@ -57,6 +57,15 @@ public enum EvoKind {
 			.enchant(ModEnchantments.EVOLVING_LUNGE, "enchantment.evotool.evolving_lunge", 20, 40, 60)
 			.enchant(Enchantments.LOOTING, "looting", 30, 50, 70)),
 
+	/** Arc : évolue en tuant des monstres avec ses flèches. Puissance, Frappe, Flamme, Infinité, foudre, exécution. */
+	BOW(new EvoProfile()
+			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
+			.power(Power.LIFESTEAL, 10).power(Power.LIGHTNING, 50).power(Power.EXECUTION, 100)
+			.enchant(Enchantments.POWER, "power", 15, 25, 35, 45, 55)
+			.enchant(Enchantments.PUNCH, "punch", 20, 40)
+			.enchant(Enchantments.FLAME, "flame", 30)
+			.enchant(Enchantments.INFINITY, "infinity", 50)),
+
 	/** Évolue en tuant des monstres : Densité, Brèche, Charge de vent, onde de choc, foudre, exécution. */
 	MACE(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()

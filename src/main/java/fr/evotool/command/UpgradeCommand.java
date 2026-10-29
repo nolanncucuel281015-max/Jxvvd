@@ -32,6 +32,7 @@ public final class UpgradeCommand {
 			{"hoe", "houe"},
 			{"sword", "epee"},
 			{"spear", "lance"},
+			{"bow", "arc"},
 			{"mace", "masse"},
 			{"helmet", "casque"},
 			{"chestplate", "plastron"},
