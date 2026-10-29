@@ -22,7 +22,18 @@ rng = random.Random(1337)
 
 # --------------------------------------------------------------------------- utilitaires
 
+def check_model_bounds(path, obj):
+    """Minecraft refuse les éléments de modèle hors de [-16, 32]."""
+    for el in obj.get("elements", []) if isinstance(obj, dict) else []:
+        for v in el["from"] + el["to"]:
+            assert -16 <= v <= 32, f"{path}: élément hors limites {el['from']} -> {el['to']}"
+        rot = el.get("rotation")
+        if rot:
+            assert rot["angle"] in (-45, -22.5, 0, 22.5, 45), f"{path}: angle {rot['angle']}"
+
+
 def write_json(path, obj):
+    check_model_bounds(path, obj)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2, ensure_ascii=False)
@@ -861,12 +872,89 @@ def hoe_elements(stage):
     return E
 
 
+def spear_elements(stage):
+    """Lance : long manche, fer en feuille, ailerons ; s'enrichit à chaque forme."""
+    E, add = builder()
+    top = 27.5 if stage < 8 else 29.5                                # pointe du fer
+    # manche
+    add([7.4, -10, 7.4], [8.6, 18, 8.6], "handle")
+    add([7.1, -11.5, 7.1], [8.9, -10, 8.9], "metal")                 # talon
+    for y in (-3, -1, 1):
+        add([7.2, y, 7.2], [8.8, y + 1, 8.8], "grip")
+    add([7.3, -3.5, 7.3], [8.7, 3, 8.7], "grip")
+    add([7, 17, 7], [9, 19, 9], "metal")                             # douille
+    # fer en forme de feuille
+    add([6.5, 19, 7.6], [9.5, 22, 8.4], "metal")
+    add([6, 22, 7.65], [10, top - 3.5, 8.35], "metal")
+    add([6.75, top - 3.5, 7.7], [9.25, top - 1, 8.3], "metal")
+    add([7.1, top - 1.9, 7.7], [8.9, top - 0.1, 8.3], "metal", ["z", 45, [8, top - 1, 8]])
+    if stage >= 20:
+        add([7, 20.5, 7.35], [9, 24, 8.65], "gem")
+    else:
+        add([7.25, 21, 7.4], [8.75, 23.5, 8.6], "gem")
+    if stage >= 1:   # niv. 5 : anneaux de douille
+        add([6.8, 16.5, 6.8], [9.2, 17, 9.2], "metal")
+    if stage >= 2:   # niv. 10 : nervure lumineuse
+        add([7.8, 23.5, 7.55], [8.2, top - 1.5, 8.45], "gem")
+    if stage >= 3:   # niv. 15 : talon serti
+        add([7.4, -12.5, 7.4], [8.6, -11.5, 8.6], "gem")
+    if stage >= 4:   # niv. 20 : ailerons (lance à ailettes)
+        add([4.5, 18.5, 7.6], [11.5, 19.5, 8.4], "metal")
+    if stage >= 5:   # niv. 25 : rubans
+        add([6.4, 13, 7.6], [6.9, 16.5, 8.4], "grip")
+        add([9.1, 13.5, 7.6], [9.6, 16.5, 8.4], "grip")
+    if stage >= 6:   # niv. 30 : ailerons relevés
+        add([2.5, 18.5, 7.65], [4.5, 19.5, 8.35], "metal", ["z", -22.5, [4.5, 19, 8]])
+        add([11.5, 18.5, 7.65], [13.5, 19.5, 8.35], "metal", ["z", 22.5, [11.5, 19, 8]])
+    if stage >= 7:   # niv. 35 : gemmes sur les ailerons
+        add([5, 18.25, 7.4], [6, 19.75, 8.6], "gem")
+        add([10, 18.25, 7.4], [11, 19.75, 8.6], "gem")
+    # niv. 40 : fer plus long (voir "top")
+    if stage >= 9:   # niv. 45 : garde sur le manche
+        add([7, 4, 7], [9, 4.75, 9], "metal")
+    if stage >= 10:  # niv. 50 : lames latérales (pertuisane)
+        add([4, 20, 7.7], [6.5, 21.25, 8.3], "metal", ["z", 45, [6.5, 20.5, 8]])
+        add([9.5, 20, 7.7], [12, 21.25, 8.3], "metal", ["z", -45, [9.5, 20.5, 8]])
+    if stage >= 11:  # niv. 55 : crochets
+        add([5.25, 22.5, 7.7], [6, 24, 8.3], "metal", ["z", 22.5, [6, 22.5, 8]])
+        add([10, 22.5, 7.7], [10.75, 24, 8.3], "metal", ["z", -22.5, [10, 22.5, 8]])
+    if stage >= 12:  # niv. 60 : runes sur le manche
+        for y in (7, 9.5, 12):
+            add([7.8, y, 7.2], [8.2, y + 0.75, 7.4], "gem")
+            add([7.8, y, 8.6], [8.2, y + 0.75, 8.8], "gem")
+    if stage >= 13:  # niv. 65 : pointe de talon
+        add([7.6, -14.5, 7.6], [8.4, -12.5, 8.4], "metal", ["y", 45, [8, -13.5, 8]])
+    if stage >= 15:  # niv. 75 : ailes
+        add([3, 19.5, 7.7], [5, 24, 8.3], "metal", ["z", 22.5, [5, 19.5, 8]])
+        add([11, 19.5, 7.7], [13, 24, 8.3], "metal", ["z", -22.5, [11, 19.5, 8]])
+    if stage >= 18:  # niv. 90 : deuxième garde sertie
+        add([7, 5.5, 7], [9, 6, 9], "metal")
+        add([6.7, 5.4, 7.6], [7, 6.1, 8.4], "gem")
+        add([9, 5.4, 7.6], [9.3, 6.1, 8.4], "gem")
+    if stage >= 19:  # niv. 95 : diadème
+        add([6, 19, 7.5], [10, 19.4, 8.5], "gem")
+    crystals = [(3, 27), (13, 27), (8, 30.8), (1, 15), (15, 15), (2, 5), (14, 5)]
+    if stage >= 14:
+        for c in crystals[0:2]:
+            crystal(add, *c)
+    if stage >= 16:
+        crystal(add, *crystals[2])
+    if stage >= 17:
+        for c in crystals[3:5]:
+            crystal(add, *c)
+    if stage >= 20:
+        for c in crystals[5:7]:
+            crystal(add, *c)
+    return E
+
+
 TOOL_MODELS = {
     # id: (éléments, hauteur approximative pour l'échelle d'affichage)
     "evolving_sword": (sword_elements, 34),
     "evolving_axe": (axe_elements, 28),
     "evolving_shovel": (shovel_elements, 30),
     "evolving_hoe": (hoe_elements, 27),
+    "evolving_spear": (spear_elements, 44),
 }
 
 
