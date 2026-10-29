@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SBS",
+    " | ",
+    " | "
+  ],
+  "key": {
+    "S": "evotool:sapphire",
+    "B": "evotool:sapphire_block",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "evotool:sapphire_warhammer",
+    "count": 1
+  }
+}

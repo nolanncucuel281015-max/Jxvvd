@@ -8,6 +8,8 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
+import fr.evotool.item.ModdedWeaponItem;
+import fr.evotool.weapon.WeaponKind;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -49,6 +51,14 @@ public class EvoToolClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+			if (stack.getItem() instanceof ModdedWeaponItem weapon) {
+				WeaponKind w = weapon.weaponKind();
+				lines.add(1, Text.translatable("tooltip.evotool.weapon.passive", Text.translatable(w.passiveKey()))
+						.formatted(Formatting.GOLD));
+				lines.add(2, Text.translatable("tooltip.evotool.weapon.ability", Text.translatable(w.abilityKey()),
+						String.format(java.util.Locale.ROOT, "%.1f", w.cooldown() / 20.0)).formatted(Formatting.LIGHT_PURPLE));
+				return;
+			}
 			EvoKind kind = EvoProgression.kindOf(stack);
 			if (kind == null) {
 				return;

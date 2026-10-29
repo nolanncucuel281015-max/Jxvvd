@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:ruby_from_smelting_ruby_ore"
+      }
+    },
+    "has_ruby_ore": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:ruby_ore"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ruby_ore"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:ruby_from_smelting_ruby_ore"
+    ]
+  }
+}

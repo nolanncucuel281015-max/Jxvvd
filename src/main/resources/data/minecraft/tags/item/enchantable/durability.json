@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "evotool:evolium_scythe",
+    "evotool:ruby_katana",
+    "evotool:sapphire_warhammer",
+    "evotool:evolite_greatsword",
+    "evotool:shadow_dagger",
+    "evotool:royal_halberd",
+    "evotool:crystal_staff"
+  ]
+}

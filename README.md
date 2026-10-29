@@ -223,6 +223,29 @@ La **masse** : un bloc d'évolium au-dessus d'un bâton.
 [    Bâton     ]
 ```
 
+**Livre de recettes** : toutes les recettes du mod se débloquent dans le livre de la table de craft
+dès que tu ramasses un de leurs ingrédients (évolium, rubis, saphir, évolite…), comme les recettes vanilla.
+
+## Armes moddées
+
+Sept armes avec leur **propre modèle 3D** (rien à voir avec les armes vanilla), des lignes lumineuses,
+un **passif** à chaque coup et une **attaque spéciale au clic droit**. Elles n'évoluent pas, mais acceptent
+les enchantements d'épée (Tranchant, Aura de feu, Butin…). Toutes se fabriquent à la **table de craft**.
+
+| Arme | Dégâts / vitesse | Passif | Clic droit (recharge) | Recette (lignes de la grille) |
+|------|-----------------|--------|-----------------------|-------------------------------|
+| **Faux d'Évolium** | 9 / 1,0, allonge +1 | vol de vie 15 % | **Moisson** : tourbillon de 4,5 blocs, attire et soigne (6 s) | `EEE` / `.E\|` / `..\|` |
+| **Katana de Rubis** | 7 / 2,0 | saignement | **Iaijutsu** : ruée de 8 blocs qui tranche tout sur le passage (5 s) | `..R` / `.R.` / `E..` |
+| **Marteau de Guerre Saphir** | 12 / 0,7 | soulève et ralentit | **Séisme** : onde de choc de 6 blocs, projette en l'air (8 s) | `SBS` / `.\|.` / `.\|.` |
+| **Espadon d'Évolite** | 14 / 0,8, allonge +1 | fendoir : 40 % aux ennemis autour | **Lame céleste** : vague d'énergie sur 16 blocs (7 s) | `.V.` / `.V.` / `E\|E` |
+| **Dague d'Ombre** | 5 / 2,8 | coup dans le dos : dégâts x2 | **Pas de l'ombre** : téléportation dans le dos de la cible visée, invisible (4 s) | `E` / `P` / `\|` |
+| **Hallebarde Royale** | 10 / 0,9, allonge +2 | transperce l'ennemi suivant (70 %) | **Fauchage royal** : balayage en demi-cercle de 5,5 blocs (5 s) | `EEG` / `E\|.` / `.\|.` |
+| **Sceptre de Cristal** | 4 / 1,6 | cristallise (ralentit) | **Éclat de cristal** : projectile magique à 32 blocs (0,8 s) | `.C.` / `G\|G` / `.\|.` |
+
+E = évolium, R = rubis, S = saphir, B = bloc de saphir, V = lingot d'évolite, P = perle de l'Ender,
+G = lingot d'or, C = cristal évolutif (dimension évolutive), | = bâton, . = case vide.
+Les attaques ne touchent ni les joueurs, ni les animaux apprivoisés, ni les villageois.
+
 ## Modèle 3D — 21 formes
 
 Chaque outil a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux il change de forme** :
@@ -281,6 +304,14 @@ Le temps repart à zéro quand tu quittes la dimension.
 | 30 min | Cloche Colosse  | bras et jambes hyper musclés : coups de poing, bonds écrasants |
 | 40 min | Cloche Titan    | + couronne, rayon sonique |
 | 50 min | Cloche Divine   | + halo, ailes, foudre, régénération |
+
+**3 phases de combat** (barre de boss en 3 parties) :
+
+| Vie | Phase | Changements |
+|----:|-------|-------------|
+| 100 % | Phase 1 | violet royal et or |
+| 66 %  | Phase 2 — **Colère** | transformation (invulnérable 2,5 s, onde de choc), devient **cramoisi et or**, attaques 1,5 fois plus fréquentes, plus fort et plus rapide, onde de son même en Slime |
+| 33 %  | Phase 3 — **Ascension dorée** | nouvelle transformation, devient **entièrement doré** et lumineux, attaques 2 fois plus fréquentes, **colonnes de lumière** annoncées par des cercles au sol |
 
 Chaque forme a plus de vie et frappe plus fort. Vaincu, il lâche de l'évolium, des blocs de rubis, une cloche,
 des lingots d'évolite et des blocs d'évolium (selon sa forme) ; un nouveau boss revient 3 minutes plus tard.

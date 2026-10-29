@@ -1813,7 +1813,7 @@ def dark_texture(st, seed):
 
 
 def trim_color(st):
-    return lerp(st["gem"][2], hexc("ffe39a"), 0.45)
+    return st["trim"] if "trim" in st else lerp(st["gem"][2], hexc("ffe39a"), 0.45)
 
 
 def trim_texture(st, seed):
@@ -2694,6 +2694,17 @@ BOSS_PARTS = ["slime_body", "slime_bell", "war_bell", "colossus_bell", "colossus
               "titan_bell", "titan_crown", "divine_bell", "divine_halo", "divine_wings",
               "titan_arm", "titan_leg", "divine_arm", "divine_leg"]
 
+# Couleurs du boss pour chaque phase de combat : 1 violet royal et or, 2 colère (cramoisi et or),
+# 3 ascension dorée (tout devient or et lumière).
+BOSS_PALETTES = {
+    1: {"gel": ("8a4adf", 200), "bronze": "b8823a", "gold": "ffd23a", "muscle": "9a5ae8", "titan": "6a3aa8",
+        "divine": "fff0c0", "eye": ("fff3a0", "ffb02a"), "trim": "ffc832", "core": "c070ff", "energy": "b060ff"},
+    2: {"gel": ("d0306a", 210), "bronze": "a83a2a", "gold": "ffb020", "muscle": "c8384a", "titan": "8a1a30",
+        "divine": "ffc890", "eye": ("ffffff", "ff2a1a"), "trim": "ffb030", "core": "ff3a3a", "energy": "ff5a1a"},
+    3: {"gel": ("ffd050", 215), "bronze": "f0c040", "gold": "fff2a8", "muscle": "f8d070", "titan": "e0a830",
+        "divine": "fff2c0", "eye": ("ffffff", "fff0a0"), "trim": "fff4c8", "core": "ffe070", "energy": "ffe680"},
+}
+
 
 def gel_texture(base, alpha, seed):
     img = Image.new("RGBA", (16, 16))
@@ -2709,13 +2720,18 @@ def gel_texture(base, alpha, seed):
 
 
 def bell_texture(base, seed):
+    """Métal de cloche : reflet vertical, moulures horizontales et petites gravures."""
     img = Image.new("RGBA", (16, 16))
     r = random.Random(seed)
     for y in range(16):
         for x in range(16):
-            f = 1.15 - 0.35 * (x / 15.0) + 0.06 * math.sin(y * 1.3) + r.uniform(-0.03, 0.03)
-            if y % 5 == 0:
-                f *= 0.75
+            f = 1.18 - 0.4 * abs(x - 5) / 10.0 + r.uniform(-0.03, 0.03)
+            if y % 8 == 0:
+                f *= 1.25
+            elif y % 8 == 1:
+                f *= 0.72
+            if (x + 2 * y) % 11 == 0 and 2 < y % 8 < 7:
+                f *= 0.8
             img.putpixel((x, y), shade(base, f))
     return img
 
@@ -2734,120 +2750,737 @@ def muscle_texture(base, seed):
     return img
 
 
-def eye_texture():
-    img = Image.new("RGBA", (16, 16), (20, 8, 24, 255))
+def eye_texture(white, iris):
+    img = Image.new("RGBA", (16, 16), (24, 10, 30, 255))
     for y in range(16):
         for x in range(16):
             d = math.hypot(x - 7.5, y - 7.5)
-            if d < 4:
-                img.putpixel((x, y), (255, 240, 120, 255) if d < 2 else (255, 120, 40, 255))
+            if d < 6.5:
+                img.putpixel((x, y), lerp(iris, white, max(0.0, 1 - d / 6.5) ** 0.7))
+            if d < 1.6:
+                img.putpixel((x, y), (255, 255, 255, 255))
     return img
+
+
+def round_tier(add, y0, y1, r, tex, cx=8.0, cz=8.0):
+    """Tranche ronde : 4 boîtes tournées de 0, 22,5, 45 et -22,5° autour de y (rayon moyen r).
+    Les dessus sont décalés de quelques centièmes pour éviter le scintillement des faces superposées."""
+    a = r / 1.36
+    for i, ang in enumerate((0, 22.5, 45, -22.5)):
+        e = 0.012 * i
+        add([cx - a, y0 - e, cz - a], [cx + a, y1 + e, cz + a], tex,
+            ["y", ang, [cx, (y0 + y1) / 2, cz]] if ang else None)
+
+
+def ring_points(r, n, start=0.0, cx=8.0, cz=8.0):
+    return [(cx + r * math.cos(start + 2 * math.pi * i / n), cz + r * math.sin(start + 2 * math.pi * i / n))
+            for i in range(n)]
+
+
+def radial_spike(add, angle_deg, r0, length, y0, y1, w, tex):
+    """Pointe horizontale qui sort du centre dans une des 8 directions (multiples de 45°)."""
+    rot = ["y", 45, [8, (y0 + y1) / 2, 8]] if angle_deg % 90 else None
+    base = angle_deg - 45 if rot else angle_deg
+    # boîte le long de l'axe de base, puis tournée de 45° pour les diagonales
+    d = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[base % 360]
+    if d[0]:
+        x0, x1 = sorted((8 + d[0] * r0, 8 + d[0] * (r0 + length)))
+        add([x0, y0, 8 - w], [x1, y1, 8 + w], tex, rot)
+    else:
+        z0, z1 = sorted((8 + d[1] * r0, 8 + d[1] * (r0 + length)))
+        add([8 - w, y0, z0], [8 + w, y1, z1], tex, rot)
+
+
+BELL_PROFILE = [
+    # (bas, haut, rayon, matière) : cloche d'église évasée, de la lèvre au cerveau
+    (0.0, 1.0, 7.0, "skin"),
+    (1.0, 1.6, 6.9, "trim"),
+    (1.6, 3.0, 6.4, "skin"),
+    (3.0, 6.0, 5.8, "skin"),
+    (6.0, 8.6, 5.4, "skin"),
+    (8.6, 9.3, 5.5, "energy"),
+    (9.3, 11.5, 5.0, "skin"),
+    (11.5, 12.6, 4.4, "skin"),
+    (12.6, 13.1, 4.55, "trim"),
+    (13.1, 14.3, 3.4, "skin"),
+    (14.3, 15.0, 2.2, "trim"),
+]
+
+
+def bell_elements(add, sym, skin, armored, level):
+    for (y0, y1, r, tex) in BELL_PROFILE:
+        round_tier(add, y0, y1, r, skin if tex == "skin" else tex)
+    # anse dorée et gemme au sommet
+    sym([6.0, 15.0, 7.3], [6.9, 17.4, 8.7], "trim")
+    add([6.0, 17.4, 7.3], [10.0, 18.2, 8.7], "trim")
+    add([7.3, 18.2, 7.3], [8.7, 19.6, 8.7], "core", ["y", 45, [8, 18.9, 8]])
+    # battant lumineux sous la cloche
+    round_tier(add, -1.9, 0.2, 2.0, "core")
+    add([7.6, 0.2, 7.6], [8.4, 0.6, 8.4], "trim")
+    # gemmes serties sur l'épaule
+    for (x, z) in ring_points(4.45, 4, math.pi / 4):
+        add([x - 0.5, 11.6, z - 0.5], [x + 0.5, 12.5, z + 0.5], "core", ["y", 45, [x, 12.05, z]])
+    # masque doré à l'avant (+z), légèrement bombé
+    mask = "trim" if armored else skin
+    add([5.8, 3.8, 11.6], [10.2, 10.6, 14.2], mask)
+    sym([4.9, 4.4, 11.4], [5.8, 10.0, 13.5], mask)
+    add([5.8, 10.6, 11.4], [10.2, 11.0, 14.35], "trim")
+    add([5.8, 3.4, 11.4], [10.2, 3.8, 14.35], "trim")
+    sym([6.1, 7.4, 14.2], [7.5, 8.9, 14.55], "eye")
+    add([7.5, 9.5, 14.2], [8.5, 10.4, 14.55], "core")                    # gemme du front
+    add([6.6, 4.9, 14.2], [9.4, 5.8, 14.4], "mouth")
+    if armored:
+        for x in (6.8, 7.7, 8.6):                                         # crocs
+            add([x, 5.3, 14.25], [x + 0.6, 5.9, 14.5], "trim")
+        sym([5.8, 9.0, 14.2], [7.8, 9.5, 14.6], "trim", ["z", -22.5, [7.8, 9.25, 14.4]])   # sourcils
+        for ang in range(0, 360, 45):                                     # pointes autour de la lèvre
+            radial_spike(add, ang, 6.4, 2.2, 0.9, 1.7, 0.45, "trim")
+            radial_spike(add, ang, 8.4, 1.0, 1.05, 1.55, 0.25, "core")
+        round_tier(add, 11.0, 11.35, 5.05, "energy")
+    if level >= 2:   # titan et divine : seconde ceinture d'énergie et couronne de gemmes
+        round_tier(add, 4.4, 4.9, 5.95, "energy")
+        for (x, z) in ring_points(6.0, 8, math.pi / 8):
+            add([x - 0.35, 2.2, z - 0.35], [x + 0.35, 2.9, z + 0.35], "core")
+    if level >= 3:   # divine : ailerons dorés sur le dôme
+        for ang in (0, 90, 180, 270):
+            radial_spike(add, ang, 3.0, 1.6, 13.3, 14.6, 0.3, "trim")
 
 
 def boss_elements(part):
     E, add = builder()
     sym = sym8(add)
-    face_z = None
     if part == "slime_body":
-        add([1, 0, 1], [15, 14, 15], "gel")                       # gelée
-        add([5, 3, 5], [11, 9, 11], "core")                       # coeur d'évolium
-        sym([3.5, 8, 15], [6, 10.5, 15.4], "eye")                 # yeux
-        add([6, 4.5, 15], [10, 5.5, 15.3], "mouth")
-        add([2, 13.5, 2], [14, 14.5, 14], "gel")
-    elif part in ("slime_bell", "war_bell", "colossus_bell", "titan_bell", "divine_bell"):
+        for (y0, y1, r) in ((0, 1.5, 6.6), (1.5, 6.0, 7.0), (6.0, 9.5, 6.6), (9.5, 11.8, 5.6),
+                            (11.8, 13.2, 4.2), (13.2, 14.0, 2.6)):
+            round_tier(add, y0, y1, r, "gel")
+        round_tier(add, 3.5, 8.5, 2.4, "core")                           # coeur d'évolium
+        for (x, y, z) in ((5, 3, 6), (10.5, 4.5, 9), (7, 10, 9.5), (10, 8.5, 5.5)):   # pépites d'or
+            add([x, y, z], [x + 1, y + 1, z + 1], "trim", ["y", 45, [x + 0.5, y + 0.5, z + 0.5]])
+        sym([4.6, 7.0, 14.0], [7.2, 9.6, 15.4], "eye")                   # grands yeux
+        add([6.8, 5.0, 14.6], [9.2, 5.8, 15.3], "mouth")
+        # petite couronne d'or
+        round_tier(add, 13.9, 14.9, 2.4, "trim")
+        for (x, z) in ring_points(2.1, 4, math.pi / 4):
+            add([x - 0.35, 14.9, z - 0.35], [x + 0.35, 16.2, z + 0.35], "trim")
+            add([x - 0.25, 16.2, z - 0.25], [x + 0.25, 16.7, z + 0.25], "core")
+    elif part.endswith("_bell"):
         skin = {"slime_bell": "gel", "war_bell": "bronze", "colossus_bell": "gel", "titan_bell": "bronze",
                 "divine_bell": "gold"}[part]
-        add([6, 15, 7], [10, 17.5, 9], "trim")                    # anse
-        add([7, 17.5, 7], [9, 18.5, 9], "trim")
-        add([5, 13, 5], [11, 15, 11], skin)                       # dôme
-        add([4, 9, 4], [12, 13, 12], skin)                        # épaules de la cloche
-        add([3, 3, 3], [13, 9, 13], skin)                         # robe
-        add([2, 0, 2], [14, 3, 14], skin)                         # lèvre
-        add([1.8, 2.6, 1.8], [14.2, 3.2, 14.2], "trim")           # bord doré
-        add([6.5, -1.5, 6.5], [9.5, 1.5, 9.5], "core")            # battant lumineux
-        sym([4.5, 9.5, 12], [6.75, 11.5, 12.4], "eye")            # yeux
-        add([6, 5.5, 13], [10, 6.5, 13.3], "mouth")
-        add([3.8, 8.6, 3.8], [12.2, 9.0, 12.2], "energy")         # ceinture d'énergie
-        if part != "slime_bell":
-            for (x, z) in ((3, 8), (13, 8), (8, 3)):              # pointes
-                add([x - 0.6, 4, z - 0.6], [x + 0.6, 7.5, z + 0.6], "trim", ["y", 45, [x, 5.75, z]])
-            add([3.9, 11, 3.9], [12.1, 11.4, 12.1], "energy")     # runes
-            sym([3.2, 10.8, 11.8], [6.9, 11.3, 12.5], "trim")     # sourcils en colère
-        if part == "titan_bell":
-            add([2.8, 5.5, 2.8], [13.2, 6.0, 13.2], "energy")
-        if part == "divine_bell":
-            add([2.8, 5.5, 2.8], [13.2, 6.0, 13.2], "energy")
-            add([3.9, 13.6, 3.9], [12.1, 14.0, 12.1], "energy")
+        level = {"slime_bell": 0, "war_bell": 1, "colossus_bell": 1, "titan_bell": 2, "divine_bell": 3}[part]
+        bell_elements(add, sym, skin, level >= 1, level)
     elif part.endswith("_arm"):
         skin = {"colossus_arm": "muscle", "titan_arm": "titan", "divine_arm": "divine"}[part]
-        add([4, 12, 4], [12, 16, 12], skin)                       # épaule
-        add([3.5, 6.5, 3.5], [12.5, 12, 12.5], skin)              # biceps énorme
-        add([5, 2.5, 5], [11, 6.5, 11], skin)                     # avant-bras
-        add([4, -2, 4], [12, 2.5, 12], skin)                      # poing
-        add([3.8, 1.8, 3.8], [12.2, 2.6, 12.2], "trim")           # bracelet
-        add([4.8, 2.6, 4.8], [11.2, 3.0, 11.2], "energy")
-        add([4, 15, 4], [12, 16.5, 12], "trim")                   # épaulière
+        round_tier(add, 12.8, 16.2, 5.0, "trim")                         # épaulière dorée
+        round_tier(add, 16.2, 17.0, 3.6, "trim")
+        round_tier(add, 13.6, 14.0, 5.1, "energy")
+        add([7.4, 17.0, 7.4], [8.6, 19.4, 8.6], "trim", ["y", 45, [8, 18.2, 8]])
+        add([7.6, 19.4, 7.6], [8.4, 20.4, 8.4], "core", ["y", 45, [8, 19.9, 8]])
+        round_tier(add, 8.0, 13.0, 4.0, skin)                            # biceps
+        round_tier(add, 9.0, 12.0, 4.5, skin)
+        round_tier(add, 7.2, 8.0, 3.4, "trim")                           # coude
+        round_tier(add, 3.2, 7.2, 3.3, skin)                             # avant-bras
+        round_tier(add, 4.0, 6.5, 3.6, skin)
+        round_tier(add, 1.6, 3.4, 3.95, "trim")                          # brassard
+        round_tier(add, 2.3, 2.7, 4.05, "energy")
+        add([7.3, 1.9, 11.0], [8.7, 3.1, 12.4], "core")
+        add([4.4, -2.6, 4.4], [11.6, 1.6, 11.6], skin)                   # poing
+        for x in (4.6, 6.4, 8.2, 10.0):                                  # poing américain
+            add([x, -3.3, 5.0], [x + 1.4, -2.6, 11.0], "trim")
     elif part.endswith("_leg"):
         skin = {"colossus_leg": "muscle", "titan_leg": "titan", "divine_leg": "divine"}[part]
-        add([4.5, 9, 4.5], [11.5, 16, 11.5], skin)                # cuisse
-        add([5, 4, 5], [11, 9, 11], skin)                         # mollet
-        add([4.8, 7.5, 3.8], [11.2, 10, 5], "trim")               # genouillère
-        add([4, 0, 2], [12, 4, 12], skin)                         # pied
-        add([3.8, 0, 1.8], [12.2, 1, 12.2], "trim")               # semelle
-        add([4.6, 3.8, 4.6], [11.4, 4.2, 11.4], "energy")
+        round_tier(add, 10.5, 16.0, 3.8, skin)                           # cuisse
+        round_tier(add, 11.5, 15.0, 4.2, skin)
+        round_tier(add, 8.6, 10.5, 3.6, "trim")                          # genouillère
+        add([6.0, 8.3, 11.0], [10.0, 10.8, 12.3], "trim")
+        add([7.4, 9.0, 12.3], [8.6, 10.2, 12.7], "core")
+        round_tier(add, 4.0, 8.6, 3.2, skin)                             # tibia et mollet
+        round_tier(add, 5.0, 7.6, 3.5, skin)
+        round_tier(add, 3.4, 4.0, 3.5, "energy")
+        add([4.2, 0, 4.0], [11.8, 3.4, 14.2], skin)                      # pied
+        add([4.0, 0, 3.8], [12.0, 0.8, 14.4], "trim")                    # semelle
+        add([4.6, 0.8, 11.6], [11.4, 2.9, 14.6], "trim")                 # coque dorée
     elif part == "titan_crown":
-        add([3, 0, 3], [13, 3, 13], "trim")
-        for (x, z) in ((3, 3), (12, 3), (3, 12), (12, 12), (7.5, 3), (7.5, 12), (3, 7.5), (12, 7.5)):
-            add([x, 3, z], [x + 1, 7, z + 1], "trim")
-            add([x + 0.2, 7, z + 0.2], [x + 0.8, 8.2, z + 0.8], "core")
-        add([2.8, 1.2, 2.8], [13.2, 1.8, 13.2], "energy")
+        round_tier(add, 0, 2.4, 6.2, "trim")
+        round_tier(add, 1.0, 1.4, 6.3, "energy")
+        for i, (x, z) in enumerate(ring_points(5.4, 8)):
+            top = 6.8 if i % 2 == 0 else 5.0
+            add([x - 0.6, 2.4, z - 0.6], [x + 0.6, top, z + 0.6], "trim", ["y", 45, [x, top / 2, z]])
+            add([x - 0.45, top, z - 0.45], [x + 0.45, top + 1.2, z + 0.45], "core", ["y", 45, [x, top + 0.6, z]])
+        for (x, z) in ring_points(6.3, 4, math.pi / 4):
+            add([x - 0.5, 0.7, z - 0.5], [x + 0.5, 1.7, z + 0.5], "core")
     elif part == "divine_halo":
-        halo_flat(add, 8, 8, 8, 7.0, tex="core", t=0.45, depth=0.45)
-        halo_flat(add, 8, 8, 8, 6.2, tex="energy", t=0.2, depth=0.3)
+        halo_flat(add, 8, 8, 8, 7.0, tex="trim", t=0.5, depth=0.45)
+        halo_flat(add, 8, 8, 8, 6.0, tex="energy", t=0.2, depth=0.3)
+        for (x, z) in ring_points(7.0, 8, math.pi / 8):
+            add([x - 0.55, 7.2, z - 0.55], [x + 0.55, 8.8, z + 0.55], "core", ["y", 45, [x, 8, z]])
     elif part == "divine_wings":
-        for side in (1, -1):
-            for i in range(5):
-                x0 = 8 + side * (2 + i * 2.5)
-                lo, hi = sorted((x0, x0 + side * 2.4))
-                add([lo, 4 + i * 1.2, 7.6], [hi, 14 - i * 0.3, 8.4], "gold" if i % 2 else "trim")
-                add([lo + 0.6, 5 + i * 1.2, 7.5], [hi - 0.6, 13 - i * 0.3, 8.5], "energy")
+        def wing(add2):
+            for i, (ang, length) in enumerate(((45, 7.5), (22.5, 8.0), (0, 7.0), (-22.5, 5.5), (-45, 4.0))):
+                beam(add2, (9.0, 9.0 - i * 0.4), ang, length, 2.2, "trim" if i % 2 == 0 else "gold", 7.6, 8.4)
+                beam(add2, (9.5, 9.0 - i * 0.4), ang, length - 1.0, 0.4, "energy", 7.5, 8.5, back=0.0)
+            add2([8.6, 7.4, 7.4], [10.4, 10.6, 8.6], "core")
+        wing(sym)
     return E
 
 
+def boss_texture_set(phase):
+    """Textures d'une phase du boss, dans textures/item/boss/phase<N>/."""
+    pal = BOSS_PALETTES[phase]
+    out = ("item", "boss", f"phase{phase}")
+    gel, alpha = pal["gel"]
+    save_png(gel_texture(hexc(gel), alpha, 1), *out, "gel")
+    save_png(bell_texture(hexc(pal["bronze"]), 2), *out, "bronze")
+    save_png(bell_texture(hexc(pal["gold"]), 3), *out, "gold")
+    save_png(muscle_texture(hexc(pal["muscle"]), 4), *out, "muscle")
+    save_png(muscle_texture(hexc(pal["titan"]), 5), *out, "titan")
+    save_png(muscle_texture(hexc(pal["divine"]), 6), *out, "divine")
+    save_png(eye_texture(hexc(pal["eye"][0]), hexc(pal["eye"][1])), *out, "eye")
+    save_png(gel_texture(hexc("1a0a24"), 255, 7), *out, "mouth")
+    st = {"gem": gem_palette(pal["core"]), "trim": hexc(pal["trim"])}
+    save_png(gem_texture(st, 8), *out, "core")
+    save_png(trim_texture(st, 9), *out, "trim")
+    save_animated(energy_frames({"gem": gem_palette(pal["energy"])}), 2, *out, "energy")
+
+
 def gen_boss_assets():
+    for phase in BOSS_PALETTES:
+        boss_texture_set(phase)
+        tex = {"particle": f"{MOD}:item/boss/phase{phase}/gold"}
+        for name in ("gel", "bronze", "gold", "muscle", "titan", "divine", "eye", "mouth", "core", "trim", "energy"):
+            tex[name] = f"{MOD}:item/boss/phase{phase}/{name}"
+        for part in BOSS_PARTS:
+            elements = boss_elements(part)
+            for el in elements:
+                t = next(iter(el["faces"].values()))["texture"]
+                if t in ("#core", "#eye"):
+                    el["light_emission"] = 15
+                elif t == "#energy":
+                    el["light_emission"] = 15
+                    el["shade"] = False
+                elif t == "#trim" and phase == 3:
+                    el["light_emission"] = 10                            # l'or rayonne en phase 3
+            write_json(os.path.join(ASSETS, "models", "item", "boss", f"phase{phase}", f"{part}.json"),
+                       {"textures": tex, "elements": elements})
 
-    save_png(gel_texture(hexc("8a4adf"), 200, 1), "item", "boss", "gel")
-    save_png(bell_texture(hexc("b87333"), 2), "item", "boss", "bronze")
-    save_png(bell_texture(hexc("ffd23a"), 3), "item", "boss", "gold")
-    save_png(muscle_texture(hexc("9a5ae8"), 4), "item", "boss", "muscle")
-    save_png(muscle_texture(hexc("6a4a3a"), 5), "item", "boss", "titan")
-    save_png(muscle_texture(hexc("ffe08a"), 6), "item", "boss", "divine")
-    save_png(eye_texture(), "item", "boss", "eye")
-    save_png(gel_texture(hexc("1a0a24"), 255, 7), "item", "boss", "mouth")
-    tex = {"particle": f"{MOD}:item/boss/gel"}
-    for name in ("gel", "bronze", "gold", "muscle", "titan", "divine", "eye", "mouth"):
-        tex[name] = f"{MOD}:item/boss/{name}"
-    tex["core"] = f"{MOD}:item/pickaxe/stage10_gem"
-    tex["energy"] = f"{MOD}:item/pickaxe/stage10_energy"
-    tex["trim"] = f"{MOD}:item/pickaxe/stage19_trim"
-    for part in BOSS_PARTS:
-        elements = boss_elements(part)
-        for el in elements:
-            t = next(iter(el["faces"].values()))["texture"]
-            if t in ("#core", "#eye"):
-                el["light_emission"] = 15
-            elif t == "#energy":
-                el["light_emission"] = 15
-                el["shade"] = False
-        write_json(os.path.join(ASSETS, "models", "item", "boss", f"{part}.json"),
-                   {"textures": tex, "elements": elements})
-
-
+    # index du modèle = morceau + 15 x (phase - 1), voir BossVisual
     def ref(i):
-        return {"type": "minecraft:model", "model": f"{MOD}:item/boss/{BOSS_PARTS[i]}"}
+        phase, part = i // len(BOSS_PARTS) + 1, BOSS_PARTS[i % len(BOSS_PARTS)]
+        return {"type": "minecraft:model", "model": f"{MOD}:item/boss/phase{phase}/{part}"}
+    count = len(BOSS_PARTS) * len(BOSS_PALETTES)
     write_json(os.path.join(ASSETS, "items", "bell_boss_part.json"), {"model": {
         "type": "minecraft:range_dispatch", "property": "minecraft:custom_model_data", "index": 0,
-        "fallback": ref(0), "entries": [{"threshold": i, "model": ref(i)} for i in range(len(BOSS_PARTS))]}})
+        "fallback": ref(0), "entries": [{"threshold": i, "model": ref(i)} for i in range(count)]}})
+
+
+# --------------------------------------------------------------------------- armes moddées (non évolutives)
+
+# id : (manche, cuir, métal, gemme, dorure, options) ; textures dans textures/item/weapons/<id>_<matière>.png
+WEAPON_THEMES = {
+    "evolium_scythe": ("2a1a3a", "4a1a6b", "8a70c8", "a64dff", "ffd23a", {}),
+    "ruby_katana": ("ece4d4", "b0142a", "dfe4ec", "ff2a4a", "ffcf4a", {}),
+    "sapphire_warhammer": ("4a3420", "1e2f6b", "8a9ab4", "2f7aff", "ffd23a", {}),
+    "evolite_greatsword": ("123a36", "0e4a44", "4fb8a8", "2fe6c8", "ffe39a", {}),
+    "shadow_dagger": ("120c18", "2a0f3a", "2e2638", "b04dff", "c8a0ff", {"stars": True}),
+    "royal_halberd": ("3a1a0e", "8a1020", "e8c050", "ff3a5a", "fff0a0", {}),
+    "crystal_staff": ("e8e4f4", "3a2a6b", "c8d0e8", "6ae0ff", "ffd86a", {}),
+}
+
+
+def weapon_theme(name):
+    w, g, m, c, t, opts = WEAPON_THEMES[name]
+    return {"wood": hexc(w), "grip": hexc(g), "metal": hexc(m), "gem": gem_palette(c), "trim": hexc(t), **opts}
+
+
+def beam(add, p, angle, length, thick, tex, z0=7.6, z1=8.4, back=0.4, off=0.0, plane="xy"):
+    """Barre droite qui part du point p dans la direction angle (degrés : 0 = +x, 90 = +y), centrée sur la ligne
+    (décalée de off vers la gauche de la direction). Une boîte horizontale ou verticale tournée de -45 à 45°
+    donne tous les multiples de 22,5°. plane = "zy" : même chose dans le plan z-y (p = (z, y), z0/z1 = x).
+    Renvoie le bout de la barre, pour enchaîner les segments d'une lame courbe."""
+    a = math.radians(angle)
+    nx, ny = -math.sin(a), math.cos(a)
+    px, py = p[0] + nx * off, p[1] + ny * off
+    base = round(angle / 90.0) * 90
+    r = angle - base
+    assert r in (-45, -22.5, 0, 22.5, 45), angle
+    h = thick / 2
+    b = base % 360
+    if b == 0:
+        u0, v0, u1, v1 = px - back, py - h, px + length, py + h
+    elif b == 180:
+        u0, v0, u1, v1 = px - length, py - h, px + back, py + h
+    elif b == 90:
+        u0, v0, u1, v1 = px - h, py - back, px + h, py + length
+    else:
+        u0, v0, u1, v1 = px - h, py - length, px + h, py + back
+    mid = (z0 + z1) / 2
+    if plane == "xy":
+        rot = ["z", r, [px, py, mid]] if r else None
+        add([u0, v0, z0], [u1, v1, z1], tex, rot)
+    else:
+        # autour de x, un angle positif fait tourner y vers z : sens inverse dans le plan (z, y)
+        rot = ["x", -r, [mid, py, px]] if r else None
+        add([z0, v0, u0], [z1, v1, u1], tex, rot)
+    return (p[0] + length * math.cos(a), p[1] + length * math.sin(a))
+
+
+def blade_chain(add, start, steps, z0=7.6, z1=8.4, edge_side=1, spine="trim", energy=True):
+    """Lame courbe : segments (angle, longueur, épaisseur) en métal, avec tranchant poli du côté edge_side
+    (1 = gauche de la direction), dos doré de l'autre côté et ligne d'énergie au centre."""
+    p = start
+    for angle, length, thick in steps:
+        beam(add, p, angle, length, thick, "metal", z0, z1)
+        beam(add, p, angle, length, 0.55, "edge", z0 + 0.15, z1 - 0.15, off=edge_side * (thick / 2 + 0.2))
+        if spine and thick > 1.2:
+            beam(add, p, angle, length, 0.35, spine, z0 - 0.05, z1 + 0.05, off=-edge_side * (thick / 2 - 0.1))
+        if energy and thick > 1.0:
+            beam(add, p, angle, length * 0.9, 0.3, "energy", z0 - 0.1, z1 + 0.1, back=0.0, off=edge_side * thick * 0.12)
+        p = (p[0] + length * math.cos(math.radians(angle)), p[1] + length * math.sin(math.radians(angle)))
+    return p
+
+
+def scythe_elements():
+    """Faux d'Évolium : long manche à deux poignées, lame en croissant qui retombe, pointe et éperon arrière."""
+    E, add = builder()
+    add([7.3, -9, 7.3], [8.7, 24, 8.7], "handle")
+    add([6.9, -10.5, 6.9], [9.1, -9, 9.1], "dark")                        # talon
+    add([7.1, -10.9, 7.1], [8.9, -10.5, 8.9], "trim")
+    add([7.45, -12.6, 7.45], [8.55, -10.9, 8.55], "edge", ["y", 45, [8, -11.75, 8]])
+    for y0, y1 in ((-7, -2), (9, 13)):                                     # poignées en cuir tressé
+        add([7.1, y0, 7.1], [8.9, y1, 8.9], "grip")
+        for y in range(int(y0), int(y1), 1):
+            add([7.0, y + 0.35, 7.0], [9.0, y + 0.65, 9.0], "dark")
+        add([6.9, y0 - 0.45, 6.9], [9.1, y0, 9.1], "trim")
+        add([6.9, y1, 6.9], [9.1, y1 + 0.45, 9.1], "trim")
+    add([8.7, 10.6, 7.5], [11.5, 11.4, 8.5], "handle")                    # poignée latérale
+    add([11.5, 9.6, 7.3], [12.7, 12.6, 8.7], "grip")
+    add([11.4, 12.6, 7.25], [12.8, 13.0, 8.75], "trim")
+    for y in (0.5, 3.0, 5.5, 15.0, 17.5, 20.0):                            # runes lumineuses
+        add([7.75, y, 7.2], [8.25, y + 1.3, 7.3], "energy")
+        add([7.75, y, 8.7], [8.25, y + 1.3, 8.8], "energy")
+        add([7.2, y + 0.4, 7.75], [7.3, y + 0.9, 8.25], "energy")
+        add([8.7, y + 0.4, 7.75], [8.8, y + 0.9, 8.25], "energy")
+    # --- tête : douille gravée, gemme, crâne de cristal
+    add([6.4, 22.5, 6.4], [9.6, 27.5, 9.6], "dark")
+    add([6.2, 22.5, 6.2], [9.8, 23.0, 9.8], "trim")
+    add([6.2, 27.0, 6.2], [9.8, 27.5, 9.8], "trim")
+    add([7.0, 23.6, 5.9], [9.0, 26.2, 10.1], "gem")
+    add([6.0, 24.2, 7.0], [10.0, 25.6, 9.0], "gem")
+    add([7.25, 27.5, 7.25], [8.75, 29.5, 8.75], "edge", ["y", 45, [8, 28.5, 8]])
+    add([7.85, 29.0, 7.85], [8.15, 31.0, 8.15], "energy")
+    # --- lame en croissant
+    tip = blade_chain(add, (6.4, 25.6), [(180, 5.5, 4.2), (202.5, 5.0, 3.6), (225, 4.5, 2.8),
+                                        (247.5, 3.5, 1.9), (270, 2.5, 1.1)])
+    beam(add, tip, 292.5, 1.6, 0.55, "edge", 7.75, 8.25)
+    beam(add, (6.6, 26.6), 180, 10.5, 0.3, "trim", 7.5, 8.5, back=0.0, off=1.75)  # liseré du dos
+    # filigrane doré et gemmes serties dans la lame
+    add([2.2, 25.2, 7.45], [3.4, 26.4, 8.55], "gem", ["z", 45, [2.8, 25.8, 8]])
+    add([-2.2, 23.4, 7.45], [-1.2, 24.4, 8.55], "gem", ["z", 45, [-1.7, 23.9, 8]])
+    # éperon arrière
+    p = beam(add, (9.6, 25.5), 0, 2.6, 1.8, "metal", 7.5, 8.5)
+    beam(add, p, -22.5, 2.2, 0.9, "edge", 7.65, 8.35)
+    beam(add, (9.6, 25.5), 0, 2.4, 0.3, "energy", 7.4, 8.6, back=0.0)
+    # cristaux flottants autour de la lame
+    crystal(add, -7.5, 27)
+    crystal(add, 2.5, 30)
+    return E
+
+
+def katana_elements():
+    """Katana de Rubis : tsuka tressée, tsuba octogonale dorée, lame courbe avec hamon lumineux rouge."""
+    E, add = builder()
+    sym = sym8(add)
+    # --- tsuka : galuchat clair + tressage rouge en losanges sur les 4 faces
+    add([7.3, -7, 7.3], [8.7, 3.6, 8.7], "handle")
+    for i in range(7):
+        y = -6.3 + i * 1.45
+        add([7.5, y, 7.12], [8.5, y + 1.0, 7.3], "grip", ["z", 45, [8, y + 0.5, 7.2]])
+        add([7.5, y, 8.7], [8.5, y + 1.0, 8.88], "grip", ["z", 45, [8, y + 0.5, 8.8]])
+        add([7.12, y, 7.5], [7.3, y + 1.0, 8.5], "grip", ["x", 45, [7.2, y + 0.5, 8]])
+        add([8.7, y, 7.5], [8.88, y + 1.0, 8.5], "grip", ["x", 45, [8.8, y + 0.5, 8]])
+    add([7.1, -8.0, 7.1], [8.9, -7.0, 8.9], "trim")                        # kashira
+    add([7.5, -8.4, 7.5], [8.5, -8.0, 8.5], "gem")
+    add([7.6, -2.3, 6.95], [8.4, -0.9, 7.15], "trim")                      # menuki
+    add([7.6, -2.3, 8.85], [8.4, -0.9, 9.05], "trim")
+    # cordon et pompon
+    p = beam(add, (8.4, -8.0), 292.5, 2.0, 0.35, "grip", 7.85, 8.15, back=0.0)
+    add([p[0] - 0.45, p[1] - 1.6, 7.6], [p[0] + 0.45, p[1], 8.4], "grip")
+    add([p[0] - 0.5, p[1] - 0.3, 7.55], [p[0] + 0.5, p[1] + 0.1, 8.45], "trim")
+    # --- tsuba : disque octogonal, liseré doré, rubis
+    add([7.0, 3.3, 7.0], [9.0, 3.6, 9.0], "trim")                          # seppa
+    add([5.4, 3.6, 6.4], [10.6, 4.6, 9.6], "dark")
+    add([6.4, 3.6, 5.4], [9.6, 4.6, 10.6], "dark")
+    add([5.75, 3.62, 5.75], [10.25, 4.58, 10.25], "dark", ["y", 45, [8, 4.1, 8]])
+    halo_flat(add, 8, 8, 4.1, 2.75, tex="trim", t=0.2, depth=0.55)
+    for (x, z) in ((5.3, 8), (10.7, 8), (8, 5.3), (8, 10.7)):
+        add([x - 0.45, 3.75, z - 0.45], [x + 0.45, 4.45, z + 0.45], "gem")
+    add([7.0, 4.6, 7.0], [9.0, 4.9, 9.0], "trim")                          # seppa
+    add([7.0, 4.9, 7.45], [9.0, 6.4, 8.55], "trim")                        # habaki
+    # --- lame : 8 segments décalés pour la courbure (sori), tranchant à gauche
+    y = 6.4
+    for i in range(8):
+        o = 0.028 * i * i
+        h = 2.75
+        add([7.0 + o, y, 7.75], [8.5 + o, y + h + 0.05, 8.25], "metal")
+        add([6.65 + o, y, 7.85], [7.0 + o, y + h + 0.05, 8.15], "edge")     # ha (tranchant)
+        add([8.5 + o, y, 7.8], [8.7 + o, y + h + 0.05, 8.2], "dark")       # mune (dos)
+        add([7.15 + o, y, 7.7], [7.4 + o, y + h + 0.05, 8.3], "energy")    # hamon lumineux
+        y += h
+    o = 0.028 * 49
+    add([7.0 + o, y, 7.75], [8.7 + o, y + 0.9, 8.25], "metal")              # kissaki (pointe)
+    add([7.35 + o, y - 0.05, 7.8], [8.55 + o, y + 1.15, 8.2], "edge", ["z", 45, [7.95 + o, y + 0.55, 8]])
+    add([7.15 + o, y, 7.7], [7.4 + o, y + 0.5, 8.3], "energy")
+    # gravure de dragon sur le talon : petites marques dorées et rubis
+    add([7.6, 7.2, 7.7], [8.2, 9.6, 8.3], "trim")
+    add([7.65, 9.9, 7.65], [8.15, 10.6, 8.35], "gem")
+    return E
+
+
+def warhammer_elements():
+    """Marteau de Guerre Saphir : grosse tête cerclée d'or, face de frappe gravée de lignes d'énergie,
+    pointe arrière, saphir traversant et pique au sommet."""
+    E, add = builder()
+    sym = sym8(add)
+    add([7.2, -7, 7.2], [8.8, 15, 8.8], "handle")
+    add([6.8, -8.6, 6.8], [9.2, -7, 9.2], "dark")
+    add([7.0, -9.0, 7.0], [9.0, -8.6, 9.0], "trim")
+    add([7.4, -10.4, 7.4], [8.6, -9.0, 8.6], "gem", ["y", 45, [8, -9.7, 8]])
+    add([7.0, -6.5, 7.0], [9.0, 1.5, 9.0], "grip")
+    for y in (-6.0, -3.5, -1.0, 1.5):
+        add([6.85, y, 6.85], [9.15, y + 0.45, 9.15], "trim")
+    for y in (4.0, 6.5, 9.0):                                              # runes
+        add([7.75, y, 7.1], [8.25, y + 1.2, 7.2], "energy")
+        add([7.75, y, 8.8], [8.25, y + 1.2, 8.9], "energy")
+    sym([6.95, 10.5, 7.5], [7.2, 14.5, 8.5], "metal")                      # attelles
+    add([7.5, 10.5, 6.95], [8.5, 14.5, 7.2], "metal")
+    add([7.5, 10.5, 8.8], [8.5, 14.5, 9.05], "metal")
+    # --- tête
+    add([3.6, 14.4, 5.4], [12.4, 22.6, 10.6], "dark")                      # bloc gravé
+    add([3.4, 14.0, 5.1], [12.6, 15.0, 10.9], "metal")
+    add([3.4, 22.0, 5.1], [12.6, 23.0, 10.9], "metal")
+    sym([4.4, 13.8, 4.9], [5.2, 23.2, 11.1], "trim")                       # cerclages dorés
+    add([3.5, 18.25, 5.3], [12.5, 18.75, 10.7], "energy")                  # ceinture d'énergie
+    add([5.9, 15.9, 4.7], [10.1, 21.1, 11.3], "gem")                       # saphir traversant
+    add([5.6, 15.6, 4.6], [10.4, 16.0, 11.4], "trim")
+    add([5.6, 21.0, 4.6], [10.4, 21.4, 11.4], "trim")
+    # face de frappe (à droite)
+    add([12.4, 13.5, 4.6], [14.6, 23.5, 11.4], "metal")
+    add([14.6, 14.0, 5.0], [15.6, 23.0, 11.0], "edge")
+    add([15.6, 18.25, 5.4], [15.7, 18.75, 10.6], "energy")
+    add([15.6, 14.4, 7.75], [15.7, 22.6, 8.25], "energy")
+    add([12.2, 13.3, 4.4], [12.7, 23.7, 11.6], "trim")
+    add([15.65, 15.5, 6.5], [15.75, 21.5, 9.5], "dark")
+    # pointe arrière (à gauche)
+    add([1.6, 15.2, 5.8], [3.6, 21.8, 10.2], "metal")
+    p = beam(add, (1.6, 18.5), 180, 3.4, 4.0, "metal", 6.4, 9.6, back=0.2)
+    p = beam(add, p, 180, 2.4, 2.2, "metal", 7.0, 9.0, back=0.2)
+    beam(add, p, 180, 1.6, 0.9, "edge", 7.5, 8.5, back=0.2)
+    beam(add, (1.6, 18.5), 180, 6.0, 0.35, "energy", 6.3, 9.7, back=0.0)
+    # pique au sommet et couronne de saphirs
+    add([6.9, 23.0, 6.9], [9.1, 24.0, 9.1], "trim")
+    add([7.1, 24.0, 7.1], [8.9, 27.0, 8.9], "edge", ["y", 45, [8, 25.5, 8]])
+    add([7.85, 26.5, 7.85], [8.15, 29.0, 8.15], "energy")
+    for (x, z) in ((4.0, 5.2), (12.0, 5.2), (4.0, 10.8), (12.0, 10.8)):
+        add([x - 0.45, 23.0, z - 0.45], [x + 0.45, 23.9, z + 0.45], "gem")
+    return E
+
+
+def greatsword_elements():
+    """Espadon d'Évolite : lame large à gorge lumineuse, garde en ailes, pommeau de cristal."""
+    E, add = builder()
+    sym = sym8(add)
+    add([7.2, -9, 7.2], [8.8, 2.5, 8.8], "grip")
+    for y in (-8.0, -5.5, -3.0, -0.5, 2.0):
+        add([7.05, y, 7.05], [8.95, y + 0.5, 8.95], "handle")
+    add([6.5, -11.0, 6.5], [9.5, -9.0, 9.5], "dark")
+    add([6.3, -9.3, 6.3], [9.7, -9.0, 9.7], "trim")
+    add([7.0, -12.8, 7.0], [9.0, -10.8, 9.0], "gem", ["y", 45, [8, -11.8, 8]])
+    add([7.8, -13.6, 7.8], [8.2, -12.6, 8.2], "energy")
+    # --- garde en ailes
+    add([5.2, 2.5, 6.7], [10.8, 4.8, 9.3], "dark")
+    add([7.0, 2.7, 6.3], [9.0, 4.6, 9.7], "gem")
+    add([5.0, 4.8, 7.0], [11.0, 5.2, 9.0], "trim")
+    add([5.0, 2.1, 7.0], [11.0, 2.5, 9.0], "trim")
+    p = beam(sym, (5.4, 3.6), 157.5, 4.6, 1.8, "metal", 7.25, 8.75)
+    q = beam(sym, p, 135, 2.2, 1.1, "edge", 7.4, 8.6)
+    beam(sym, (5.4, 3.6), 157.5, 4.3, 0.35, "energy", 7.15, 8.85, back=0.0)
+    beam(sym, q, 112.5, 1.0, 0.6, "trim", 7.5, 8.5)
+    # --- lame
+    add([6.4, 4.8, 7.35], [9.6, 7.4, 8.65], "dark")                        # ricasso gravé
+    sym([6.6, 5.2, 7.3], [7.0, 7.0, 8.7], "energy")
+    add([5.3, 7.4, 7.5], [10.7, 26.0, 8.5], "metal")
+    sym([4.7, 7.8, 7.7], [5.3, 25.6, 8.3], "edge")
+    add([7.4, 7.8, 7.42], [8.6, 23.5, 8.58], "dark")                       # gorge
+    add([7.75, 8.2, 7.37], [8.25, 23.0, 8.63], "energy")
+    for y in (10.0, 13.5, 17.0, 20.5):                                     # runes d'évolite
+        sym([5.9, y, 7.45], [6.4, y + 1.4, 8.55], "energy")
+        sym([6.4, y + 0.45, 7.45], [6.9, y + 0.95, 8.55], "trim")
+    add([6.04, 24.04, 7.5], [9.96, 27.96, 8.5], "metal", ["z", 45, [8, 26, 8]])        # pointe
+    add([5.9, 23.9, 7.7], [10.1, 28.1, 8.3], "edge", ["z", 45, [8, 26, 8]])
+    add([7.8, 22.5, 7.36], [8.2, 27.0, 8.64], "energy")
+    # cristaux d'évolite flottants
+    crystal(add, 1.5, 11)
+    crystal(add, 14.5, 15)
+    crystal(add, 8, 30)
+    return E
+
+
+def dagger_elements():
+    """Dague d'Ombre : lame en feuille de métal sombre, gorge violette, quillons recourbés et volutes d'ombre."""
+    E, add = builder()
+    sym = sym8(add)
+    add([7.3, -3, 7.3], [8.7, 3, 8.7], "grip")
+    for y in (-2.4, -0.9, 0.6, 2.1):
+        add([7.15, y, 7.15], [8.85, y + 0.4, 8.85], "handle")
+    add([7.0, -4.2, 7.0], [9.0, -3.0, 9.0], "dark")
+    add([7.4, -5.6, 7.4], [8.6, -4.2, 8.6], "gem", ["y", 45, [8, -4.9, 8]])
+    # quillons
+    add([6.0, 3.0, 7.3], [10.0, 4.0, 8.7], "dark")
+    add([7.3, 3.1, 7.0], [8.7, 3.9, 9.0], "gem")
+    p = beam(sym, (6.2, 3.5), 157.5, 2.0, 0.9, "metal", 7.45, 8.55)
+    beam(sym, p, 112.5, 1.4, 0.55, "edge", 7.55, 8.45)
+    # lame en feuille
+    for (y0, y1, w) in ((4.0, 6.0, 2.6), (6.0, 9.5, 3.2), (9.5, 11.5, 2.4), (11.5, 13.0, 1.5)):
+        add([8 - w / 2, y0, 7.65], [8 + w / 2, y1 + 0.05, 8.35], "metal")
+        sym([8 - w / 2 - 0.3, y0 + 0.1, 7.78], [8 - w / 2, y1, 8.22], "edge")
+    add([7.4, 12.6, 7.7], [8.6, 13.8, 8.3], "edge", ["z", 45, [8, 13.2, 8]])
+    add([7.8, 4.3, 7.58], [8.2, 12.0, 8.42], "energy")
+    sym([7.0, 6.5, 7.6], [7.25, 9.0, 8.4], "energy")
+    # volutes d'ombre autour de la lame
+    for (x, y, ang) in ((4.6, 8.0, 112.5), (11.4, 10.5, 67.5), (4.9, 12.5, 67.5)):
+        beam(add, (x, y), ang, 1.6, 0.35, "energy", 7.85, 8.15, back=0.0)
+    crystal(add, 3.5, 5.5)
+    return E
+
+
+def halberd_elements():
+    """Hallebarde Royale : hampe cerclée d'or, fer de hache en croissant, crochet arrière
+    et pointe en fleur de lys."""
+    E, add = builder()
+    sym = sym8(add)
+    add([7.3, -13, 7.3], [8.7, 22, 8.7], "handle")
+    add([7.0, -14.4, 7.0], [9.0, -13, 9.0], "trim")
+    add([7.45, -16.0, 7.45], [8.55, -14.4, 8.55], "edge", ["y", 45, [8, -15.2, 8]])
+    for y in (-10.0, -7.0, 3.5, 8.0, 12.5):
+        add([7.1, y, 7.1], [8.9, y + 0.55, 8.9], "trim")
+    add([7.15, -6.0, 7.15], [8.85, 2.5, 8.85], "grip")
+    for y in (-5.0, -2.0, 1.0):
+        add([7.05, y, 7.05], [8.95, y + 0.3, 8.95], "dark")
+    for y in (14.5, 17.0):                                                 # runes
+        add([7.75, y, 7.2], [8.25, y + 1.2, 7.3], "energy")
+        add([7.75, y, 8.7], [8.25, y + 1.2, 8.8], "energy")
+    # pompon royal
+    add([8.7, 19.4, 7.6], [9.4, 20.2, 8.4], "trim")
+    add([9.0, 15.6, 7.7], [9.9, 19.4, 8.3], "grip")
+    add([8.95, 15.2, 7.65], [9.95, 15.6, 8.35], "trim")
+    # --- douille
+    add([6.7, 20.5, 6.7], [9.3, 25.0, 9.3], "dark")
+    add([6.5, 20.5, 6.5], [9.5, 21.0, 9.5], "trim")
+    add([6.5, 24.5, 6.5], [9.5, 25.0, 9.5], "trim")
+    add([7.3, 21.8, 6.4], [8.7, 23.4, 9.6], "gem")
+    # --- fer de hache (à gauche)
+    add([2.4, 20.6, 7.6], [6.7, 25.2, 8.4], "metal")
+    add([0.6, 19.6, 7.65], [2.4, 26.4, 8.35], "metal")
+    beam(add, (2.6, 25.2), 135, 2.8, 1.5, "metal", 7.65, 8.35)
+    beam(add, (2.6, 20.6), 225, 3.2, 1.5, "metal", 7.65, 8.35)
+    add([-0.3, 19.3, 7.78], [0.6, 26.7, 8.22], "edge")
+    beam(add, (0.4, 27.2), 112.5, 1.2, 0.6, "edge", 7.78, 8.22)
+    beam(add, (0.1, 18.4), 247.5, 1.4, 0.6, "edge", 7.78, 8.22)
+    add([0.75, 19.9, 7.55], [1.05, 26.1, 8.45], "energy")
+    add([3.4, 21.8, 7.5], [5.6, 24.0, 8.5], "trim")                        # sceau royal
+    add([3.9, 22.3, 7.4], [5.1, 23.5, 8.6], "gem")
+    add([2.4, 20.4, 7.55], [6.7, 20.7, 8.45], "trim")
+    add([2.4, 25.1, 7.55], [6.7, 25.4, 8.45], "trim")
+    # --- crochet arrière (à droite)
+    p = beam(add, (9.3, 23.0), -22.5, 3.6, 1.5, "metal", 7.6, 8.4)
+    beam(add, p, -45, 1.8, 0.7, "edge", 7.7, 8.3)
+    beam(add, (9.3, 23.0), -22.5, 3.3, 0.3, "energy", 7.5, 8.5, back=0.0)
+    # --- pointe en fleur de lys
+    add([7.1, 25.0, 7.6], [8.9, 28.6, 8.4], "metal")
+    sym([6.75, 25.3, 7.75], [7.1, 28.3, 8.25], "edge")
+    add([7.31, 28.0, 7.7], [8.69, 29.4, 8.3], "edge", ["z", 45, [8, 28.7, 8]])
+    add([7.85, 25.2, 7.5], [8.15, 28.6, 8.5], "energy")
+    p = beam(sym, (7.1, 25.6), 135, 2.2, 0.8, "trim", 7.7, 8.3)
+    beam(sym, p, 247.5, 1.2, 0.6, "trim", 7.7, 8.3)
+    sym([5.0, 25.0, 7.65], [5.6, 25.6, 8.35], "gem")
+    return E
+
+
+def staff_elements():
+    """Sceptre de Cristal : hampe d'argent entourée d'un ruban doré, griffes qui tiennent un grand cristal
+    flottant, anneau d'énergie et éclats en orbite."""
+    E, add = builder()
+    sym = sym8(add)
+    add([7.35, -12, 7.35], [8.65, 17, 8.65], "handle")
+    add([7.1, -13, 7.1], [8.9, -12, 8.9], "trim")
+    add([7.45, -14.6, 7.45], [8.55, -13, 8.55], "gem", ["y", 45, [8, -13.8, 8]])
+    for i in range(12):                                                    # ruban en spirale
+        y = -10.5 + i * 2.2
+        if -2.5 < y < 4.5:
+            continue
+        side = i % 4
+        if side == 0:
+            add([7.2, y, 7.2], [8.8, y + 0.7, 7.35], "trim")
+        elif side == 1:
+            add([8.65, y, 7.2], [8.8, y + 0.7, 8.8], "trim")
+        elif side == 2:
+            add([7.2, y, 8.65], [8.8, y + 0.7, 8.8], "trim")
+        else:
+            add([7.2, y, 7.2], [7.35, y + 0.7, 8.8], "trim")
+    add([7.15, -2.5, 7.15], [8.85, 4.5, 8.85], "grip")
+    add([6.95, -2.9, 6.95], [9.05, -2.5, 9.05], "trim")
+    add([6.95, 4.5, 6.95], [9.05, 4.9, 9.05], "trim")
+    for y in (6.5, 9.5, 12.5):                                             # runes
+        add([7.75, y, 7.25], [8.25, y + 1.3, 7.35], "energy")
+        add([7.75, y, 8.65], [8.25, y + 1.3, 8.75], "energy")
+    # --- tête
+    add([6.8, 17.0, 6.8], [9.2, 18.4, 9.2], "trim")
+    add([6.2, 18.4, 6.2], [9.8, 19.2, 9.8], "dark")
+    add([6.0, 18.6, 6.0], [10.0, 19.0, 10.0], "trim")
+    for plane in ("xy", "zy"):                                             # 4 griffes
+        for s in (1, -1):
+            start = (8 - s * 1.7, 19.0)
+            a1, a2, a3 = (112.5, 90, 67.5) if s == 1 else (67.5, 90, 112.5)
+            z0, z1 = 7.7, 8.3
+            p = beam(add, start, a1, 2.8, 0.7, "trim", z0, z1, plane=plane)
+            p = beam(add, p, a2, 2.6, 0.6, "trim", z0, z1, plane=plane)
+            p = beam(add, p, a3, 1.6, 0.5, "trim", z0, z1, plane=plane)
+            beam(add, p, a3, 0.6, 0.45, "gem", z0 - 0.05, z1 + 0.05, back=0.0, plane=plane)
+    # cristal flottant
+    add([6.6, 21.6, 6.6], [9.4, 26.4, 9.4], "gem", ["y", 45, [8, 24, 8]])
+    add([7.1, 26.4, 7.1], [8.9, 28.0, 8.9], "gem", ["y", 45, [8, 27.2, 8]])
+    add([7.1, 20.0, 7.1], [8.9, 21.6, 8.9], "gem", ["y", 45, [8, 20.8, 8]])
+    add([7.85, 27.8, 7.85], [8.15, 30.6, 8.15], "energy")
+    sym([5.9, 23.2, 7.85], [6.2, 24.8, 8.15], "energy", ["y", 45, [6.05, 24, 8]])
+    halo_flat(add, 8, 8, 24.0, 3.9, t=0.18, depth=0.18)
+    halo(add, 8, 24.0, 4.6, t=0.15, depth=0.15)
+    crystal(add, 2.8, 27.0)
+    crystal(add, 13.2, 21.5)
+    crystal(add, 3.6, 19.0)
+    return E
+
+
+WEAPON_MODELS = {
+    # id : (éléments, hauteur pour l'échelle d'affichage)
+    "evolium_scythe": (scythe_elements, 36),
+    "ruby_katana": (katana_elements, 32),
+    "sapphire_warhammer": (warhammer_elements, 30),
+    "evolite_greatsword": (greatsword_elements, 36),
+    "shadow_dagger": (dagger_elements, 24),
+    "royal_halberd": (halberd_elements, 40),
+    "crystal_staff": (staff_elements, 36),
+}
+
+WEAPON_LIGHT = {"gem": 12, "energy": 15}
+
+
+def weapon_textures(name):
+    st = weapon_theme(name)
+    seed = 100 + list(WEAPON_THEMES).index(name) * 7
+    parts = {
+        "handle": wood_texture(st["wood"], seed),
+        "grip": grip_texture(st["grip"], seed + 1),
+        "metal": metal_texture(st, seed + 2),
+        "gem": gem_texture(st, seed + 3),
+        "edge": edge_texture(st, seed + 4),
+        "dark": dark_texture(st, seed + 5),
+        "trim": trim_texture(st, seed + 6),
+    }
+    for part, img in parts.items():
+        save_png(img, "item", "weapons", f"{name}_{part}")
+    save_animated(energy_frames(st), 2, "item", "weapons", f"{name}_energy")
+
+
+def weapon_model(name):
+    elements, height = WEAPON_MODELS[name]
+    els = elements()
+    for el in els:
+        t = next(iter(el["faces"].values()))["texture"][1:]
+        if t in WEAPON_LIGHT:
+            el["light_emission"] = WEAPON_LIGHT[t]
+        if t == "energy":
+            el["shade"] = False
+    tex = {"particle": f"{MOD}:item/weapons/{name}_metal"}
+    for part in ("handle", "grip", "metal", "gem", "energy", "edge", "dark", "trim"):
+        tex[part] = f"{MOD}:item/weapons/{name}_{part}"
+    return {
+        "credit": "Evo Tool - arme 3D générée par tools/generate_assets.py",
+        "gui_light": "side",
+        "textures": tex,
+        "elements": els,
+        "display": spear_display() if name == "royal_halberd" else display(height),
+    }
+
+
+WEAPON_RECIPES = {
+    "evolium_scythe": (["EEE", " E|", "  |"], {"E": f"{MOD}:evolium", "|": "minecraft:stick"}),
+    "ruby_katana": (["  R", " R ", "E  "], {"R": f"{MOD}:ruby", "E": f"{MOD}:evolium"}),
+    "sapphire_warhammer": (["SBS", " | ", " | "], {"S": f"{MOD}:sapphire", "B": f"{MOD}:sapphire_block",
+                                                    "|": "minecraft:stick"}),
+    "evolite_greatsword": ([" V ", " V ", "E|E"], {"V": f"{MOD}:evolite_ingot", "E": f"{MOD}:evolium",
+                                                    "|": "minecraft:stick"}),
+    "shadow_dagger": (["E", "P", "|"], {"E": f"{MOD}:evolium", "P": "minecraft:ender_pearl", "|": "minecraft:stick"}),
+    "royal_halberd": (["EEG", "E| ", " | "], {"E": f"{MOD}:evolium", "G": "minecraft:gold_ingot",
+                                              "|": "minecraft:stick"}),
+    "crystal_staff": ([" C ", "G|G", " | "], {"C": f"{MOD}:evolving_crystal", "G": "minecraft:gold_ingot",
+                                              "|": "minecraft:stick"}),
+}
+
+
+def gen_weapons():
+    for name in WEAPON_THEMES:
+        weapon_textures(name)
+        write_json(os.path.join(ASSETS, "models", "item", f"{name}.json"), weapon_model(name))
+        write_json(os.path.join(ASSETS, "items", f"{name}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{name}"}})
+        pattern, key = WEAPON_RECIPES[name]
+        write_json(os.path.join(DATA, "recipe", f"{name}.json"), {
+            "type": "minecraft:crafting_shaped", "category": "equipment",
+            "pattern": pattern, "key": key, "result": {"id": f"{MOD}:{name}", "count": 1},
+        })
+    melee = [f"{MOD}:{n}" for n in WEAPON_THEMES if n != "crystal_staff"]
+    tags = os.path.join(ROOT, "data")
+    # enchantements d'épée (Tranchant, Butin, Aura de feu...) sur toutes les armes de corps à corps
+    write_json(os.path.join(DATA, "tags", "item", "modded_weapons.json"),
+               {"replace": False, "values": [f"{MOD}:{n}" for n in WEAPON_THEMES]})
+    for tag in ("enchantable/sword", "enchantable/sharp_weapon", "enchantable/weapon",
+                "enchantable/fire_aspect", "enchantable/melee_weapon", "enchantable/durability"):
+        write_json(os.path.join(tags, "minecraft", "tags", "item", f"{tag}.json"),
+                   {"replace": False, "values": melee if tag != "enchantable/durability"
+                    else [f"{MOD}:{n}" for n in WEAPON_THEMES]})
+    for gem in ("ruby", "sapphire"):
+        write_json(os.path.join(DATA, "tags", "item", f"{gem}_tool_materials.json"),
+                   {"replace": False, "values": [f"{MOD}:{gem}"]})
+    write_json(os.path.join(DATA, "tags", "item", "evolite_tool_materials.json"),
+               {"replace": False, "values": [f"{MOD}:evolite_ingot"]})
+
+
+def recipe_unlocks():
+    """Débloque chaque recette du mod dans le livre de recettes dès qu'on ramasse un de ses ingrédients
+    (comme les recettes vanilla) : elles apparaissent alors dans la table de craft."""
+    rec = os.path.join(DATA, "recipe")
+    for file in sorted(os.listdir(rec)):
+        name = file[:-5]
+        recipe = json.load(open(os.path.join(rec, file), encoding="utf-8"))
+        if "key" in recipe:
+            items = list(recipe["key"].values())
+        elif "ingredients" in recipe:
+            items = list(recipe["ingredients"])
+        else:
+            items = [recipe["ingredient"]]
+        items = sorted({i for i in items if i not in ("minecraft:stick", "minecraft:string")})
+        criteria = {"has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {"recipe": f"{MOD}:{name}"}}}
+        for item in items:
+            criteria["has_" + item.split(":")[1]] = {
+                "trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": item}]}}
+        category = recipe.get("category", "misc")
+        if recipe["type"] in ("minecraft:smelting", "minecraft:blasting"):
+            category = "misc"
+        write_json(os.path.join(DATA, "advancement", "recipes", category, f"{name}.json"), {
+            "parent": "minecraft:recipes/root",
+            "criteria": criteria,
+            "requirements": [list(criteria)],
+            "rewards": {"recipes": [f"{MOD}:{name}"]},
+        })
 
 
 # --------------------------------------------------------------------------- génération
@@ -3200,4 +3833,6 @@ if __name__ == "__main__":
     gen_data()
     gen_dimension_assets()
     gen_dimension_data()
+    gen_weapons()
+    recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

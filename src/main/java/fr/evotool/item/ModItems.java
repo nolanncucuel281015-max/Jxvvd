@@ -4,6 +4,7 @@ import fr.evotool.EvoTool;
 import fr.evotool.component.EvoData;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
+import fr.evotool.weapon.WeaponKind;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -106,6 +107,26 @@ public final class ModItems {
 	public static final Item EVOLVING_BOOTS = register("evolving_boots",
 			s -> new EvolvingArmorItem(EvoKind.BOOTS, s), evolving().armor(EVOLIUM_ARMOR, EquipmentType.BOOTS));
 
+	/** Matériaux des armes moddées (durabilité, enchantabilité, réparation à l'enclume). */
+	public static final ToolMaterial RUBY_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_DIAMOND_TOOL, 1800, 8.0F, 3.0F, 18,
+			TagKey.of(RegistryKeys.ITEM, EvoTool.id("ruby_tool_materials")));
+	public static final ToolMaterial SAPPHIRE_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_DIAMOND_TOOL, 2000, 8.0F, 3.0F, 18,
+			TagKey.of(RegistryKeys.ITEM, EvoTool.id("sapphire_tool_materials")));
+	public static final ToolMaterial EVOLITE_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 3000, 9.0F, 4.0F, 20,
+			TagKey.of(RegistryKeys.ITEM, EvoTool.id("evolite_tool_materials")));
+
+	// --- armes moddées (modèles 3D uniques, passif + attaque spéciale au clic droit)
+	public static final Item EVOLIUM_SCYTHE = weapon(WeaponKind.SCYTHE, EVOLIUM_MATERIAL, Rarity.EPIC);
+	public static final Item RUBY_KATANA = weapon(WeaponKind.KATANA, RUBY_MATERIAL, Rarity.RARE);
+	public static final Item SAPPHIRE_WARHAMMER = weapon(WeaponKind.WARHAMMER, SAPPHIRE_MATERIAL, Rarity.RARE);
+	public static final Item EVOLITE_GREATSWORD = weapon(WeaponKind.GREATSWORD, EVOLITE_MATERIAL, Rarity.EPIC);
+	public static final Item SHADOW_DAGGER = weapon(WeaponKind.DAGGER, EVOLIUM_MATERIAL, Rarity.RARE);
+	public static final Item ROYAL_HALBERD = weapon(WeaponKind.HALBERD, EVOLIUM_MATERIAL, Rarity.EPIC);
+	public static final Item CRYSTAL_STAFF = weapon(WeaponKind.STAFF, EVOLIUM_MATERIAL, Rarity.EPIC);
+
+	public static final List<Item> MODDED_WEAPONS = List.of(
+			EVOLIUM_SCYTHE, RUBY_KATANA, SAPPHIRE_WARHAMMER, EVOLITE_GREATSWORD, SHADOW_DAGGER, ROYAL_HALBERD, CRYSTAL_STAFF);
+
 	public static final List<Item> EVOLVING_ITEMS = List.of(
 			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLVING_SPEAR, EVOLVING_BOW, EVOLIUM_MACE,
 			EVOLVING_HELMET, EVOLVING_CHESTPLATE, EVOLVING_LEGGINGS, EVOLVING_BOOTS);
@@ -150,6 +171,13 @@ public final class ModItems {
 				.fireproof()
 				.rarity(Rarity.EPIC)
 				.maxCount(1);
+	}
+
+	private static Item weapon(WeaponKind kind, ToolMaterial material, Rarity rarity) {
+		return register(kind.id(), s -> new ModdedWeaponItem(kind, s),
+				new Item.Settings().sword(material, 0.0F, 0.0F)
+						.attributeModifiers(ModdedWeaponItem.attributes(kind))
+						.rarity(rarity));
 	}
 
 	private static Item register(String name, Function<Item.Settings, Item> factory, Item.Settings settings) {

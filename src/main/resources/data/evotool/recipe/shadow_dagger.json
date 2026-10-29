@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "E",
+    "P",
+    "|"
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "P": "minecraft:ender_pearl",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "evotool:shadow_dagger",
+    "count": 1
+  }
+}

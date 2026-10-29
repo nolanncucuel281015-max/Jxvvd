@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:evolium_from_blasting_deepslate_evolium_ore"
+      }
+    },
+    "has_deepslate_evolium_ore": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:deepslate_evolium_ore"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_deepslate_evolium_ore"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:evolium_from_blasting_deepslate_evolium_ore"
+    ]
+  }
+}

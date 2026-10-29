@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "  R",
+    " R ",
+    "E  "
+  ],
+  "key": {
+    "R": "evotool:ruby",
+    "E": "evotool:evolium"
+  },
+  "result": {
+    "id": "evotool:ruby_katana",
+    "count": 1
+  }
+}

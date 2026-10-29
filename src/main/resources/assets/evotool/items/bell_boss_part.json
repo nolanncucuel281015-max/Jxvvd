@@ -5,112 +5,322 @@
     "index": 0,
     "fallback": {
       "type": "minecraft:model",
-      "model": "evotool:item/boss/slime_body"
+      "model": "evotool:item/boss/phase1/slime_body"
     },
     "entries": [
       {
         "threshold": 0,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/slime_body"
+          "model": "evotool:item/boss/phase1/slime_body"
         }
       },
       {
         "threshold": 1,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/slime_bell"
+          "model": "evotool:item/boss/phase1/slime_bell"
         }
       },
       {
         "threshold": 2,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/war_bell"
+          "model": "evotool:item/boss/phase1/war_bell"
         }
       },
       {
         "threshold": 3,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/colossus_bell"
+          "model": "evotool:item/boss/phase1/colossus_bell"
         }
       },
       {
         "threshold": 4,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/colossus_arm"
+          "model": "evotool:item/boss/phase1/colossus_arm"
         }
       },
       {
         "threshold": 5,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/colossus_leg"
+          "model": "evotool:item/boss/phase1/colossus_leg"
         }
       },
       {
         "threshold": 6,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/titan_bell"
+          "model": "evotool:item/boss/phase1/titan_bell"
         }
       },
       {
         "threshold": 7,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/titan_crown"
+          "model": "evotool:item/boss/phase1/titan_crown"
         }
       },
       {
         "threshold": 8,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/divine_bell"
+          "model": "evotool:item/boss/phase1/divine_bell"
         }
       },
       {
         "threshold": 9,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/divine_halo"
+          "model": "evotool:item/boss/phase1/divine_halo"
         }
       },
       {
         "threshold": 10,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/divine_wings"
+          "model": "evotool:item/boss/phase1/divine_wings"
         }
       },
       {
         "threshold": 11,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/titan_arm"
+          "model": "evotool:item/boss/phase1/titan_arm"
         }
       },
       {
         "threshold": 12,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/titan_leg"
+          "model": "evotool:item/boss/phase1/titan_leg"
         }
       },
       {
         "threshold": 13,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/divine_arm"
+          "model": "evotool:item/boss/phase1/divine_arm"
         }
       },
       {
         "threshold": 14,
         "model": {
           "type": "minecraft:model",
-          "model": "evotool:item/boss/divine_leg"
+          "model": "evotool:item/boss/phase1/divine_leg"
+        }
+      },
+      {
+        "threshold": 15,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/slime_body"
+        }
+      },
+      {
+        "threshold": 16,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/slime_bell"
+        }
+      },
+      {
+        "threshold": 17,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/war_bell"
+        }
+      },
+      {
+        "threshold": 18,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/colossus_bell"
+        }
+      },
+      {
+        "threshold": 19,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/colossus_arm"
+        }
+      },
+      {
+        "threshold": 20,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/colossus_leg"
+        }
+      },
+      {
+        "threshold": 21,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/titan_bell"
+        }
+      },
+      {
+        "threshold": 22,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/titan_crown"
+        }
+      },
+      {
+        "threshold": 23,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/divine_bell"
+        }
+      },
+      {
+        "threshold": 24,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/divine_halo"
+        }
+      },
+      {
+        "threshold": 25,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/divine_wings"
+        }
+      },
+      {
+        "threshold": 26,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/titan_arm"
+        }
+      },
+      {
+        "threshold": 27,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/titan_leg"
+        }
+      },
+      {
+        "threshold": 28,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/divine_arm"
+        }
+      },
+      {
+        "threshold": 29,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase2/divine_leg"
+        }
+      },
+      {
+        "threshold": 30,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/slime_body"
+        }
+      },
+      {
+        "threshold": 31,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/slime_bell"
+        }
+      },
+      {
+        "threshold": 32,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/war_bell"
+        }
+      },
+      {
+        "threshold": 33,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/colossus_bell"
+        }
+      },
+      {
+        "threshold": 34,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/colossus_arm"
+        }
+      },
+      {
+        "threshold": 35,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/colossus_leg"
+        }
+      },
+      {
+        "threshold": 36,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/titan_bell"
+        }
+      },
+      {
+        "threshold": 37,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/titan_crown"
+        }
+      },
+      {
+        "threshold": 38,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/divine_bell"
+        }
+      },
+      {
+        "threshold": 39,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/divine_halo"
+        }
+      },
+      {
+        "threshold": 40,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/divine_wings"
+        }
+      },
+      {
+        "threshold": 41,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/titan_arm"
+        }
+      },
+      {
+        "threshold": 42,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/titan_leg"
+        }
+      },
+      {
+        "threshold": 43,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/divine_arm"
+        }
+      },
+      {
+        "threshold": 44,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/boss/phase3/divine_leg"
         }
       }
     ]

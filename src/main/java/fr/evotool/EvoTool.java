@@ -17,6 +17,7 @@ import fr.evotool.upgrade.GiantItem;
 import fr.evotool.upgrade.MagicPowers;
 import fr.evotool.upgrade.PickaxeSlam;
 import fr.evotool.weapon.CombatHandler;
+import fr.evotool.weapon.WeaponPowers;
 import fr.evotool.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -45,6 +46,7 @@ public class EvoTool implements ModInitializer {
 		FarmingHandler.init();
 		AxeLaser.init();
 		CombatHandler.init();
+		WeaponPowers.init();
 		ArmorHandler.init();
 		MagicPowers.init();
 		GiantItem.init();

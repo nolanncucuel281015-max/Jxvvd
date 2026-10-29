@@ -10,18 +10,28 @@ import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.item.ModItems;
+import fr.evotool.item.ModdedWeaponItem;
 import fr.evotool.mixin.ForgingScreenHandlerAccessor;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import fr.evotool.upgrade.GiantItem;
 import fr.evotool.upgrade.PickaxeSlam;
+import fr.evotool.weapon.WeaponKind;
+import fr.evotool.weapon.WeaponPowers;
 import java.util.ArrayList;
 import java.util.List;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.component.type.CustomModelDataComponent;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
@@ -101,6 +111,7 @@ final class SelfTest {
 			// Après le géant : le scan génère beaucoup de chunks et décharge ceux du spawn.
 			try {
 				checks += checkOres(server, FAILURES);
+				checks += checkWeapons(server, FAILURES);
 				checks += checkDimension(server, FAILURES);
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
@@ -304,7 +315,81 @@ final class SelfTest {
 			height = boss.getHeight();
 			health = boss.getMaxHealth();
 		}
+		// Trois phases : à 2/3 de la vie le boss se transforme (invulnérable), à 1/3 c'est l'ascension dorée.
 		boss.applyForm(3, true);
+		checks++;
+		boss.setHealth(boss.getMaxHealth() * 0.5F);
+		boss.checkPhase(evo);
+		if (boss.getPhase() != 2 || !boss.isTransforming()) {
+			failures.add("phase 2 du boss : phase " + boss.getPhase() + ", transformation " + boss.isTransforming());
+		}
+		checks++;
+		float before = boss.getHealth();
+		boss.damage(evo, evo.getDamageSources().generic(), 20.0F);
+		if (boss.getHealth() < before) {
+			failures.add("le boss prend des dégâts pendant sa transformation");
+		}
+		checks++;
+		boss.applyForm(3, true);
+		if (boss.getPhase() != 1 || boss.isTransforming()) {
+			failures.add("une nouvelle forme du boss ne repart pas en phase 1 (phase " + boss.getPhase() + ")");
+		}
+		checks++;
+		boss.setHealth(boss.getMaxHealth() * 0.25F);
+		boss.checkPhase(evo);
+		if (boss.getPhase() != 3) {
+			failures.add("phase 3 du boss : phase " + boss.getPhase());
+		}
+		return checks;
+	}
+
+	/** Attaques spéciales des armes moddées, sur un zombie posé devant un faux joueur. */
+	private static int checkWeapons(MinecraftServer server, List<String> failures) {
+		int checks = 0;
+		ServerWorld world = server.getOverworld();
+		BlockPos center = new BlockPos(3000, 250, 3000);
+		world.setChunkForced(center.getX() >> 4, center.getZ() >> 4, true);
+		world.getChunk(center.getX() >> 4, center.getZ() >> 4);
+		world.getChunk(center.getX() >> 4, (center.getZ() + 14) >> 4);
+		for (int dx = -4; dx <= 4; dx++) {
+			for (int dz = -4; dz <= 14; dz++) {
+				world.setBlockState(center.add(dx, -1, dz), net.minecraft.block.Blocks.STONE.getDefaultState());
+			}
+		}
+		FakePlayer player = FakePlayer.get(world);
+		for (WeaponKind kind : WeaponKind.values()) {
+			checks++;
+			// le joueur regarde vers le sud (+z), le zombie est 2 blocs devant et lui fait face
+			player.refreshPositionAndAngles(center.getX() + 0.5, center.getY(), center.getZ() + 0.5, 0.0F, 0.0F);
+			ZombieEntity zombie = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+			if (zombie == null) {
+				failures.add("zombie de test non créé");
+				return checks;
+			}
+			zombie.refreshPositionAndAngles(center.getX() + 0.5, center.getY(), center.getZ() + 2.5, 180.0F, 0.0F);
+			zombie.setAiDisabled(true);
+			world.spawnEntity(zombie);
+			float health = zombie.getHealth();
+			WeaponPowers.activate(kind, world, player);
+			switch (kind) {
+				case SCYTHE, KATANA, WARHAMMER, HALBERD -> {
+					if (zombie.isAlive() && zombie.getHealth() >= health) {
+						failures.add(kind + " : l'attaque spéciale ne touche pas le zombie devant le joueur");
+					}
+				}
+				case DAGGER -> {
+					if (player.getZ() <= zombie.getZ() || player.squaredDistanceTo(zombie) > 4.0) {
+						failures.add("dague : pas téléporté dans le dos du zombie (joueur z=" + player.getZ() + ", zombie z=" + zombie.getZ() + ")");
+					}
+				}
+				default -> {
+					// projectiles : ils avancent aux ticks suivants
+				}
+			}
+			EvoTool.LOGGER.info("EVOTOOL weapon {}: zombie {} -> {}", kind, health, zombie.getHealth());
+			zombie.discard();
+		}
+		world.setChunkForced(center.getX() >> 4, center.getZ() >> 4, false);
 		return checks;
 	}
 
@@ -358,6 +443,47 @@ final class SelfTest {
 				failures.add("placed_feature manquante : " + ore);
 			}
 		}
+
+		// Armes moddées : dégâts, recette à la table de craft et déblocage dans le livre de recettes.
+		for (Item item : ModItems.MODDED_WEAPONS) {
+			checks++;
+			WeaponKind kind = ((ModdedWeaponItem) item).weaponKind();
+			AttributeModifiersComponent modifiers = new ItemStack(item).get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+			double damage = -1;
+			if (modifiers != null) {
+				for (AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
+					if (entry.attribute().equals(EntityAttributes.ATTACK_DAMAGE)) {
+						damage = entry.modifier().value() + 1.0;
+					}
+				}
+			}
+			if (Math.abs(damage - kind.damage()) > 1.0E-6) {
+				failures.add(kind + " : dégâts " + damage + " au lieu de " + kind.damage());
+			}
+		}
+		int recipes = 0;
+		for (net.minecraft.recipe.RecipeEntry<?> recipe : server.getRecipeManager().values()) {
+			net.minecraft.util.Identifier id = recipe.id().getValue();
+			if (!id.getNamespace().equals(EvoTool.MOD_ID)) {
+				continue;
+			}
+			recipes++;
+			checks++;
+			boolean unlocked = false;
+			for (String category : new String[] {"equipment", "building", "misc"}) {
+				unlocked |= server.getAdvancementLoader().get(EvoTool.id("recipes/" + category + "/" + id.getPath())) != null;
+			}
+			if (!unlocked) {
+				failures.add("recette " + id + " absente du livre de recettes (pas de déblocage)");
+			}
+		}
+		for (WeaponKind kind : WeaponKind.values()) {
+			checks++;
+			if (server.getRecipeManager().get(RegistryKey.of(RegistryKeys.RECIPE, EvoTool.id(kind.id()))).isEmpty()) {
+				failures.add("recette manquante : " + kind.id());
+			}
+		}
+		EvoTool.LOGGER.info("EVOTOOL {} recipes of the mod, all in the recipe book", recipes);
 
 		// Chaque objet, à chaque forme, puis amélioré.
 		for (EvoKind kind : EvoKind.values()) {

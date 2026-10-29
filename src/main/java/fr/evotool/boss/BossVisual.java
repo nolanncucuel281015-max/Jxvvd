@@ -36,11 +36,13 @@ final class BossVisual {
 	private static final int TITAN_LEG = 12;
 	private static final int DIVINE_ARM = 13;
 	private static final int DIVINE_LEG = 14;
+	/** Chaque phase de combat a son jeu de 15 modèles (couleurs) : index = morceau + 15 x (phase - 1). */
+	private static final int PARTS_PER_PHASE = 15;
 
 	private enum Role { BODY, LEFT_ARM, RIGHT_ARM, LEFT_LEG, RIGHT_LEG, CROWN, HALO, WINGS }
 
 	/** offset : position du point d'ancrage (pivot) par rapport aux pieds du boss, face avant vers +z. */
-	private record Part(DisplayEntity.ItemDisplayEntity entity, Role role, Vector3f offset, float scale, Vector3f pivot) {
+	private record Part(DisplayEntity.ItemDisplayEntity entity, int model, Role role, Vector3f offset, float scale, Vector3f pivot) {
 	}
 
 	private static final Vector3f BOTTOM = new Vector3f(0, -0.5F, 0);
@@ -50,6 +52,7 @@ final class BossVisual {
 	private final BellBossEntity boss;
 	private final List<Part> parts = new ArrayList<>();
 	private int builtForm = -1;
+	private int builtPhase = -1;
 
 	BossVisual(BellBossEntity boss) {
 		this.boss = boss;
@@ -60,10 +63,16 @@ final class BossVisual {
 		boolean broken = parts.stream().anyMatch(p -> p.entity().isRemoved());
 		if (form != builtForm || broken) {
 			build(world, form);
+		} else if (boss.getPhase() != builtPhase) {
+			// nouvelle phase : mêmes morceaux, nouvelles couleurs
+			builtPhase = boss.getPhase();
+			for (Part part : parts) {
+				part.entity().setItemStack(stack(part.model()));
+			}
 		}
 		for (Part part : parts) {
 			part.entity().setPosition(boss.getX(), boss.getY(), boss.getZ());
-			part.entity().setGlowing(boss.hurtTicks > 0);
+			part.entity().setGlowing(boss.hurtTicks > 0 || boss.isTransforming());
 		}
 		if (boss.age % 2 == 0) {
 			pose(form);
@@ -73,6 +82,7 @@ final class BossVisual {
 	private void build(ServerWorld world, int form) {
 		discard(world, false);
 		builtForm = form;
+		builtPhase = boss.getPhase();
 		switch (form) {
 			case 0 -> add(world, SLIME_BODY, Role.BODY, new Vector3f(0, 0, 0), 2.0F, BOTTOM);
 			case 1 -> add(world, SLIME_BELL, Role.BODY, new Vector3f(0, 0.25F, 0), 2.4F, BOTTOM);
@@ -99,15 +109,19 @@ final class BossVisual {
 		pose(form);
 	}
 
-	private void add(ServerWorld world, int model, Role role, Vector3f offset, float scale, Vector3f pivot) {
+	private ItemStack stack(int model) {
 		ItemStack stack = new ItemStack(ModItems.BELL_BOSS_PART);
-		stack.set(DataComponentTypes.CUSTOM_MODEL_DATA,
-				new CustomModelDataComponent(List.of((float) model), List.of(), List.of(), List.of()));
-		DisplayEntity.ItemDisplayEntity entity = GiantItem.spawn(world, stack, ItemDisplayContext.NONE,
+		float index = model + PARTS_PER_PHASE * (builtPhase - 1);
+		stack.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(List.of(index), List.of(), List.of(), List.of()));
+		return stack;
+	}
+
+	private void add(ServerWorld world, int model, Role role, Vector3f offset, float scale, Vector3f pivot) {
+		DisplayEntity.ItemDisplayEntity entity = GiantItem.spawn(world, stack(model), ItemDisplayContext.NONE,
 				new Vec3d(boss.getX(), boss.getY(), boss.getZ()), 0.0F, new Quaternionf(), 0.2F, 1);
 		entity.setBrightness(null);
 		entity.setTeleportDuration(2);
-		parts.add(new Part(entity, role, offset, scale, pivot));
+		parts.add(new Part(entity, model, role, offset, scale, pivot));
 	}
 
 	private void pose(int form) {
@@ -116,6 +130,7 @@ final class BossVisual {
 		double speed = boss.getVelocity().horizontalLength();
 		float walk = (float) Math.min(1.0, speed * 12);
 		boolean airborne = !boss.isOnGround();
+		boolean transforming = boss.isTransforming();
 		for (Part part : parts) {
 			Quaternionf local = new Quaternionf();
 			Vector3f scale = new Vector3f(part.scale());
@@ -131,6 +146,11 @@ final class BossVisual {
 					if (boss.ringTicks > 0) {
 						sway += 18.0F * (float) Math.sin(boss.ringTicks * 0.9) * boss.ringTicks / 20.0F;
 					}
+					if (transforming) {
+						// la cloche tremble et sonne pendant la transformation
+						sway = 12.0F * (float) Math.sin(t * 1.3);
+						scale.mul(1.0F + 0.04F * (float) Math.sin(t * 0.9));
+					}
 					if (form >= 1) {
 						local.rotationZ((float) Math.toRadians(sway));
 					}
@@ -143,8 +163,8 @@ final class BossVisual {
 					boolean right = part.role() == Role.RIGHT_ARM;
 					float phase = right ? 0 : (float) Math.PI;
 					float swing = (float) (28.0 * walk * Math.sin(t * 0.35 + phase));
-					if (airborne) {
-						swing = -150.0F;                          // bras levés pendant le bond
+					if (airborne || transforming) {
+						swing = -150.0F;                          // bras levés pendant le bond et la transformation
 					} else if (right && boss.punchTicks > 0) {
 						swing = -110.0F * boss.punchTicks / 8.0F;  // coup de poing
 					}
@@ -182,5 +202,6 @@ final class BossVisual {
 		}
 		parts.clear();
 		builtForm = -1;
+		builtPhase = -1;
 	}
 }
