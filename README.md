@@ -19,6 +19,12 @@ pioche, pelle, hache, houe, épée, masse (mace), casque, plastron, jambières e
 
 La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
 
+**Pioche géante** : clic droit avec la Pioche Évolutive. Ta pioche apparaît en géant au-dessus de l'endroit visé
+(« pfff »), **s'abat dans le sol** (explosion, onde de choc, débris) et **creuse un puits jusqu'à la bedrock**.
+La taille du puits évolue avec le niveau : 1x1, 3x3 (niv. 20), 5x5 (niv. 50), 7x7 (niv. 100). Seuls les minerais
+rapportent quelque chose (avec Fortune), à tes pieds ou dans l'inventaire avec la télékinésie ; le reste est pulvérisé.
+Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
+
 ## Hache — en coupant du bois et en tuant des monstres
 
 | Niveau | Déblocage |

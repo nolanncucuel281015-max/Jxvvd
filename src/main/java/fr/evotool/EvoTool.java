@@ -11,7 +11,9 @@ import fr.evotool.mining.EvoMiningHandler;
 import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
 import fr.evotool.upgrade.CelestialBow;
+import fr.evotool.upgrade.GiantItem;
 import fr.evotool.upgrade.MagicPowers;
+import fr.evotool.upgrade.PickaxeSlam;
 import fr.evotool.weapon.CombatHandler;
 import fr.evotool.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
@@ -43,7 +45,9 @@ public class EvoTool implements ModInitializer {
 		CombatHandler.init();
 		ArmorHandler.init();
 		MagicPowers.init();
+		GiantItem.init();
 		CelestialBow.init();
+		PickaxeSlam.init();
 		if (Boolean.getBoolean("evotool.selftest")) {
 			SelfTest.register();
 		}

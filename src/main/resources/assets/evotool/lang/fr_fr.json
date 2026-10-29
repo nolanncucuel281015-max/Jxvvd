@@ -125,5 +125,6 @@
   "item.evotool.evolving_bow": "Arc Évolutif",
   "upgrade.evotool.celestial_bow": "Arc céleste",
   "upgrade.evotool.celestial_bow.desc": "Au niveau 100 : clic droit, ton arc apparaît en géant et tire une flèche toutes les demi-secondes sur les monstres.",
-  "tooltip.evotool.bow_hint": "Niveau 100 + évolite : clic droit = arc céleste"
+  "tooltip.evotool.bow_hint": "Niveau 100 + évolite : clic droit = arc céleste",
+  "tooltip.evotool.pickaxe_hint": "Clic droit : pioche géante, creuse un puits jusqu'à la bedrock"
 }

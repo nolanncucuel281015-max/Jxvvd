@@ -76,6 +76,9 @@ public class EvoToolClient implements ClientModInitializer {
 			if (kind == EvoKind.SWORD) {
 				lines.add(index++, Text.translatable("tooltip.evotool.sword_hint").formatted(Formatting.RED));
 			}
+			if (kind == EvoKind.PICKAXE) {
+				lines.add(index++, Text.translatable("tooltip.evotool.pickaxe_hint").formatted(Formatting.GOLD));
+			}
 			if (kind == EvoKind.BOW) {
 				lines.add(index++, Text.translatable("tooltip.evotool.bow_hint").formatted(Formatting.LIGHT_PURPLE));
 			}

@@ -7,18 +7,26 @@ import fr.evotool.evo.EvoProgression;
 import fr.evotool.item.ModItems;
 import fr.evotool.mixin.ForgingScreenHandlerAccessor;
 import fr.evotool.upgrade.EvoliteUpgrade;
+import fr.evotool.upgrade.GiantItem;
+import fr.evotool.upgrade.PickaxeSlam;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.gen.feature.PlacedFeature;
+import org.joml.Quaternionf;
 
 /**
  * Auto-test lancé par la CI (-Devotool.selftest=true) sur un vrai serveur : vérifie que le mod se charge
@@ -28,24 +36,50 @@ final class SelfTest {
 	private SelfTest() {
 	}
 
+	private static final List<String> FAILURES = new ArrayList<>();
+	private static int checks;
+	private static int startTick = -1;
+	private static DisplayEntity.ItemDisplayEntity giant;
+
 	static void register() {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-			List<String> failures = new ArrayList<>();
-			int checks = 0;
 			try {
-				checks = run(server, failures);
+				checks = run(server, FAILURES);
+				// Objet géant : il doit rester dans le monde (bug corrigé : il était supprimé dès son apparition).
+				ServerWorld world = server.getOverworld();
+				world.setChunkForced(0, 0, true);
+				giant = GiantItem.spawn(world, new ItemStack(ModItems.EVOLVING_BOW), ItemDisplayContext.FIXED,
+						new Vec3d(8, 200, 8), 0.0F, new Quaternionf(), 2.0F, 4);
+				startTick = server.getTicks();
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
-				failures.add("crash: " + t);
+				FAILURES.add("crash: " + t);
+				finish(server);
 			}
-			if (failures.isEmpty()) {
-				EvoTool.LOGGER.info("EVOTOOL SELFTEST PASSED ({} checks)", checks);
-			} else {
-				failures.forEach(f -> EvoTool.LOGGER.error("EVOTOOL SELFTEST FAILURE: {}", f));
-				EvoTool.LOGGER.error("EVOTOOL SELFTEST FAILED ({} failures / {} checks)", failures.size(), checks);
-			}
-			server.stop(false);
 		});
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (startTick < 0 || server.getTicks() - startTick < 20) {
+				return;
+			}
+			startTick = -1;
+			checks++;
+			if (giant == null || giant.isRemoved() || server.getOverworld().getEntity(giant.getUuid()) == null) {
+				FAILURES.add("l'objet géant a disparu juste après être apparu");
+			} else {
+				GiantItem.remove(server.getOverworld(), giant, 2.0F);
+			}
+			finish(server);
+		});
+	}
+
+	private static void finish(MinecraftServer server) {
+		if (FAILURES.isEmpty()) {
+			EvoTool.LOGGER.info("EVOTOOL SELFTEST PASSED ({} checks)", checks);
+		} else {
+			FAILURES.forEach(f -> EvoTool.LOGGER.error("EVOTOOL SELFTEST FAILURE: {}", f));
+			EvoTool.LOGGER.error("EVOTOOL SELFTEST FAILED ({} failures / {} checks)", FAILURES.size(), checks);
+		}
+		server.stop(false);
 	}
 
 	private static int run(MinecraftServer server, List<String> failures) {
@@ -76,6 +110,12 @@ final class SelfTest {
 		if (net.minecraft.enchantment.EnchantmentHelper.getLevel(enchantments.getOrThrow(net.minecraft.enchantment.Enchantments.LUNGE), oldSpear) != 0
 				|| net.minecraft.enchantment.EnchantmentHelper.getLevel(enchantments.getOrThrow(fr.evotool.evo.ModEnchantments.EVOLVING_LUNGE), oldSpear) != 3) {
 			failures.add("Élan vanilla non converti sur la lance");
+		}
+
+		// Taille du puits de la pioche géante selon le niveau.
+		checks++;
+		if (PickaxeSlam.radius(0) != 0 || PickaxeSlam.radius(20) != 1 || PickaxeSlam.radius(50) != 2 || PickaxeSlam.radius(100) != 3) {
+			failures.add("taille du puits de la pioche géante");
 		}
 
 		// Génération des minerais.

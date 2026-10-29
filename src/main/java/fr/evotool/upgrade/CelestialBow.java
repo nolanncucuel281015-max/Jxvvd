@@ -6,14 +6,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.CustomModelDataComponent;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.Brightness;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,12 +26,10 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 /**
  * Arc Évolutif niveau 100 amélioré à l'évolite : clic droit = l'arc du joueur apparaît en géant devant lui
@@ -53,8 +48,6 @@ public final class CelestialBow {
 	private static final int ARROW_LIFETIME = 100;
 	private static final float GIANT_SCALE = 6.0F;
 	private static final double DISTANCE_IN_FRONT = 4.5;
-	/** Tag posé sur l'arc géant pour le retrouver (et le supprimer s'il reste après un arrêt du serveur). */
-	private static final String GIANT_TAG = "evotool_celestial_bow";
 
 	private static final class Volley {
 		final ServerWorld world;
@@ -85,12 +78,6 @@ public final class CelestialBow {
 	public static void init() {
 		UseItemCallback.EVENT.register(CelestialBow::onUse);
 		ServerTickEvents.END_SERVER_TICK.register(server -> tick(server.getTicks()));
-		// Un arc géant resté dans une sauvegarde (serveur arrêté pendant une salve) est supprimé au chargement.
-		ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-			if (entity.getCommandTags().contains(GIANT_TAG) && VOLLEYS.stream().noneMatch(v -> v.giant == entity)) {
-				entity.discard();
-			}
-		});
 	}
 
 	public static boolean isReady(ItemStack stack) {
@@ -123,43 +110,17 @@ public final class CelestialBow {
 		// floats[0] = forme ; flags[0] = forcer le modèle bandé (voir items/evolving_bow.json)
 		shown.set(DataComponentTypes.CUSTOM_MODEL_DATA,
 				new CustomModelDataComponent(List.of(stage), List.of(true), List.of(), List.of()));
-
-		DisplayEntity.ItemDisplayEntity giant = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
-		giant.setItemStack(shown);
-		giant.setItemDisplayContext(ItemDisplayContext.FIXED);
-		giant.setBillboardMode(DisplayEntity.BillboardMode.FIXED);
-		giant.setBrightness(new Brightness(15, 15));
-		giant.setViewRange(4.0F);
-		giant.setTeleportDuration(2);
-		giant.setTransformation(transformation(0.2F));
-		giant.addCommandTag(GIANT_TAG);
-		Vec3d pos = giantPosition(player);
-		giant.refreshPositionAndAngles(pos.x, pos.y, pos.z, player.getYaw(), player.getPitch());
-		world.spawnEntity(giant);
-
-		// Il grandit en quelques ticks (interpolation côté client) : effet « pfff ».
-		giant.setInterpolationDuration(APPEAR_TICKS);
-		giant.setStartInterpolation(0);
-		giant.setTransformation(transformation(GIANT_SCALE));
-		poof(world, pos);
+		DisplayEntity.ItemDisplayEntity giant = GiantItem.spawn(world, shown, ItemDisplayContext.FIXED, giantPosition(player),
+				player.getYaw(), ROTATION, GIANT_SCALE, APPEAR_TICKS);
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.5F, 1.2F);
 		return giant;
 	}
 
-	/** Taille de l'arc géant, tourné de 45° pour que la corde soit verticale. */
-	private static AffineTransformation transformation(float scale) {
-		return new AffineTransformation(new Vector3f(), new Quaternionf().rotationZ((float) Math.toRadians(-45)),
-				new Vector3f(scale, scale, scale), new Quaternionf());
-	}
+	/** Tourné de 45° pour que la corde soit verticale. */
+	private static final Quaternionf ROTATION = new Quaternionf().rotationZ((float) Math.toRadians(-45));
 
 	private static Vec3d giantPosition(ServerPlayerEntity player) {
 		return player.getEyePos().add(player.getRotationVector().multiply(DISTANCE_IN_FRONT)).add(0, 0.5, 0);
-	}
-
-	private static void poof(ServerWorld world, Vec3d pos) {
-		world.spawnParticles(ParticleTypes.POOF, pos.x, pos.y, pos.z, 60, 1.5, 1.5, 1.5, 0.05);
-		world.spawnParticles(ParticleTypes.CLOUD, pos.x, pos.y, pos.z, 30, 1.2, 1.2, 1.2, 0.02);
-		world.playSound(null, BlockPos.ofFloored(pos), SoundEvents.ENTITY_ILLUSIONER_MIRROR_MOVE, SoundCategory.PLAYERS, 1.0F, 1.0F);
 	}
 
 	private static void tick(int tick) {
@@ -167,14 +128,13 @@ public final class CelestialBow {
 			Volley volley = it.next();
 			int step = tick - volley.startTick;
 			if (step >= VOLLEY_TICKS || volley.player.isRemoved() || volley.player.getEntityWorld() != volley.world) {
-				poof(volley.world, new Vec3d(volley.giant.getX(), volley.giant.getY(), volley.giant.getZ()));
-				volley.giant.discard();
+				GiantItem.remove(volley.world, volley.giant, GIANT_SCALE);
 				it.remove();
 				continue;
 			}
 			// L'arc géant suit le regard du joueur.
 			Vec3d pos = giantPosition(volley.player);
-			volley.giant.refreshPositionAndAngles(pos.x, pos.y, pos.z, volley.player.getYaw(), volley.player.getPitch());
+			volley.giant.refreshPositionAndAngles(pos.x, pos.y, pos.z, volley.player.getYaw(), 0.0F);
 			if (step >= APPEAR_TICKS && (step - APPEAR_TICKS) % ARROW_INTERVAL == 0 && volley.fired < ARROW_COUNT) {
 				fire(volley, pos, tick);
 				volley.fired++;
