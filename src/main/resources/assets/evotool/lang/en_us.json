@@ -119,5 +119,6 @@
   "item.evotool.evolving_spear": "Evolving Spear",
   "upgrade.evotool.lightning_charge": "Lightning Charge",
   "upgrade.evotool.lightning_charge.desc": "While charging: Speed III, and every hit strikes the target with lightning.",
-  "tooltip.evotool.sword_hint": "Sneak + right-click: celestial explosion (20 blocks)"
+  "tooltip.evotool.sword_hint": "Sneak + right-click: celestial explosion (20 blocks)",
+  "enchantment.evotool.evolving_lunge": "Evolving Lunge"
 }

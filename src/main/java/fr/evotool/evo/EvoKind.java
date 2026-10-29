@@ -53,7 +53,8 @@ public enum EvoKind {
 			.power(Power.LIFESTEAL, 10).power(Power.SHOCKWAVE, 30).power(Power.LIGHTNING, 50)
 			.power(Power.WIDE_SHOCKWAVE, 75).power(Power.EXECUTION, 100)
 			.enchant(Enchantments.SHARPNESS, "sharpness", 15, 25, 35, 45, 55)
-			.enchant(Enchantments.LUNGE, "lunge", 20, 40, 60)
+			// Élan évolutif : comme Élan, mais sans faim (voir data/evotool/enchantment/evolving_lunge.json).
+			.enchant(ModEnchantments.EVOLVING_LUNGE, "enchantment.evotool.evolving_lunge", 20, 40, 60)
 			.enchant(Enchantments.LOOTING, "looting", 30, 50, 70)),
 
 	/** Évolue en tuant des monstres : Densité, Brèche, Charge de vent, onde de choc, foudre, exécution. */

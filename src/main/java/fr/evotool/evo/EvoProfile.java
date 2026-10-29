@@ -90,8 +90,10 @@ public final class EvoProfile {
 		return this;
 	}
 
+	/** @param name nom vanilla (« fortune ») ou clé de traduction complète (« enchantment.evotool.xxx »). */
 	EvoProfile enchant(RegistryKey<Enchantment> enchantment, String name, int... levels) {
-		enchants.add(new EnchantStep(enchantment, "enchantment.minecraft." + name, levels));
+		String key = name.contains(".") ? name : "enchantment.minecraft." + name;
+		enchants.add(new EnchantStep(enchantment, key, levels));
 		return this;
 	}
 

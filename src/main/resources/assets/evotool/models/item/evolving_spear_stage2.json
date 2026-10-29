@@ -976,7 +976,7 @@
       "rotation": [
         5,
         270,
-        -85
+        5
       ],
       "translation": [
         0,
@@ -993,7 +993,7 @@
       "rotation": [
         5,
         -270,
-        85
+        -5
       ],
       "translation": [
         0,
@@ -1010,7 +1010,7 @@
       "rotation": [
         -20,
         90,
-        -80
+        10
       ],
       "translation": [
         3.13,
@@ -1027,7 +1027,7 @@
       "rotation": [
         -20,
         -90,
-        80
+        -10
       ],
       "translation": [
         3.13,

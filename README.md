@@ -50,8 +50,10 @@ Les animaux ne rapportent rien. Chaque niveau donne +0,1 dégât (+10 au niveau 
 avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 10 secondes.
 
 **Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre, exécution),
-avec Tranchant I à V (15/25/35/45/55), **Élan** I à III (20/40/60) et Butin I à III (30/50/70).
-Elle garde la charge et les estocs de la lance en netherite.
+avec Tranchant I à V (15/25/35/45/55), **Élan évolutif** I à III (20/40/60) et Butin I à III (30/50/70).
+Elle garde la charge de la lance en netherite, mais ses estocs n'ont **pas besoin d'être chargés** : on peut
+enchaîner les Élans pour s'élancer encore et encore. L'Élan évolutif **ne consomme pas de nourriture**
+(l'Élan vanilla coûte 4 points de faim par niveau à chaque estoc).
 
 | Niveau | Épée | Masse |
 |-------:|------|-------|

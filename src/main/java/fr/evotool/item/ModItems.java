@@ -57,10 +57,14 @@ public final class ModItems {
 	public static final Item EVOLVING_SWORD = register("evolving_sword",
 			s -> new EvolvingToolItem(EvoKind.SWORD, s),
 			evolving().sword(EVOLIUM_MATERIAL, 3.0F, -2.4F));
-	/** Lance : mêmes réglages de charge que la lance en netherite de Minecraft 1.21.11. */
+	/**
+	 * Lance : mêmes réglages de charge que la lance en netherite de Minecraft 1.21.11,
+	 * mais les estocs n'ont pas besoin d'être chargés : on peut enchaîner les Élans.
+	 */
 	public static final Item EVOLVING_SPEAR = register("evolving_spear",
 			s -> new EvolvingToolItem(EvoKind.SPEAR, s),
-			evolving().spear(EVOLIUM_MATERIAL, 1.15F, 1.2F, 0.4F, 2.5F, 7.0F, 5.5F, 5.1F, 8.75F, 4.6F));
+			evolving().spear(EVOLIUM_MATERIAL, 1.15F, 1.2F, 0.4F, 2.5F, 7.0F, 5.5F, 5.1F, 8.75F, 4.6F)
+					.component(DataComponentTypes.MINIMUM_ATTACK_CHARGE, 0.0F));
 	public static final Item EVOLIUM_MACE = register("evolium_mace", EvoliumMaceItem::new,
 			evolving()
 					.maxDamage(2500)

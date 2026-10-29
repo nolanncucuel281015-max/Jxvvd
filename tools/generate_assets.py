@@ -959,14 +959,16 @@ TOOL_MODELS = {
 
 
 def spear_display():
-    """Reprend la tenue de la lance vanilla (item/spear_in_hand), conçue pour un sprite en diagonale.
-    Notre modèle est vertical : on ajoute -45° autour de Z (rotation appliquée en premier),
-    et on adapte l'échelle (sprite de ~22,6 unités en diagonale, notre lance mesure ~45 unités)."""
+    """Reprend la tenue de la lance vanilla (item/spear_in_hand).
+    Le sprite vanilla en main (32x32) est dessiné pointe en HAUT À GAUCHE (axe à 135°),
+    notre modèle est vertical (axe à 90°) : on ajoute +45° autour de Z (rotation appliquée en premier ;
+    pour la main gauche le jeu inverse Z, d'où -45°). Échelle : le sprite fait ~22,6 unités en diagonale,
+    notre lance ~45 unités, donc on divise l'échelle vanilla par 2."""
     d = display(36)
-    d["thirdperson_righthand"] = {"rotation": [5, 270, -85], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
-    d["thirdperson_lefthand"] = {"rotation": [5, -270, 85], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
-    d["firstperson_righthand"] = {"rotation": [-20, 90, -80], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
-    d["firstperson_lefthand"] = {"rotation": [-20, -90, 80], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
+    d["thirdperson_righthand"] = {"rotation": [5, 270, 5], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
+    d["thirdperson_lefthand"] = {"rotation": [5, -270, -5], "translation": [0, 2, 2], "scale": [0.85, 0.85, 0.85]}
+    d["firstperson_righthand"] = {"rotation": [-20, 90, 10], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
+    d["firstperson_lefthand"] = {"rotation": [-20, -90, -10], "translation": [3.13, 2, 0.13], "scale": [0.68, 0.68, 0.68]}
     return d
 
 
@@ -1687,6 +1689,39 @@ def gen_data():
                       ("leg_armor", "evolving_leggings"), ("foot_armor", "evolving_boots")):
         write_json(os.path.join(tags, "minecraft", "tags", "item", f"{tag}.json"),
                    {"replace": False, "values": [f"{MOD}:{item}"]})
+
+    # --- Élan évolutif : Élan vanilla sans faim (apply_exhaustion) ni usure (change_item_damage)
+    on_foot = {
+        "condition": "minecraft:all_of",
+        "terms": [
+            {"condition": "minecraft:inverted",
+             "term": {"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"vehicle": {}}}},
+            {"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"flags": {"is_fall_flying": False}}},
+            {"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"flags": {"is_in_water": False}}},
+        ],
+    }
+    write_json(os.path.join(DATA, "enchantment", "evolving_lunge.json"), {
+        "anvil_cost": 2,
+        "description": {"translate": "enchantment.evotool.evolving_lunge"},
+        "effects": {"minecraft:post_piercing_attack": [{
+            "effect": {"type": "minecraft:all_of", "effects": [
+                {"type": "minecraft:apply_impulse", "coordinate_scale": [1.0, 0.0, 1.0], "direction": [0.0, 0.0, 1.0],
+                 "magnitude": {"type": "minecraft:linear", "base": 0.458, "per_level_above_first": 0.458}},
+                {"type": "minecraft:play_sound", "pitch": 1.0, "volume": 1.0,
+                 "sound": ["minecraft:item.spear.lunge_1", "minecraft:item.spear.lunge_2", "minecraft:item.spear.lunge_3"]},
+            ]},
+            "requirements": on_foot,
+        }]},
+        "exclusive_set": ["minecraft:lunge"],
+        "max_cost": {"base": 25, "per_level_above_first": 8},
+        "max_level": 3,
+        "min_cost": {"base": 5, "per_level_above_first": 8},
+        "slots": ["hand"],
+        "supported_items": f"#{MOD}:evolving_spears",
+        "weight": 1,
+    })
+    write_json(os.path.join(DATA, "tags", "item", "evolving_spears.json"),
+               {"replace": False, "values": [f"{MOD}:evolving_spear"]})
 
     # --- génération du monde
     wg = os.path.join(DATA, "worldgen")

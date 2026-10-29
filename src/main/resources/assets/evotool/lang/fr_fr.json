@@ -119,5 +119,6 @@
   "item.evotool.evolving_spear": "Lance Évolutive",
   "upgrade.evotool.lightning_charge": "Charge fulgurante",
   "upgrade.evotool.lightning_charge.desc": "Pendant la charge : vitesse III, et chaque coup foudroie la cible.",
-  "tooltip.evotool.sword_hint": "Accroupi + clic droit : explosion céleste (20 blocs)"
+  "tooltip.evotool.sword_hint": "Accroupi + clic droit : explosion céleste (20 blocs)",
+  "enchantment.evotool.evolving_lunge": "Élan évolutif"
 }
