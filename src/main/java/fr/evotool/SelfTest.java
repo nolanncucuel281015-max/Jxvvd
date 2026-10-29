@@ -48,6 +48,8 @@ final class SelfTest {
 				// Objet géant : il doit rester dans le monde (bug corrigé : il était supprimé dès son apparition).
 				ServerWorld world = server.getOverworld();
 				world.setChunkForced(0, 0, true);
+				// Le scan des minerais prend du temps : on recharge le chunk avant d'y faire apparaître le géant.
+				world.getChunk(0, 0);
 				giant = GiantItem.spawn(world, new ItemStack(ModItems.EVOLVING_BOW), ItemDisplayContext.FIXED,
 						new Vec3d(8, 200, 8), 0.0F, new Quaternionf(), 2.0F, 4);
 				startTick = server.getTicks();
@@ -64,7 +66,8 @@ final class SelfTest {
 			startTick = -1;
 			checks++;
 			if (giant == null || giant.isRemoved() || server.getOverworld().getEntity(giant.getUuid()) == null) {
-				FAILURES.add("l'objet géant a disparu juste après être apparu");
+				FAILURES.add("l'objet géant a disparu juste après être apparu (retiré : "
+						+ (giant == null ? "null" : giant.getRemovalReason()) + ")");
 			} else {
 				GiantItem.remove(server.getOverworld(), giant, 2.0F);
 			}
@@ -130,6 +133,7 @@ final class SelfTest {
 		int evolium = 0;
 		int ruby = 0;
 		int sapphire = 0;
+		int diamond = 0;
 		for (int cx = 40; cx < 48; cx++) {
 			for (int cz = 40; cz < 48; cz++) {
 				net.minecraft.world.chunk.Chunk chunk = overworld.getChunk(cx, cz);
@@ -143,15 +147,22 @@ final class SelfTest {
 								ruby++;
 							} else if (state.isOf(fr.evotool.block.ModBlocks.SAPPHIRE_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_SAPPHIRE_ORE)) {
 								sapphire++;
+							} else if (state.isOf(net.minecraft.block.Blocks.DIAMOND_ORE) || state.isOf(net.minecraft.block.Blocks.DEEPSLATE_DIAMOND_ORE)) {
+								diamond++;
 							}
 						}
 					}
 				}
 			}
 		}
-		EvoTool.LOGGER.info("EVOTOOL ORES in 64 chunks: evolium={} ruby={} sapphire={}", evolium, ruby, sapphire);
+		EvoTool.LOGGER.info("EVOTOOL ORES in 64 chunks: evolium={} diamond={} ruby={} sapphire={}", evolium, diamond, ruby, sapphire);
 		if (evolium == 0 || ruby == 0 || sapphire == 0) {
 			failures.add("minerais absents de la génération : évolium=" + evolium + " rubis=" + ruby + " saphir=" + sapphire);
+		}
+		// L'évolium doit rester plus rare que le diamant, mais pas introuvable.
+		checks++;
+		if (evolium >= diamond || evolium * 4 < diamond) {
+			failures.add("rareté de l'évolium : " + evolium + " blocs pour " + diamond + " diamants (attendu entre 1/4 et 1 fois le diamant)");
 		}
 
 		// Génération des minerais.
