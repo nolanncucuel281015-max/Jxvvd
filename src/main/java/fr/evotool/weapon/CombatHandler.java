@@ -47,6 +47,10 @@ public final class CombatHandler {
 			EvoData data = EvoProgression.get(weapon);
 			ServerWorld world = (ServerWorld) entity.getEntityWorld();
 
+			if (EvoProgression.kindOf(weapon) == EvoKind.SPEAR) {
+				// Une lance d'une ancienne version peut encore avoir l'Élan vanilla : on le convertit.
+				EvoProgression.convertVanillaLunge(weapon, world.getRegistryManager());
+			}
 			if (EvoProgression.isActive(profile, data, Power.LIFESTEAL)) {
 				player.heal(damageTaken * LIFESTEAL_RATIO);
 			}

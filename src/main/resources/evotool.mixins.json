@@ -5,7 +5,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"AnvilScreenHandlerMixin",
-		"ForgingScreenHandlerAccessor"
+		"ForgingScreenHandlerAccessor",
+		"PlayerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

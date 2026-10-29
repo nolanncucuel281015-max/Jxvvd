@@ -16,6 +16,7 @@ import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -208,6 +209,25 @@ public final class EvoProgression {
 	}
 
 	/**
+	 * L'Élan vanilla coûte de la faim : sur la Lance Évolutive, on le remplace par l'Élan évolutif
+	 * (même niveau, ou plus si l'évolution en donne plus).
+	 */
+	public static void convertVanillaLunge(ItemStack stack, RegistryWrapper.WrapperLookup registries) {
+		RegistryWrapper.Impl<Enchantment> enchantments = registries.getOrThrow(RegistryKeys.ENCHANTMENT);
+		RegistryEntry<Enchantment> vanilla = enchantments.getOrThrow(Enchantments.LUNGE);
+		int level = EnchantmentHelper.getLevel(vanilla, stack);
+		if (level <= 0) {
+			return;
+		}
+		RegistryEntry<Enchantment> evolving = enchantments.getOrThrow(ModEnchantments.EVOLVING_LUNGE);
+		int target = Math.max(level, EnchantmentHelper.getLevel(evolving, stack));
+		EnchantmentHelper.apply(stack, builder -> {
+			builder.set(vanilla, 0);
+			builder.set(evolving, target);
+		});
+	}
+
+	/**
 	 * @param exact si vrai, les enchantements d'évolution sont mis exactement au niveau prévu
 	 *              (utilisé par /upgrade pour pouvoir redescendre). Sinon ils ne font qu'augmenter,
 	 *              pour ne pas écraser un enchantement plus fort mis à l'enclume.
@@ -221,6 +241,9 @@ public final class EvoProgression {
 		int level = get(stack).level();
 
 		RegistryWrapper.Impl<Enchantment> enchantments = registries.getOrThrow(RegistryKeys.ENCHANTMENT);
+		if (kind == EvoKind.SPEAR) {
+			convertVanillaLunge(stack, registries);
+		}
 		for (EvoProfile.EnchantStep step : profile.enchants()) {
 			int wanted = step.levelAt(level);
 			if (wanted <= 0 && !exact) {

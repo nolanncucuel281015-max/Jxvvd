@@ -57,6 +57,27 @@ final class SelfTest {
 			failures.add("mixin d'enclume non appliqué");
 		}
 
+		checks++;
+		boolean hungerMixin = false;
+		for (java.lang.reflect.Method method : net.minecraft.entity.player.PlayerEntity.class.getDeclaredMethods()) {
+			hungerMixin |= method.getName().contains("noHungerWithSpear");
+		}
+		if (!hungerMixin) {
+			failures.add("mixin anti-faim de la lance non appliqué");
+		}
+
+		// L'Élan vanilla d'une ancienne lance est remplacé par l'Élan évolutif.
+		checks++;
+		ItemStack oldSpear = new ItemStack(ModItems.EVOLVING_SPEAR);
+		var enchantments = server.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+		net.minecraft.enchantment.EnchantmentHelper.apply(oldSpear,
+				builder -> builder.set(enchantments.getOrThrow(net.minecraft.enchantment.Enchantments.LUNGE), 3));
+		EvoProgression.refresh(oldSpear, server.getRegistryManager());
+		if (net.minecraft.enchantment.EnchantmentHelper.getLevel(enchantments.getOrThrow(net.minecraft.enchantment.Enchantments.LUNGE), oldSpear) != 0
+				|| net.minecraft.enchantment.EnchantmentHelper.getLevel(enchantments.getOrThrow(fr.evotool.evo.ModEnchantments.EVOLVING_LUNGE), oldSpear) != 3) {
+			failures.add("Élan vanilla non converti sur la lance");
+		}
+
 		// Génération des minerais.
 		for (String ore : new String[] {"ore_evolium", "ore_ruby", "ore_sapphire", "ore_evolite"}) {
 			checks++;

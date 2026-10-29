@@ -52,8 +52,9 @@ avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Rec
 **Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre, exécution),
 avec Tranchant I à V (15/25/35/45/55), **Élan évolutif** I à III (20/40/60) et Butin I à III (30/50/70).
 Elle garde la charge de la lance en netherite, mais ses estocs n'ont **pas besoin d'être chargés** : on peut
-enchaîner les Élans pour s'élancer encore et encore. L'Élan évolutif **ne consomme pas de nourriture**
-(l'Élan vanilla coûte 4 points de faim par niveau à chaque estoc).
+enchaîner les Élans pour s'élancer encore et encore. **Tant que tu tiens la Lance Évolutive, tu ne perds
+pas de faim** (coups, Élan, charge…). L'Élan vanilla (qui coûte 4 points de faim par niveau à chaque estoc) est
+automatiquement remplacé par l'Élan évolutif sur la lance.
 
 | Niveau | Épée | Masse |
 |-------:|------|-------|
