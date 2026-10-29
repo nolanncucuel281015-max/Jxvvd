@@ -51,3 +51,26 @@ jobs:
               javap -p -cp "$JAR" "$c" 2>/dev/null || true
             done
           done
+
+      # Inspection ponctuelle de Minecraft (commit contenant [inspect]).
+      - name: Inspect vanilla Minecraft
+        if: always() && contains(github.event.head_commit.message, '[inspect]')
+        run: |
+          set +e
+          ALL=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' ! -name '*sources*' 2>/dev/null)
+          for JAR in $ALL; do
+            for f in assets/minecraft/items/netherite_spear.json assets/minecraft/models/item/netherite_spear.json assets/minecraft/models/item/netherite_spear_in_hand.json data/minecraft/enchantment/lunge.json data/minecraft/recipe/netherite_spear_smithing.json; do
+              if unzip -l "$JAR" "$f" >/dev/null 2>&1; then echo "=== $f ($JAR)"; unzip -p "$JAR" "$f"; echo; fi
+            done
+            unzip -l "$JAR" | awk '{print $4}' | grep -i -E 'spear|lunge' | grep -v -E '^net/' | head -40
+            for t in $(unzip -l "$JAR" | awk '{print $4}' | grep 'data/minecraft/tags/item/enchantable/'); do
+              if unzip -p "$JAR" "$t" | grep -q -i spear; then echo "=== $t"; unzip -p "$JAR" "$t"; echo; fi
+            done
+          done
+          for JAR in $(echo "$ALL" | tr ' ' '\n' | grep -i yarn); do
+            echo "##### $JAR"
+            javap -cp "$JAR" 'net.minecraft.item.Item$Settings' 2>/dev/null | grep -i -E 'spear|kinetic|piercing|swing'
+            javap -cp "$JAR" net.minecraft.component.DataComponentTypes 2>/dev/null | grep -i -E 'kinetic|piercing|swing|use_effect|charge|weapon'
+            javap -c -cp "$JAR" net.minecraft.item.Items 2>/dev/null | grep -n -B2 -A45 'String netherite_spear' | head -120
+            javap -cp "$JAR" net.minecraft.enchantment.Enchantments 2>/dev/null | grep -i lunge
+          done
