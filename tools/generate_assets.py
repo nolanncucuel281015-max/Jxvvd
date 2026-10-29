@@ -2038,7 +2038,7 @@ def gen_data():
     ores_cfg = {
         # Évolium : uniquement dans l'ardoise des abîmes, petits filons, souvent détruits à l'air libre.
         "ore_evolium": {"targets": [target("minecraft:deepslate_ore_replaceables", "deepslate_evolium_ore")],
-                        "size": 3, "discard_chance_on_air_exposure": 0.7},
+                        "size": 4, "discard_chance_on_air_exposure": 0.5},
         "ore_ruby": {"targets": [target("minecraft:stone_ore_replaceables", "ruby_ore"),
                                  target("minecraft:deepslate_ore_replaceables", "deepslate_ruby_ore")],
                      "size": 6, "discard_chance_on_air_exposure": 0.3},
@@ -2060,12 +2060,13 @@ def gen_data():
                                                                       "min_inclusive": {"absolute": 10},
                                                                       "max_inclusive": {"absolute": 90}}},
                         {"type": "minecraft:biome"}],
-        # Diamant vanilla : 7 filons/chunk de taille 4. Évolium : 1 filon de taille 3, 1 chunk sur 2.
-        "ore_evolium": [{"type": "minecraft:rarity_filter", "chance": 2},
+        # Diamant vanilla : ~7 filons/chunk de taille 4 (+ gros filons). Évolium : 3 filons/chunk de taille 4,
+        # dans l'ardoise des abîmes uniquement (Y -64 à -16) : nettement plus rare que le diamant, mais trouvable.
+        "ore_evolium": [{"type": "minecraft:count", "count": 3},
                         {"type": "minecraft:in_square"},
                         {"type": "minecraft:height_range", "height": {"type": "minecraft:trapezoid",
                                                                       "min_inclusive": {"absolute": -64},
-                                                                      "max_inclusive": {"absolute": -20}}},
+                                                                      "max_inclusive": {"absolute": -16}}},
                         {"type": "minecraft:biome"}],
         "ore_ruby": [{"type": "minecraft:count", "count": 4},
                      {"type": "minecraft:in_square"},

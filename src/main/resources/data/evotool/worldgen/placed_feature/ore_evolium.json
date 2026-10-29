@@ -2,8 +2,8 @@
   "feature": "evotool:ore_evolium",
   "placement": [
     {
-      "type": "minecraft:rarity_filter",
-      "chance": 2
+      "type": "minecraft:count",
+      "count": 3
     },
     {
       "type": "minecraft:in_square"
@@ -16,7 +16,7 @@
           "absolute": -64
         },
         "max_inclusive": {
-          "absolute": -20
+          "absolute": -16
         }
       }
     },

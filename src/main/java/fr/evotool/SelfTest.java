@@ -124,6 +124,36 @@ final class SelfTest {
 			}
 		}
 
+		// Génération des minerais : on génère 64 chunks et on compte les minerais du mod sous terre.
+		checks++;
+		ServerWorld overworld = server.getOverworld();
+		int evolium = 0;
+		int ruby = 0;
+		int sapphire = 0;
+		for (int cx = 40; cx < 48; cx++) {
+			for (int cz = 40; cz < 48; cz++) {
+				net.minecraft.world.chunk.Chunk chunk = overworld.getChunk(cx, cz);
+				for (int x = 0; x < 16; x++) {
+					for (int z = 0; z < 16; z++) {
+						for (int y = -64; y < 64; y++) {
+							net.minecraft.block.BlockState state = chunk.getBlockState(new net.minecraft.util.math.BlockPos(cx * 16 + x, y, cz * 16 + z));
+							if (state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_EVOLIUM_ORE)) {
+								evolium++;
+							} else if (state.isOf(fr.evotool.block.ModBlocks.RUBY_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_RUBY_ORE)) {
+								ruby++;
+							} else if (state.isOf(fr.evotool.block.ModBlocks.SAPPHIRE_ORE) || state.isOf(fr.evotool.block.ModBlocks.DEEPSLATE_SAPPHIRE_ORE)) {
+								sapphire++;
+							}
+						}
+					}
+				}
+			}
+		}
+		EvoTool.LOGGER.info("EVOTOOL ORES in 64 chunks: evolium={} ruby={} sapphire={}", evolium, ruby, sapphire);
+		if (evolium == 0 || ruby == 0 || sapphire == 0) {
+			failures.add("minerais absents de la génération : évolium=" + evolium + " rubis=" + ruby + " saphir=" + sapphire);
+		}
+
 		// Génération des minerais.
 		for (String ore : new String[] {"ore_evolium", "ore_ruby", "ore_sapphire", "ore_evolite"}) {
 			checks++;
