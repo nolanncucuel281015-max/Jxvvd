@@ -2062,7 +2062,7 @@ def gen_data():
                         {"type": "minecraft:biome"}],
         # Diamant vanilla : ~7 filons/chunk de taille 4 (+ gros filons). Évolium : 3 filons/chunk de taille 4,
         # dans l'ardoise des abîmes uniquement (Y -64 à -16) : nettement plus rare que le diamant, mais trouvable.
-        "ore_evolium": [{"type": "minecraft:count", "count": 3},
+        "ore_evolium": [{"type": "minecraft:count", "count": 5},
                         {"type": "minecraft:in_square"},
                         {"type": "minecraft:height_range", "height": {"type": "minecraft:trapezoid",
                                                                       "min_inclusive": {"absolute": -64},

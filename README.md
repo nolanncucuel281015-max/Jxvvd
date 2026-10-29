@@ -203,7 +203,7 @@ Il faut être opérateur (comme pour `/give`).
 
 | Minerai | Où | Outil requis | Drop |
 |---------|----|--------------|------|
-| **Évolium** | Ardoise des abîmes uniquement (Y -64 à -16), plus rare que le diamant | Pioche en **diamant** | Évolium (directement, comme le diamant — Fortune marche) |
+| **Évolium** | Ardoise des abîmes uniquement (Y -64 à -16), environ 3 fois plus rare que le diamant (plus fréquent vers Y -40) | Pioche en **diamant** | Évolium (directement, comme le diamant — Fortune marche) |
 | **Rubis** | Pierre et ardoise (Y -48 à 48) | Pioche en fer | Rubis |
 | **Saphir** | Pierre et ardoise (Y -32 à 64) | Pioche en fer | Saphir |
 
