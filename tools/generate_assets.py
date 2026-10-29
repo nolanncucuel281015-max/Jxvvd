@@ -1052,6 +1052,17 @@ def bow_grid(stage, pull):
     return grid
 
 
+def bow_normal(t):
+    """Direction « extérieure » de l'arc (vers le haut à gauche, à l'opposé de la corde), en pixels."""
+    dx = 2 * (1 - t) * (BOW_C[0] - BOW_T1[0]) + 2 * t * (BOW_T2[0] - BOW_C[0])
+    dy = 2 * (1 - t) * (BOW_C[1] - BOW_T1[1]) + 2 * t * (BOW_T2[1] - BOW_C[1])
+    nx, ny = -dy, dx
+    if nx + ny > 0:          # on veut pointer vers (-1, -1)
+        nx, ny = -nx, -ny
+    length = math.hypot(nx, ny) or 1.0
+    return nx / length, ny / length
+
+
 def bow_elements(stage, pull):
     E, add = builder()
     grid = bow_grid(stage, pull)
@@ -1068,12 +1079,109 @@ def bow_elements(stage, pull):
             while end + 1 < 16 and grid.get((end + 1, y)) == mat:
                 end += 1
             z0, z1 = BOW_DEPTH[mat]
+            if mat == "S" and stage >= 12:          # niv. 60 : corde d'énergie, plus épaisse
+                z0, z1 = 7.55, 8.45
             add([x, 15 - y, z0], [end + 1, 16 - y, z1], tex[mat])
             x = end + 1
+
+    def cell(px, py, z0, z1, texture, size=1.0):
+        """Un cube sur la case pixel (px, py) (y vers le bas), centré sur la case."""
+        cx, cy = px + 0.5, 15.5 - py
+        h = size / 2
+        add([round(cx - h, 3), round(cy - h, 3), z0], [round(cx + h, 3), round(cy + h, 3), z1], texture)
+
+    def along(t, out):
+        x, y = bow_arc(t)
+        nx, ny = bow_normal(t)
+        return x + nx * out, y + ny * out
+
+    if stage >= 4:   # niv. 20 : poignée blindée, capuchons de gemme des deux côtés
+        gx, gy = bow_arc(0.5)
+        add([round(gx - 1, 3), round(15.5 - gy - 1, 3), 6.25], [round(gx + 1, 3), round(15.5 - gy + 1, 3), 9.75], "metal")
+        add([round(gx - 0.6, 3), round(15.5 - gy - 0.6, 3), 5.9], [round(gx + 0.6, 3), round(15.5 - gy + 0.6, 3), 10.1], "gem")
+    if stage >= 6:   # niv. 30 : plaques d'armure superposées sur les branches
+        for i, t in enumerate([0.12, 0.2, 0.28, 0.36, 0.64, 0.72, 0.8, 0.88]):
+            x, y = bow_arc(t)
+            size = 1.4 if i % 2 == 0 else 1.1
+            cell(int(x), int(y), 6.6, 9.4, "metal", size)
+    # Formes pleines (ailerons, ailes) : on remplit une grille de pixels puis on fusionne par rangées.
+    deco = {}
+
+    def paint(px, py, kind):
+        cellxy = (int(math.floor(px)), int(math.floor(py)))
+        if cellxy not in grid and (kind in ("edge", "frame") or cellxy not in deco):
+            deco[cellxy] = kind
+
+    if stage >= 8:   # niv. 40 : ailerons tranchants le long de l'arc
+        for a0, b0 in ((0.14, 0.36), (0.64, 0.86)):
+            for k in range(121):
+                t = a0 + (b0 - a0) * k / 120
+                height = 0.6 + 2.6 * math.sin(math.pi * k / 120)
+                d = 0.6
+                while d <= height:
+                    px, py = along(t, d + 0.6)
+                    paint(px, py, "edge" if d > height - 0.5 else "fin")
+                    d += 0.2
+    if stage >= 10:  # niv. 50 : ailes de dragon aux extrémités (cadre en métal, membrane en gemme)
+        for tip_t, sign in ((0.0, 1), (1.0, -1)):
+            for k in range(81):
+                f = k / 80
+                t = tip_t + sign * f * 0.18
+                span = 5.5 * (1 - f) + 0.8
+                d = 0.6
+                while d <= span:
+                    px, py = along(t, d + 0.6)
+                    paint(px, py, "frame" if d > span - 0.6 or k < 4 else "membrane")
+                    d += 0.2
+    depth = {"fin": (7.6, 8.4, "metal"), "edge": (7.4, 8.6, "gem"), "frame": (7.45, 8.55, "metal"), "membrane": (7.8, 8.2, "gem")}
+    for y in range(min([c[1] for c in deco] or [0]), max([c[1] for c in deco] or [-1]) + 1):
+        xs = sorted(c[0] for c in deco if c[1] == y)
+        i = 0
+        while i < len(xs):
+            kind = deco[(xs[i], y)]
+            j = i
+            while j + 1 < len(xs) and xs[j + 1] == xs[j] + 1 and deco[(xs[j + 1], y)] == kind:
+                j += 1
+            z0, z1, texture = depth[kind]
+            add([xs[i], 15 - y, z0], [xs[j] + 1, 16 - y, z1], texture)
+            i = j + 1
+    if stage >= 12:  # niv. 60 : noeuds d'énergie aux extrémités de la corde
+        for (px, py) in ((14, 1), (1, 14)):
+            cell(px, py, 7.0, 9.0, "gem", 1.6)
+    if stage >= 16:  # niv. 80 : halo magique derrière l'arc
+        cx, cy = 7.5, 8.5
+        for i in range(28):
+            a = 2 * math.pi * i / 28
+            x, y = cx + math.cos(a) * 9.5, cy + math.sin(a) * 9.5
+            add([round(x - 0.45, 3), round(y - 0.45, 3), 4.4], [round(x + 0.45, 3), round(y + 0.45, 3), 5.2],
+                "gem" if i % 4 == 0 else "metal")
+    if stage >= 18:  # niv. 90 : anneau runique devant l'arc
+        cx, cy = 7.5, 8.5
+        for i in range(16):
+            a = 2 * math.pi * i / 16 + 0.2
+            x, y = cx + math.cos(a) * 6.5, cy + math.sin(a) * 6.5
+            add([round(x - 0.35, 3), round(y - 0.35, 3), 10.8], [round(x + 0.35, 3), round(y + 0.35, 3), 11.4], "gem")
+    if stage >= 20:  # niv. 100 : couronne de pointes de lumière autour du halo
+        cx, cy = 7.5, 8.5
+        for i in range(8):
+            a = 2 * math.pi * i / 8 + math.pi / 8
+            x, y = cx + math.cos(a) * 11.5, cy + math.sin(a) * 11.5
+            angle = 45 if i % 2 == 0 else -45
+            add([round(x - 0.4, 3), round(y - 1.6, 3), 4.5], [round(x + 0.4, 3), round(y + 1.6, 3), 5.1], "gem",
+                ["z", angle, [round(x, 3), round(y, 3), 4.8]])
     for (cx, cy, s) in ((-1.5, 17.5, 14), (17.5, -1.5, 14), (-2.5, 13, 16), (13, 18.5, 17), (18.5, 3, 17), (6, 20, 20), (20, 6, 20)):
         if stage >= s:
             crystal(add, cx, cy)
     return E
+
+
+def bow_gui_scale(elements):
+    """Réduit l'icône si les décorations dépassent du cadre (halo, cristaux)."""
+    extent = 8.0
+    for el in elements:
+        for i in (0, 1):
+            extent = max(extent, abs(el["from"][i] - 8), abs(el["to"][i] - 8))
+    return round(min(1.0, 8.0 / extent), 3)
 
 
 def bow_model(stage, pull):
@@ -1083,7 +1191,7 @@ def bow_model(stage, pull):
         "gui_light": "front",
         "textures": {"particle": st + "handle", "handle": st + "handle", "grip": st + "grip",
                      "metal": st + "metal", "gem": st + "gem", "string": f"{MOD}:item/bow/string"},
-        "elements": bow_elements(stage, pull),
+        "elements": (elements := bow_elements(stage, pull)),
         # mêmes transformations que l'arc vanilla (models/item/bow.json + item/generated)
         "display": {
             "thirdperson_righthand": {"rotation": [-80, 260, -40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
@@ -1093,7 +1201,7 @@ def bow_model(stage, pull):
             "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
             "head": {"rotation": [0, 180, 0], "translation": [0, 13, 7], "scale": [1, 1, 1]},
             "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
-            "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+            "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [bow_gui_scale(elements)] * 3},
         },
     }
 

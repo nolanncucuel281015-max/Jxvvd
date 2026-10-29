@@ -50,7 +50,10 @@ coupé est replanté. Recharge : 10 secondes.
 ## Arc — en tuant des monstres avec ses flèches
 
 Craft comme l'arc normal : 3 évolium + 3 ficelles. Un monstre tué par une flèche de l'Arc Évolutif lui donne de l'XP
-(même courbe que l'épée). Il change de forme tous les 5 niveaux (21 formes 3D, avec l'animation de tension).
+(même courbe que l'épée). Il change de forme **tous les 5 niveaux** (21 formes 3D, avec l'animation de tension) :
+poignée blindée (20), plaques d'armure sur les branches (30), ailerons tranchants (40), ailes de dragon aux
+extrémités (50), corde d'énergie (60), cristaux flottants (70), halo magique derrière l'arc (80),
+anneau runique (90) et couronne de pointes de lumière (100).
 
 | Niveau | Bonus |
 |-------:|-------|
