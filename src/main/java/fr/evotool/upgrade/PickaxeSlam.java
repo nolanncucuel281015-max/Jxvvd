@@ -26,6 +26,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -36,14 +38,17 @@ import org.joml.Vector3f;
 /**
  * Pioche Évolutive niveau 100 améliorée à l'évolite, clic droit : la pioche du joueur apparaît en géant,
  * se lève au-dessus de lui puis s'abat vers l'avant (slash). Une onde tranchante creuse alors une tranchée
- * de 100 blocs de long, 7 de large et 7 de haut droit devant. Seuls les minerais rapportent quelque chose.
+ * de 100 blocs de long et 7 de large droit devant, de 7 blocs au-dessus des pieds jusqu'à la bedrock.
+ * Seuls les minerais rapportent quelque chose.
  */
 public final class PickaxeSlam {
 	public static final int LENGTH = 100;
 	public static final int WIDTH = 7;
-	public static final int HEIGHT = 7;
+	/** Hauteur creusée au-dessus des pieds du joueur (en plus de tout ce qui est en dessous, jusqu'à la bedrock). */
+	public static final int HEIGHT_ABOVE = 7;
 	private static final int START_DISTANCE = 2;
-	private static final int BLOCKS_PER_TICK = 5;
+	/** Longueur creusée par tick (chaque bloc de longueur = 7 colonnes jusqu'à la bedrock). */
+	private static final int BLOCKS_PER_TICK = 2;
 
 	private static final int COOLDOWN = 300;
 	private static final int GROW_TICKS = 8;
@@ -101,25 +106,30 @@ public final class PickaxeSlam {
 		return new Vec3d(-Math.sin(rad), 0, Math.cos(rad));
 	}
 
-	/** Les blocs de la tranchée situés entre deux distances (en blocs) devant le joueur. */
+	/** Les colonnes (x, z) de la tranchée situées entre deux distances (en blocs) devant le joueur (y = 0). */
 	public static Set<BlockPos> trench(BlockPos origin, Vec3d forward, Vec3d right, double from, double to) {
-		Set<BlockPos> positions = new LinkedHashSet<>();
+		Set<BlockPos> columns = new LinkedHashSet<>();
 		double half = (WIDTH - 1) / 2.0;
 		for (double d = from; d < to; d += 0.5) {
 			for (double w = -half - 0.25; w <= half + 0.25; w += 0.5) {
 				double x = origin.getX() + 0.5 + forward.x * d + right.x * w;
 				double z = origin.getZ() + 0.5 + forward.z * d + right.z * w;
-				for (int h = 0; h < HEIGHT; h++) {
-					positions.add(BlockPos.ofFloored(x, origin.getY() + h, z));
-				}
+				columns.add(BlockPos.ofFloored(x, 0, z));
 			}
 		}
-		return positions;
+		return columns;
 	}
 
 	private static ActionResult onUse(PlayerEntity player, World world, Hand hand) {
 		ItemStack pickaxe = player.getStackInHand(hand);
+		if (EvoProgression.kindOf(pickaxe) != EvoKind.PICKAXE) {
+			return ActionResult.PASS;
+		}
 		if (!isReady(pickaxe)) {
+			// On explique pourquoi rien ne se passe.
+			if (world instanceof ServerWorld) {
+				player.sendMessage(Text.translatable("message.evotool.slash_locked").formatted(Formatting.GRAY), true);
+			}
 			return ActionResult.PASS;
 		}
 		if (player.getItemCooldownManager().isCoolingDown(pickaxe)) {
@@ -208,18 +218,28 @@ public final class PickaxeSlam {
 		int advance = Math.min(BLOCKS_PER_TICK, LENGTH - slash.carved);
 		double to = from + advance;
 		List<ItemStack> drops = new ArrayList<>();
-		for (BlockPos pos : trench(slash.origin, slash.forward, slash.right, from, to)) {
-			BlockState state = world.getBlockState(pos);
-			if (state.isAir() || state.getHardness(world, pos) < 0 || !state.getFluidState().isEmpty()
-					|| world.getBlockEntity(pos) != null
-					|| slash.player.isBlockBreakingRestricted(world, pos, slash.player.interactionManager.getGameMode())) {
+		int top = slash.origin.getY() + HEIGHT_ABOVE - 1;
+		int bottom = world.getBottomY();
+		for (BlockPos column : trench(slash.origin, slash.forward, slash.right, from, to)) {
+			if (!world.isChunkLoaded(column.getX() >> 4, column.getZ() >> 4)) {
 				continue;
 			}
-			if (state.isIn(ConventionalBlockTags.ORES)) {
-				drops.addAll(Block.getDroppedStacks(state, world, pos, null, slash.player, slash.pickaxe));
-				slash.xp += EvoProgression.xpForBlock(state);
+			// De 7 blocs au-dessus des pieds jusqu'en bas du monde ; la bedrock (incassable) reste.
+			for (int y = top; y >= bottom; y--) {
+				BlockPos pos = new BlockPos(column.getX(), y, column.getZ());
+				BlockState state = world.getBlockState(pos);
+				if (state.isAir() || state.getHardness(world, pos) < 0 || !state.getFluidState().isEmpty()
+						|| world.getBlockEntity(pos) != null
+						|| slash.player.isBlockBreakingRestricted(world, pos, slash.player.interactionManager.getGameMode())) {
+					continue;
+				}
+				if (state.isIn(ConventionalBlockTags.ORES)) {
+					drops.addAll(Block.getDroppedStacks(state, world, pos, null, slash.player, slash.pickaxe));
+					slash.xp += EvoProgression.xpForBlock(state);
+				}
+				// Sans mise à jour des voisins : beaucoup plus rapide pour des milliers de blocs.
+				world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
 			}
-			world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
 		}
 		slash.carved += advance;
 

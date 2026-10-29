@@ -112,15 +112,15 @@ final class SelfTest {
 			failures.add("Élan vanilla non converti sur la lance");
 		}
 
-		// Tranchée du slash de la pioche : 100 x 7 x 7, quelle que soit la direction (sans trous en diagonale).
+		// Tranchée du slash de la pioche : 100 x 7 colonnes, quelle que soit la direction (sans trous en diagonale).
 		for (float yaw : new float[] {0.0F, 37.0F, 45.0F, 90.0F, 200.0F}) {
 			checks++;
 			Vec3d forward = PickaxeSlam.horizontal(yaw);
 			Vec3d right = new Vec3d(-forward.z, 0, forward.x);
 			int size = PickaxeSlam.trench(net.minecraft.util.math.BlockPos.ORIGIN, forward, right, 2, 2 + PickaxeSlam.LENGTH).size();
-			int expected = PickaxeSlam.LENGTH * PickaxeSlam.WIDTH * PickaxeSlam.HEIGHT;
+			int expected = PickaxeSlam.LENGTH * PickaxeSlam.WIDTH;
 			if (size < expected || size > expected * 1.6) {
-				failures.add("tranchée de la pioche (yaw " + yaw + ") : " + size + " blocs au lieu d'environ " + expected);
+				failures.add("tranchée de la pioche (yaw " + yaw + ") : " + size + " colonnes au lieu d'environ " + expected);
 			}
 		}
 

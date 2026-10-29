@@ -21,7 +21,8 @@ La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne cas
 
 **Slash de la pioche géante** (Pioche Évolutive **niveau 100 + améliorée à l'évolite**) : clic droit. Ta pioche
 apparaît en géant au-dessus de toi (« pfff »), se lève puis **s'abat vers l'avant** (POW !) : une onde tranchante
-part tout droit et creuse une **tranchée de 100 blocs de long, 7 de large et 7 de haut**. Seuls les minerais
+part tout droit et creuse une **tranchée de 100 blocs de long et 7 de large, de 7 blocs au-dessus de tes pieds
+jusqu'à la bedrock**. Seuls les minerais
 rapportent quelque chose (avec Fortune), dans l'inventaire avec la télékinésie ; le reste est pulvérisé.
 Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 
