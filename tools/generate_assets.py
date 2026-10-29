@@ -1223,13 +1223,18 @@ def gen_bow():
             write_json(os.path.join(ASSETS, "models", "item", f"evolving_bow_stage{i}_{names[pull]}.json"), bow_model(i, pull))
 
     def by_stage(i):
-        # comme items/bow.json : au repos, puis 3 étapes de tension selon la durée d'utilisation
+        # comme items/bow.json : au repos, puis 3 étapes de tension selon la durée d'utilisation.
+        # Le drapeau custom_model_data n°0 force l'arc bandé (utilisé par l'arc géant de l'arc céleste).
         return {
-            "type": "minecraft:condition", "property": "minecraft:using_item",
-            "on_false": ref(i, None),
-            "on_true": {"type": "minecraft:range_dispatch", "property": "minecraft:use_duration", "scale": 0.05,
-                        "fallback": ref(i, 0),
-                        "entries": [{"threshold": 0.65, "model": ref(i, 1)}, {"threshold": 0.9, "model": ref(i, 2)}]},
+            "type": "minecraft:condition", "property": "minecraft:custom_model_data", "index": 0,
+            "on_true": ref(i, 2),
+            "on_false": {
+                "type": "minecraft:condition", "property": "minecraft:using_item",
+                "on_false": ref(i, None),
+                "on_true": {"type": "minecraft:range_dispatch", "property": "minecraft:use_duration", "scale": 0.05,
+                            "fallback": ref(i, 0),
+                            "entries": [{"threshold": 0.65, "model": ref(i, 1)}, {"threshold": 0.9, "model": ref(i, 2)}]},
+            },
         }
 
     write_json(os.path.join(ASSETS, "items", "evolving_bow.json"), {
