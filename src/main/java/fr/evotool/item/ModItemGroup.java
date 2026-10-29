@@ -16,6 +16,9 @@ public final class ModItemGroup {
 					.displayName(Text.translatable("itemGroup.evotool.main"))
 					.entries((context, entries) -> {
 						ModItems.EVOLVING_ITEMS.forEach(entries::add);
+						entries.add(ModItems.EVOLITE_INGOT);
+						entries.add(ModBlocks.EVOLITE_BLOCK);
+						entries.add(ModBlocks.EVOLITE_ORE);
 						entries.add(ModItems.EVOLIUM);
 						entries.add(ModBlocks.EVOLIUM_BLOCK);
 						entries.add(ModBlocks.DEEPSLATE_EVOLIUM_ORE);

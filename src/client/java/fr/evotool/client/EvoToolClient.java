@@ -6,6 +6,7 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
+import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -64,6 +65,12 @@ public class EvoToolClient implements ClientModInitializer {
 					lines.add(index++, Text.translatable(on ? "tooltip.evotool.power_on" : "tooltip.evotool.power_off",
 							Text.translatable(power.translationKey())).formatted(on ? Formatting.GOLD : Formatting.DARK_GRAY));
 				}
+			}
+			if (EvoliteUpgrade.isUpgraded(stack)) {
+				EvoliteUpgrade.Upgrade upgrade = EvoliteUpgrade.upgradeFor(kind);
+				lines.add(index++, Text.translatable("tooltip.evotool.upgraded", Text.translatable(upgrade.translationKey()))
+						.formatted(Formatting.AQUA, Formatting.BOLD));
+				lines.add(index++, Text.translatable(upgrade.descriptionKey()).formatted(Formatting.DARK_AQUA));
 			}
 			lines.add(index++, Text.translatable(profile.counter().translationKey(), data.count()).formatted(Formatting.DARK_GRAY));
 			lines.add(index, Text.translatable(profile.isArmor() ? "tooltip.evotool.armor_hint" : "tooltip.evotool.hint")

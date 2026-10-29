@@ -42,6 +42,8 @@ public final class ModItems {
 	public static final Item EVOLIUM = register("evolium", Item::new, new Item.Settings().rarity(Rarity.RARE));
 	public static final Item RUBY = register("ruby", Item::new, new Item.Settings());
 	public static final Item SAPPHIRE = register("sapphire", Item::new, new Item.Settings());
+	public static final Item EVOLITE_INGOT = register("evolite_ingot", Item::new,
+			new Item.Settings().rarity(Rarity.EPIC).fireproof());
 
 	public static final Item EVOLVING_PICKAXE = register("evolving_pickaxe",
 			s -> new EvolvingToolItem(EvoKind.PICKAXE, s),

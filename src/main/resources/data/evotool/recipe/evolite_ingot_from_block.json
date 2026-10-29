@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "evotool:evolite_block"
+  ],
+  "result": {
+    "id": "evotool:evolite_ingot",
+    "count": 9
+  }
+}

@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "evotool:deepslate_evolium_ore",
-    "evotool:evolium_block"
+    "evotool:evolium_block",
+    "evotool:evolite_ore",
+    "evotool:evolite_block"
   ]
 }

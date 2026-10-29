@@ -29,3 +29,25 @@ jobs:
             build/libs/*.jar
             !build/libs/*-sources.jar
 
+
+      - name: Server self-test
+        run: |
+          mkdir -p run-selftest && echo "eula=true" > run-selftest/eula.txt
+          timeout 900 ./gradlew runSelftest 2>&1 | tee selftest.log | grep -E "evotool|EVOTOOL|ERROR|Exception|Mixin" || true
+          echo "----- résultat -----"
+          grep -E "EVOTOOL SELFTEST" selftest.log || true
+          if grep -iE "(error|warn).*(evotool)|(evotool).*(fail|error|couldn't|unable)" run-selftest/logs/latest.log | grep -v "SELFTEST PASSED"; then
+            echo "Des erreurs liées au mod ont été trouvées dans le log du serveur."; exit 1
+          fi
+          grep -q "EVOTOOL SELFTEST PASSED" selftest.log
+
+      # Diagnostic : si quelque chose échoue, affiche des API Minecraft utiles (noms Yarn).
+      - name: Show Minecraft API on failure
+        if: failure()
+        run: |
+          for JAR in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name 'minecraft-*.jar' ! -name '*sources*' 2>/dev/null | grep -i yarn); do
+            echo "##### $JAR"
+            for c in net.minecraft.screen.AnvilScreenHandler net.minecraft.screen.ForgingScreenHandler; do
+              javap -p -cp "$JAR" "$c" 2>/dev/null || true
+            done
+          done

@@ -8,6 +8,8 @@
     "evotool:deepslate_sapphire_ore",
     "evotool:evolium_block",
     "evotool:ruby_block",
-    "evotool:sapphire_block"
+    "evotool:sapphire_block",
+    "evotool:evolite_ore",
+    "evotool:evolite_block"
   ]
 }

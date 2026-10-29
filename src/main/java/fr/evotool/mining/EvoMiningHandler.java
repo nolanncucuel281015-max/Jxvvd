@@ -6,6 +6,7 @@ import fr.evotool.evo.EvoMode;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
+import fr.evotool.upgrade.EvoliteUpgrade;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -132,11 +133,19 @@ public final class EvoMiningHandler {
 			replantSapling(world, origin, drops);
 		}
 
+		boolean telekinesis = EvoliteUpgrade.has(tool, EvoliteUpgrade.Upgrade.TELEKINESIS);
 		for (ItemStack drop : drops) {
 			ItemStack result = smelt ? smelt(world, drop) : drop;
 			// Fortune VI + auto-smelt peut dépasser la taille max d'une pile : on découpe.
 			while (!result.isEmpty()) {
-				Block.dropStack(world, origin, result.split(result.getMaxCount()));
+				ItemStack part = result.split(result.getMaxCount());
+				// Amélioration à l'évolite : directement dans l'inventaire, le surplus tombe par terre.
+				if (telekinesis) {
+					player.getInventory().insertStack(part);
+				}
+				if (!part.isEmpty()) {
+					Block.dropStack(world, origin, part);
+				}
 			}
 		}
 

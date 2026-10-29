@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "fr.evotool.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"AnvilScreenHandlerMixin",
+		"ForgingScreenHandlerAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -7,6 +7,7 @@ import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
 import fr.evotool.network.EvoSettingsPayload;
+import fr.evotool.upgrade.EvoliteUpgrade;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,8 @@ public class EvoScreen extends Screen {
 	private static final int LINE_HEIGHT = 11;
 
 	private EvoProfile profile;
+	/** Pouvoir d'amélioration à l'évolite, ou null si l'objet n'est pas amélioré. */
+	private EvoliteUpgrade.Upgrade upgrade;
 	private EvoData data = EvoData.DEFAULT;
 	private Text itemName = Text.empty();
 	private int selectedMode;
@@ -56,6 +59,7 @@ public class EvoScreen extends Screen {
 		boolean firstInit = profile == null;
 		profile = kind.profile();
 		itemName = stack.getName();
+		upgrade = EvoliteUpgrade.isUpgraded(stack) ? EvoliteUpgrade.upgradeFor(kind) : null;
 		if (firstInit) {
 			data = EvoProgression.get(stack);
 			selectedMode = EvoProgression.selectedMode(profile, data).ordinal();
@@ -137,6 +141,10 @@ public class EvoScreen extends Screen {
 	/** Enchantements gagnés et pouvoirs permanents déjà débloqués. */
 	private List<Text> activeBonuses(int level) {
 		List<Text> bonuses = new ArrayList<>();
+		if (upgrade != null) {
+			bonuses.add(Text.translatable("tooltip.evotool.upgraded", Text.translatable(upgrade.translationKey()))
+					.formatted(Formatting.AQUA));
+		}
 		if (profile.isArmor() && client != null && client.player != null) {
 			// Les bonus de l'armure dépendent de tout l'ensemble porté.
 			int setLevel = ArmorSet.setLevel(client.player);

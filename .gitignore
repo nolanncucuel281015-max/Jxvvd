@@ -7,3 +7,4 @@ run/
 .vscode/
 bin/
 __pycache__/
+run-selftest/

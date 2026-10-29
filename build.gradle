@@ -13,6 +13,16 @@ base {
 loom {
 	splitEnvironmentSourceSets()
 
+	runs {
+		// Serveur d'auto-test pour la CI : ./gradlew runSelftest (s'arrête tout seul).
+		selftest {
+			server()
+			name "Evo Tool self-test"
+			vmArg "-Devotool.selftest=true"
+			runDir "run-selftest"
+		}
+	}
+
 	mods {
 		"evotool" {
 			sourceSet sourceSets.main

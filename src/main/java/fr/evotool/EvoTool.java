@@ -9,6 +9,7 @@ import fr.evotool.item.ModItems;
 import fr.evotool.mining.EvoMiningHandler;
 import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
+import fr.evotool.upgrade.MagicPowers;
 import fr.evotool.weapon.CombatHandler;
 import fr.evotool.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
@@ -38,6 +39,10 @@ public class EvoTool implements ModInitializer {
 		FarmingHandler.init();
 		CombatHandler.init();
 		ArmorHandler.init();
+		MagicPowers.init();
+		if (Boolean.getBoolean("evotool.selftest")) {
+			SelfTest.register();
+		}
 		LOGGER.info("Evo Tool chargé : que l'évolution commence !");
 	}
 }

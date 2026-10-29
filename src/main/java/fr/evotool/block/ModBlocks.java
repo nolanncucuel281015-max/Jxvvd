@@ -42,6 +42,12 @@ public final class ModBlocks {
 	public static final Block SAPPHIRE_BLOCK = register("sapphire_block", Block::new,
 			AbstractBlock.Settings.copy(Blocks.DIAMOND_BLOCK), Rarity.COMMON);
 
+	// Évolite : dans la pierre de l'End, un peu plus fréquent que les débris antiques. Pioche en diamant requise.
+	public static final Block EVOLITE_ORE = register("evolite_ore", Block::new,
+			AbstractBlock.Settings.copy(Blocks.ANCIENT_DEBRIS).luminance(state -> 5), Rarity.RARE);
+	public static final Block EVOLITE_BLOCK = register("evolite_block", Block::new,
+			AbstractBlock.Settings.copy(Blocks.NETHERITE_BLOCK).luminance(state -> 9), Rarity.EPIC);
+
 	private ModBlocks() {
 	}
 

@@ -106,6 +106,24 @@ Résistance V = plus aucun dégât (sauf /kill et le vide).
 | 95 | diadème | filigrane doré |
 | 100 | halo complet | toutes les jointures brillent |
 
+## Évolite et améliorations
+
+**L'évolite** se trouve dans la **pierre de l'End**, un peu plus souvent que les débris antiques de la netherite
+(pioche en diamant requise, très résistant aux explosions). Fais fondre le minerai pour obtenir un **lingot d'évolite**.
+
+Dans une **enclume** : objet évolutif + lingot d'évolite (10 niveaux d'XP) = **version améliorée** (qui brille),
+avec un pouvoir magique :
+
+| Objet | Pouvoir |
+|-------|---------|
+| Pioche, pelle, hache, houe | **Télékinésie** : les objets cassés vont directement dans l'inventaire |
+| Épée | **Slash magique** : clic droit, une vague tranchante frappe tout sur 8 blocs devant toi |
+| Masse | **Envol** : clic droit, bond dans les airs sans dégâts de chute (parfait pour l'attaque écrasante) |
+| Casque | **Vue du chevalier** : les monstres à 24 blocs brillent à travers les murs |
+| Plastron | **Bouclier magique** : 4 cœurs dorés permanents qui se rechargent hors combat |
+| Jambières | **Jambes célestes** : monte les blocs sans sauter, plus de dégâts de chute |
+| Bottes | **Nuage magique** : **double saut** pour s'envoler sur un nuage, comme en créatif |
+
 ## Courbes d'XP
 
 | Niveau | Outils (blocs) | Épée / masse (monstres) |

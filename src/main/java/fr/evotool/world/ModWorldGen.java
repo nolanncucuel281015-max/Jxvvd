@@ -18,5 +18,7 @@ public final class ModWorldGen {
 			RegistryKey<PlacedFeature> key = RegistryKey.of(RegistryKeys.PLACED_FEATURE, EvoTool.id(name));
 			BiomeModifications.addFeature(BiomeSelectors.foundInOverworld(), GenerationStep.Feature.UNDERGROUND_ORES, key);
 		}
+		BiomeModifications.addFeature(BiomeSelectors.foundInTheEnd(), GenerationStep.Feature.UNDERGROUND_ORES,
+				RegistryKey.of(RegistryKeys.PLACED_FEATURE, EvoTool.id("ore_evolite")));
 	}
 }

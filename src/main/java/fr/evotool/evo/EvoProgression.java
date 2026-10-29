@@ -86,6 +86,9 @@ public final class EvoProgression {
 		if (state.isOf(ModBlocks.DEEPSLATE_EVOLIUM_ORE)) {
 			return 60;
 		}
+		if (state.isOf(ModBlocks.EVOLITE_ORE)) {
+			return 40;
+		}
 		if (state.isIn(ModItems.GEM_ORES)) {
 			return 15;
 		}

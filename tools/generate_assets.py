@@ -77,6 +77,8 @@ def value_noise(w, h, scale, seed):
 
 # --------------------------------------------------------------------------- palettes
 
+EVOLITE = [hexc("063b37"), hexc("13a891"), hexc("2fe6c8"), hexc("9dfff0"), hexc("ffffff")]
+
 GEMS = {
     # sombre, moyen, clair, très clair, éclat
     "evolium": [hexc("2a0b4f"), hexc("6a1fc4"), hexc("a64dff"), hexc("5ef2ff"), hexc("ffffff")],
@@ -109,6 +111,55 @@ def deepslate_base(seed):
             if (y % 5 == 0 and rng.random() < 0.55):
                 g -= 14
             img.putpixel((x, y), (clamp(g - 2), clamp(g), clamp(g + 5), 255))
+    return img
+
+
+def end_stone_base(seed):
+    n = value_noise(16, 16, 3, seed)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            v = n[y][x]
+            base = (221, 223, 165)
+            f = 0.92 + (v - 0.5) * 0.22 + r.uniform(-0.03, 0.03)
+            if r.random() < 0.07:
+                f *= 0.86
+            img.putpixel((x, y), shade(base + (255,), f))
+    return img
+
+
+def ingot_sprite(palette):
+    """Lingot vu en perspective (comme les lingots vanilla)."""
+    dark, mid, light, bright, spark = palette
+    rows = [
+        "................",
+        "................",
+        "................",
+        "................",
+        "......ooooo.....",
+        "....oollllloo...",
+        "..oollllllllloo.",
+        ".olmmmmlllllllo.",
+        ".ommmmmmmmmlllo.",
+        ".odmmmmmmmmmmmo.",
+        ".oddddmmmmmmmdo.",
+        "..oodddddmmmdo..",
+        "....oooddddoo...",
+        "........oooo....",
+        "................",
+        "................",
+    ]
+    colors = {"o": shade(dark, 0.6), "d": dark, "m": mid, "l": light}
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        assert len(row) == 16, (y, row)
+        for x, ch in enumerate(row):
+            if ch in colors:
+                img.putpixel((x, y), colors[ch])
+    for p in ((6, 5), (7, 5), (4, 6)):
+        img.putpixel(p, bright)
+    img.putpixel((8, 5), spark)
     return img
 
 
@@ -1310,6 +1361,9 @@ def gen_textures():
     save_png(ore_texture(deep, GEMS["ruby"]), "block", "deepslate_ruby_ore")
     save_png(ore_texture(stone_base(33), GEMS["sapphire"]), "block", "sapphire_ore")
     save_png(ore_texture(deepslate_base(44), GEMS["sapphire"]), "block", "deepslate_sapphire_ore")
+    save_png(ore_texture(end_stone_base(55), EVOLITE, glow=True), "block", "evolite_ore")
+    save_png(storage_block(EVOLITE), "block", "evolite_block")
+    save_png(ingot_sprite(EVOLITE), "item", "evolite_ingot")
     for g in GEMS:
         save_png(storage_block(GEMS[g]), "block", f"{g}_block")
         save_png(gem_sprite(GEMS[g]), "item", g)
@@ -1322,7 +1376,7 @@ def gen_textures():
 
 
 BLOCKS = ["deepslate_evolium_ore", "evolium_block", "ruby_ore", "deepslate_ruby_ore", "ruby_block",
-          "sapphire_ore", "deepslate_sapphire_ore", "sapphire_block"]
+          "sapphire_ore", "deepslate_sapphire_ore", "sapphire_block", "evolite_ore", "evolite_block"]
 ORES = {
     "deepslate_evolium_ore": "evolium",
     "ruby_ore": "ruby", "deepslate_ruby_ore": "ruby",
@@ -1354,6 +1408,11 @@ def gen_models():
                    {"parent": "minecraft:block/cube_all", "textures": {"all": f"{MOD}:block/{b}"}})
         write_json(os.path.join(ASSETS, "items", f"{b}.json"),
                    {"model": {"type": "minecraft:model", "model": f"{MOD}:block/{b}"}})
+    for flat in ["evolite_ingot"]:
+        write_json(os.path.join(ASSETS, "models", "item", f"{flat}.json"),
+                   {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{flat}"}})
+        write_json(os.path.join(ASSETS, "items", f"{flat}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{flat}"}})
     for g in GEMS:
         write_json(os.path.join(ASSETS, "models", "item", f"{g}.json"),
                    {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{g}"}})
@@ -1464,6 +1523,20 @@ def gen_data():
             "ingredients": [f"{MOD}:{g}_block"],
             "result": {"id": f"{MOD}:{g}", "count": 9},
         })
+    write_json(os.path.join(rec, "evolite_block.json"), {
+        "type": "minecraft:crafting_shaped", "category": "building",
+        "pattern": ["###", "###", "###"], "key": {"#": f"{MOD}:evolite_ingot"},
+        "result": {"id": f"{MOD}:evolite_block", "count": 1},
+    })
+    write_json(os.path.join(rec, "evolite_ingot_from_block.json"), {
+        "type": "minecraft:crafting_shapeless", "category": "misc",
+        "ingredients": [f"{MOD}:evolite_block"], "result": {"id": f"{MOD}:evolite_ingot", "count": 9},
+    })
+    for kind, time in (("smelting", 200), ("blasting", 100)):
+        write_json(os.path.join(rec, f"evolite_ingot_from_{kind}.json"), {
+            "type": f"minecraft:{kind}", "category": "misc", "ingredient": f"{MOD}:evolite_ore",
+            "result": {"id": f"{MOD}:evolite_ingot"}, "experience": 2.0, "cookingtime": time,
+        })
     for ore, gem in ORES.items():
         for kind, time in (("smelting", 200), ("blasting", 100)):
             write_json(os.path.join(rec, f"{gem}_from_{kind}_{ore}.json"), {
@@ -1480,17 +1553,21 @@ def gen_data():
     ore_ids = [f"{MOD}:{o}" for o in ORES]
     gem_blocks = [f"{MOD}:{g}_block" for g in GEMS]
     tags = os.path.join(ROOT, "data")
+    evolite = [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"]
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
-               {"replace": False, "values": ore_ids + gem_blocks})
+               {"replace": False, "values": ore_ids + gem_blocks + evolite})
     # Évolium : pioche en diamant obligatoire. Rubis / saphir : pioche en fer.
     write_json(os.path.join(tags, "minecraft", "tags", "block", "needs_diamond_tool.json"),
-               {"replace": False, "values": [f"{MOD}:deepslate_evolium_ore", f"{MOD}:evolium_block"]})
+               {"replace": False, "values": [f"{MOD}:deepslate_evolium_ore", f"{MOD}:evolium_block"] + evolite})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "needs_iron_tool.json"),
                {"replace": False, "values": [o for o in ore_ids if "evolium" not in o]
                 + [f"{MOD}:ruby_block", f"{MOD}:sapphire_block"]})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "beacon_base_blocks.json"),
                {"replace": False, "values": gem_blocks})
-    write_json(os.path.join(tags, "c", "tags", "block", "ores.json"), {"replace": False, "values": ore_ids})
+    write_json(os.path.join(tags, "c", "tags", "block", "ores.json"),
+               {"replace": False, "values": ore_ids + [f"{MOD}:evolite_ore"]})
+    write_json(os.path.join(tags, "c", "tags", "item", "ingots.json"),
+               {"replace": False, "values": [f"{MOD}:evolite_ingot"]})
     write_json(os.path.join(tags, "c", "tags", "item", "gems.json"),
                {"replace": False, "values": [f"{MOD}:{g}" for g in GEMS]})
     write_json(os.path.join(DATA, "tags", "block", "gem_ores.json"),
@@ -1525,7 +1602,20 @@ def gen_data():
                                      target("minecraft:deepslate_ore_replaceables", "deepslate_sapphire_ore")],
                          "size": 6, "discard_chance_on_air_exposure": 0.3},
     }
+    ores_cfg["ore_evolite"] = {
+        "targets": [{"target": {"predicate_type": "minecraft:block_match", "block": "minecraft:end_stone"},
+                     "state": {"Name": f"{MOD}:evolite_ore"}}],
+        "size": 3, "discard_chance_on_air_exposure": 0.5,
+    }
     placements = {
+        # Débris antiques : ~2 petits filons par chunk dans un Nether plein de roche.
+        # L'End est surtout du vide : on tente 10 filons par chunk, seuls ceux qui tombent dans la pierre de l'End restent.
+        "ore_evolite": [{"type": "minecraft:count", "count": 10},
+                        {"type": "minecraft:in_square"},
+                        {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform",
+                                                                      "min_inclusive": {"absolute": 10},
+                                                                      "max_inclusive": {"absolute": 90}}},
+                        {"type": "minecraft:biome"}],
         # Diamant vanilla : 7 filons/chunk de taille 4. Évolium : 1 filon de taille 3, 1 chunk sur 2.
         "ore_evolium": [{"type": "minecraft:rarity_filter", "chance": 2},
                         {"type": "minecraft:in_square"},
