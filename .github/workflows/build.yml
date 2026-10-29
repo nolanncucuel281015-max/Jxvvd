@@ -75,6 +75,10 @@ jobs:
             javap -cp "$JAR" 'net.minecraft.item.Item$Settings' 2>/dev/null | grep -i -E 'spear|kinetic|piercing|swing'
             javap -cp "$JAR" net.minecraft.component.DataComponentTypes 2>/dev/null | grep -i -E 'kinetic|piercing|swing|use_effect|charge|weapon'
             javap -c -cp "$JAR" net.minecraft.item.Items 2>/dev/null | grep -n -B2 -A45 'String netherite_spear' | head -120
+            javap -p -cp "$JAR" 'net.minecraft.entity.decoration.DisplayEntity$ItemDisplayEntity' 2>/dev/null
+            javap -p -cp "$JAR" net.minecraft.entity.decoration.DisplayEntity 2>/dev/null | grep -i -E 'set|Transformation|billboard|interpolation|teleport'
+            javap -cp "$JAR" net.minecraft.util.math.AffineTransformation 2>/dev/null | grep -E 'AffineTransformation\('
+            javap -cp "$JAR" net.minecraft.entity.Entity 2>/dev/null | grep -i -E 'refreshPositionAndAngles|setYaw|setPitch|requestTeleport'
             javap -cp "$JAR" net.minecraft.item.BowItem 2>/dev/null
             javap -cp "$JAR" net.minecraft.entity.projectile.ArrowEntity 2>/dev/null | grep -E 'ArrowEntity\('
             javap -cp "$JAR" net.minecraft.entity.projectile.PersistentProjectileEntity 2>/dev/null | grep -i -E 'pickup|setDamage|setCritical|weapon'
