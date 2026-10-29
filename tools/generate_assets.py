@@ -403,107 +403,97 @@ def element(frm, to, tex, rot=None, uv_seed=0):
     }
     for face, (w, h) in sizes.items():
         faces[face] = {"uv": uv(w, h), "texture": "#" + tex}
-    el = {"from": frm, "to": to, "faces": faces}
+    el = {"from": [round(v, 3) for v in frm], "to": [round(v, 3) for v in to], "faces": faces}
     if rot:
         axis, angle, origin = rot
-        el["rotation"] = {"angle": angle, "axis": axis, "origin": origin}
+        el["rotation"] = {"angle": angle, "axis": axis, "origin": [round(v, 3) for v in origin]}
     return el
 
 
 def pickaxe_elements(stage):
-    E = []
-    s = 0
-
-    def add(frm, to, tex, rot=None):
-        nonlocal s
-        s += 1
-        E.append(element(frm, to, tex, rot, s))
-
-    # --- Manche
-    add([7.25, -3, 7.25], [8.75, 10.5, 8.75], "handle")
-    add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")              # pommeau
-    for y in (-2.25, -0.25, 1.75, 3.75):                               # bandes de cuir
-        add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
-    add([7.1, -2.5, 7.1], [8.9, 5.5, 8.9], "grip")                     # manchon de prise
-    add([6.75, 9.5, 6.75], [9.25, 11, 9.25], "metal")                  # virole
-    # langues de métal le long du manche
-    add([6.9, 6.5, 7.6], [7.25, 10, 8.4], "metal")
-    add([8.75, 6.5, 7.6], [9.1, 10, 8.4], "metal")
+    E, add = builder()
+    sym = sym8(add)
+    handle(add, 10.5)
+    add([6.75, 9.5, 6.75], [9.25, 11, 9.25], "trim")                   # virole dorée
+    sym([6.9, 6.5, 7.6], [7.25, 10, 8.4], "dark")                      # langues de métal
 
     # --- Tête
-    add([6, 11, 6.5], [10, 15.5, 9.5], "metal")                        # douille
+    add([6, 11, 6.5], [10, 15.5, 9.5], "dark")                         # douille gravée
+    add([5.8, 11.15, 6.3], [10.2, 11.55, 9.7], "trim")                 # liserés
+    add([5.8, 14.95, 6.3], [10.2, 15.35, 9.7], "trim")
     if stage >= 20:
         add([6.25, 11.5, 5.75], [9.75, 15, 10.25], "gem")              # coeur surchargé
     else:
         add([6.5, 11.75, 6], [9.5, 14.75, 10], "gem")                  # coeur d'évolium
-    add([2, 12.25, 7], [6, 14.75, 9], "metal")                         # bras gauche
-    add([10, 12.25, 7], [14, 14.75, 9], "metal")                       # bras droit
-    # lames recourbées : segment puis pointe
-    add([-1.5, 11.75, 7.2], [2.5, 13.75, 8.8], "metal", ["z", 22.5, [2, 12.75, 8]])
-    add([13.5, 11.75, 7.2], [17.5, 13.75, 8.8], "metal", ["z", -22.5, [14, 12.75, 8]])
+    sym([2, 12.25, 7], [6, 14.75, 9], "metal")                         # bras
+    sym([2.25, 14.75, 7.25], [6, 15.1, 8.75], "edge")                  # arête polie
+    sym([2.25, 11.9, 7.25], [6, 12.25, 8.75], "dark")                  # dessous des bras
+    # lames recourbées : segment puis pointe polie
+    sym([-1.5, 11.75, 7.2], [2.5, 13.75, 8.8], "metal", ["z", 22.5, [2, 12.75, 8]])
+    sym([-1.25, 13.75, 7.4], [2.25, 14.1, 8.6], "edge", ["z", 22.5, [2, 12.75, 8]])
     tip = 4.0 if stage < 8 else 5.5
-    add([-0.5 - tip, 10.6, 7.55], [-0.5, 11.9, 8.45], "metal", ["z", 45, [-0.5, 11.3, 8]])
-    add([16.5, 10.6, 7.55], [16.5 + tip, 11.9, 8.45], "metal", ["z", -45, [16.5, 11.3, 8]])
+    sym([-0.5 - tip, 10.6, 7.55], [-0.5, 11.9, 8.45], "edge", ["z", 45, [-0.5, 11.3, 8]])
+    sym([-0.25 - tip * 0.8, 10.95, 7.48], [-0.6, 11.55, 8.52], "metal", ["z", 45, [-0.5, 11.3, 8]])
 
-    # Chaque forme (tous les 5 niveaux) ajoute de nouvelles pièces aux précédentes.
-    if stage >= 1:   # niv. 5 : arêtes de renfort sur les bras
-        add([3, 14.75, 7.5], [6, 15.25, 8.5], "metal")
-        add([10, 14.75, 7.5], [13, 15.25, 8.5], "metal")
-    if stage >= 2:   # niv. 10 : anneau de braise sur la virole (auto-smelt)
+    if stage >= 1:   # niv. 5 : arêtes de renfort et rivets
+        sym([3, 15.1, 7.5], [6, 15.5, 8.5], "trim")
+        sym([4.6, 13.1, 6.85], [5.2, 13.9, 9.15], "trim")
+    if stage >= 2:   # niv. 10 : veines d'énergie dans les bras (auto-smelt)
+        sym([2.4, 13.35, 6.92], [5.9, 13.65, 9.08], "energy")
         add([6.6, 9.75, 6.6], [9.4, 10.5, 9.4], "gem")
     if stage >= 3:   # niv. 15 : incrustations de gemmes (Fortune)
-        add([3, 12.75, 6.75], [5, 14.25, 9.25], "gem")
-        add([11, 12.75, 6.75], [13, 14.25, 9.25], "gem")
+        sym([3, 12.75, 6.75], [4.4, 14.25, 9.25], "gem")
     if stage >= 4:   # niv. 20 : couronne
         add([7, 15.5, 7], [9, 17, 9], "gem")
-    if stage >= 5:   # niv. 25 : clous de gemme devant / derrière la douille
+        add([6.6, 15.35, 6.6], [9.4, 15.75, 9.4], "trim")
+    if stage >= 5:   # niv. 25 : veines dans les lames recourbées, clous de gemme
+        sym([-1.0, 12.6, 7.12], [2.3, 12.9, 8.88], "energy", ["z", 22.5, [2, 12.75, 8]])
         add([7.25, 12.5, 5.5], [8.75, 14, 6], "gem")
         add([7.25, 12.5, 10], [8.75, 14, 10.5], "gem")
     if stage >= 6:   # niv. 30 : ailerons
-        add([4.75, 10.5, 7.5], [6, 13, 8.5], "metal", ["z", -22.5, [6, 11, 8]])
-        add([10, 10.5, 7.5], [11.25, 13, 8.5], "metal", ["z", 22.5, [10, 11, 8]])
+        sym([4.75, 10.5, 7.5], [6, 13, 8.5], "metal", ["z", -22.5, [6, 11, 8]])
+        sym([5.0, 10.9, 7.45], [5.4, 12.6, 8.55], "energy", ["z", -22.5, [6, 11, 8]])
     if stage >= 7:   # niv. 35 : pommeau en gemme
-        add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
-    # niv. 40 : lames plus longues (voir "tip" plus haut)
+        add([7.25, -5.9, 7.25], [8.75, -5.1, 8.75], "gem")
     if stage >= 9:   # niv. 45 : garde au milieu du manche
-        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
+        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "trim")
     if stage >= 10:  # niv. 50 : pointe en losange au sommet
         add([7.25, 16.5, 7.25], [8.75, 19.5, 8.75], "gem", ["y", 45, [8, 18, 8]])
+        add([7.85, 17, 7.85], [8.15, 20.5, 8.15], "energy")
     if stage >= 11:  # niv. 55 : barbes sous les bras
-        add([3.5, 10.75, 7.6], [4.5, 12.25, 8.4], "metal", ["z", 45, [4, 12.25, 8]])
-        add([11.5, 10.75, 7.6], [12.5, 12.25, 8.4], "metal", ["z", -45, [12, 12.25, 8]])
+        sym([3.5, 10.75, 7.6], [4.5, 12.25, 8.4], "edge", ["z", 45, [4, 12.25, 8]])
     if stage >= 12:  # niv. 60 : runes lumineuses sur le manche
         for y in (6.75, 8.25):
-            add([7.75, y, 7.0], [8.25, y + 0.75, 7.25], "gem")
-            add([7.75, y, 8.75], [8.25, y + 0.75, 9.0], "gem")
-    if stage >= 13:  # niv. 65 : épines sur le dessus des bras
-        add([1.75, 14.25, 7.6], [2.75, 16.25, 8.4], "metal", ["z", 22.5, [2.25, 14.25, 8]])
-        add([13.25, 14.25, 7.6], [14.25, 16.25, 8.4], "metal", ["z", -22.5, [13.75, 14.25, 8]])
+            add([7.75, y, 7.05], [8.25, y + 0.75, 7.2], "energy")
+            add([7.75, y, 8.8], [8.25, y + 0.75, 8.95], "energy")
+    if stage >= 13:  # niv. 65 : épines sur les bras
+        sym([1.75, 14.25, 7.6], [2.75, 16.25, 8.4], "edge", ["z", 22.5, [2.25, 14.25, 8]])
     if stage >= 14:  # niv. 70 : deux premiers cristaux flottants
         crystal(add, 1.5, 17.5)
         crystal(add, 14.5, 17.5)
     if stage >= 15:  # niv. 75 : ailes au-dessus de la tête
-        add([4, 15, 7.7], [6, 18.5, 8.3], "metal", ["z", 22.5, [6, 15, 8]])
-        add([10, 15, 7.7], [12, 18.5, 8.3], "metal", ["z", -22.5, [10, 15, 8]])
+        sym([4, 15, 7.7], [6, 18.5, 8.3], "metal", ["z", 22.5, [6, 15, 8]])
+        sym([4.6, 15.4, 7.65], [5.2, 18.1, 8.35], "energy", ["z", 22.5, [6, 15, 8]])
     if stage >= 16:  # niv. 80 : cristal au zénith
-        crystal(add, 8, 21.5)
+        crystal(add, 8, 22)
     if stage >= 17:  # niv. 85 : cristaux latéraux
-        crystal(add, -2.5, 15)
-        crystal(add, 18.5, 15)
+        crystal(add, -2.5, 15.5)
+        crystal(add, 18.5, 15.5)
     if stage >= 18:  # niv. 90 : cristal sous le pommeau
-        add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
-    if stage >= 19:  # niv. 95 : diadème et gemmes sur la virole
-        add([5.5, 15.25, 7.75], [10.5, 15.75, 8.25], "metal")
-        add([6.4, 10, 7.5], [6.75, 10.75, 8.5], "gem")
-        add([9.25, 10, 7.5], [9.6, 10.75, 8.5], "gem")
-    if stage >= 20:  # niv. 100 : halo complet
+        add([7.6, -7.6, 7.6], [8.4, -6.35, 8.4], "gem", ["y", 45, [8, -7, 8]])
+    if stage >= 19:  # niv. 95 : diadème
+        add([5.5, 15.35, 7.75], [10.5, 15.75, 8.25], "gem")
+    if stage >= 20:  # niv. 100 : halo d'énergie autour de la tête
+        halo(add, 8, 13.5, 8.5, z=10.7, depth=0.2)
         crystal(add, -3.5, 9.5)
         crystal(add, 19.5, 9.5)
     return E
 
 
 def crystal(add, cx, cy):
+    """Cristal flottant lumineux : losange de gemme et coeur d'énergie."""
     add([cx - 0.6, cy - 1.1, 7.4], [cx + 0.6, cy + 1.1, 8.6], "gem", ["y", 45, [cx, cy, 8]])
+    add([cx - 0.2, cy - 1.5, 7.8], [cx + 0.2, cy + 1.5, 8.2], "energy")
 
 
 def display(height):
@@ -528,107 +518,94 @@ def display(height):
 
 
 def pickaxe_model(stage):
-    st = f"{MOD}:item/pickaxe/stage{stage}_"
     return {
         "credit": "Evo Tool - modèle 3D généré par tools/generate_assets.py",
         "gui_light": "side",
-        "textures": {
-            "particle": st + "metal",
-            "handle": st + "handle",
-            "grip": st + "grip",
-            "metal": st + "metal",
-            "gem": st + "gem",
-        },
-        "elements": pickaxe_elements(stage),
-        "display": display(27),
+        "textures": stage_textures(stage),
+        "elements": finalize(pickaxe_elements(stage), stage),
+        "display": display(28),
     }
 
 
 def mace_elements(stage):
-    E = []
-    n = 0
-
-    def add(frm, to, tex, rot=None):
-        nonlocal n
-        n += 1
-        E.append(element(frm, to, tex, rot, n))
-
-    # --- Forme de base : manche, tête lourde et coeur d'évolium
-    add([7.25, -3, 7.25], [8.75, 10, 8.75], "handle")
-    add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")
-    for y in (-2.25, -0.25, 1.75, 3.75):
-        add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
-    add([7.1, -2.5, 7.1], [8.9, 5.5, 8.9], "grip")
-    add([6.5, 9, 6.5], [9.5, 10.5, 9.5], "metal")
-    add([4.5, 10.5, 4.5], [11.5, 17.5, 11.5], "metal")
+    E, add = builder()
+    sym = sym8(add)
+    handle(add, 10)
+    add([6.5, 9, 6.5], [9.5, 10.5, 9.5], "trim")
+    # --- Tête : bloc d'évolium serti dans une cage de métal
+    add([4.5, 10.5, 4.5], [11.5, 17.5, 11.5], "dark")
     if stage >= 20:
-        add([5, 11, 3.75], [11, 17, 12.25], "gem")                    # coeur surchargé
+        add([5, 11, 3.75], [11, 17, 12.25], "gem")
         add([3.75, 11, 5], [12.25, 17, 11], "gem")
     else:
         add([5.5, 11.5, 4], [10.5, 16.5, 12], "gem")
         add([4, 11.5, 5.5], [12, 16.5, 10.5], "gem")
     add([4, 10, 4], [12, 11, 12], "metal")
     add([4, 17, 4], [12, 18, 12], "metal")
+    add([4.25, 11, 4.25], [5, 17, 5], "edge")                          # montants de la cage
+    add([11, 11, 4.25], [11.75, 17, 5], "edge")
+    add([4.25, 11, 11], [5, 17, 11.75], "edge")
+    add([11, 11, 11], [11.75, 17, 11.75], "edge")
+    add([3.8, 10.85, 3.8], [12.2, 11.15, 12.2], "trim")
+    add([3.8, 17.85, 3.8], [12.2, 18.15, 12.2], "trim")
 
-    # --- Chaque forme (tous les 5 niveaux) ajoute des pièces
     if stage >= 1:   # niv. 5 : garde sur le manche
-        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
-    if stage >= 2:   # niv. 10 : 4 pointes en losange
+        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "trim")
+    if stage >= 2:   # niv. 10 : 4 pointes en losange + ceinture d'énergie
         for (x, z) in ((2.5, 8), (13.5, 8), (8, 2.5), (8, 13.5)):
-            add([x - 1, 13, z - 1], [x + 1, 15, z + 1], "metal", ["y", 45, [x, 14, z]])
+            add([x - 1, 13, z - 1], [x + 1, 15, z + 1], "edge", ["y", 45, [x, 14, z]])
+        halo_flat(add, 8, 8, 14, 4.25, depth=0.15, t=0.15)
     if stage >= 3:   # niv. 15 : pommeau en gemme
-        add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
+        add([7.25, -5.9, 7.25], [8.75, -5.1, 8.75], "gem")
     if stage >= 4:   # niv. 20 : cristal au sommet
         add([7, 18, 7], [9, 21, 9], "gem", ["y", 45, [8, 19.5, 8]])
+        add([7.8, 18.5, 7.8], [8.2, 22, 8.2], "energy")
     if stage >= 5:   # niv. 25 : clous aux 4 coins de la tête
         for (x, z) in ((4, 4), (11, 4), (4, 11), (11, 11)):
-            add([x, 13.5, z], [x + 1, 14.5, z + 1], "gem")
+            add([x - 0.1, 13.5, z - 0.1], [x + 1.1, 14.5, z + 1.1], "gem")
     if stage >= 6:   # niv. 30 : pointes diagonales gauche / droite
-        add([3.5, 17, 7.5], [5, 20, 8.5], "metal", ["z", 22.5, [5, 17, 8]])
-        add([11, 17, 7.5], [12.5, 20, 8.5], "metal", ["z", -22.5, [11, 17, 8]])
+        sym([3.5, 17, 7.5], [5, 20, 8.5], "edge", ["z", 22.5, [5, 17, 8]])
     if stage >= 7:   # niv. 35 : pointes diagonales avant / arrière
-        add([7.5, 17, 3.5], [8.5, 20, 5], "metal", ["x", -22.5, [8, 17, 5]])
-        add([7.5, 17, 11], [8.5, 20, 12.5], "metal", ["x", 22.5, [8, 17, 11]])
+        add([7.5, 17, 3.5], [8.5, 20, 5], "edge", ["x", -22.5, [8, 17, 5]])
+        add([7.5, 17, 11], [8.5, 20, 12.5], "edge", ["x", 22.5, [8, 17, 11]])
     if stage >= 8:   # niv. 40 : pointes sous la tête
-        add([3.5, 8, 7.5], [5, 11, 8.5], "metal", ["z", -22.5, [5, 11, 8]])
-        add([11, 8, 7.5], [12.5, 11, 8.5], "metal", ["z", 22.5, [11, 11, 8]])
-    if stage >= 9:   # niv. 45 : runes sur le manche
+        sym([3.5, 8, 7.5], [5, 11, 8.5], "edge", ["z", -22.5, [5, 11, 8]])
+    if stage >= 9:   # niv. 45 : runes lumineuses sur le manche
         for y in (6.25, 7.75):
-            add([7.75, y, 7.0], [8.25, y + 0.75, 7.25], "gem")
-            add([7.75, y, 8.75], [8.25, y + 0.75, 9.0], "gem")
+            add([7.75, y, 7.05], [8.25, y + 0.75, 7.2], "energy")
+            add([7.75, y, 8.8], [8.25, y + 0.75, 8.95], "energy")
     if stage >= 10:  # niv. 50 : pointes latérales doublées
         for (x, z) in ((0.5, 8), (15.5, 8), (8, 0.5), (8, 15.5)):
             add([x - 0.6, 13.4, z - 0.6], [x + 0.6, 14.6, z + 0.6], "gem", ["y", 45, [x, 14, z]])
-    if stage >= 11:  # niv. 55 : lames verticales sur les 4 faces
-        add([3.5, 11, 7.75], [4, 17, 8.25], "metal")
-        add([12, 11, 7.75], [12.5, 17, 8.25], "metal")
-        add([7.75, 11, 3.5], [8.25, 17, 4], "metal")
-        add([7.75, 11, 12], [8.25, 17, 12.5], "metal")
+    if stage >= 11:  # niv. 55 : lames verticales lumineuses sur les 4 faces
+        add([3.5, 11, 7.75], [4, 17, 8.25], "energy")
+        add([12, 11, 7.75], [12.5, 17, 8.25], "energy")
+        add([7.75, 11, 3.5], [8.25, 17, 4], "energy")
+        add([7.75, 11, 12], [8.25, 17, 12.5], "energy")
     if stage >= 12:  # niv. 60 : couronne
-        add([5, 18, 5], [11, 18.5, 11], "metal")
+        add([5, 18, 5], [11, 18.5, 11], "trim")
         for (x, z) in ((5, 5), (10.25, 5), (5, 10.25), (10.25, 10.25)):
             add([x, 18.5, z], [x + 0.75, 19.75, z + 0.75], "gem")
     if stage >= 13:  # niv. 65 : cristal sous le pommeau
-        add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
+        add([7.6, -7.6, 7.6], [8.4, -6.35, 8.4], "gem", ["y", 45, [8, -7, 8]])
     if stage >= 14:  # niv. 70 : deux cristaux flottants
         crystal(add, 0, 19)
         crystal(add, 16, 19)
     if stage >= 15:  # niv. 75 : ailes
-        add([2, 16, 7.7], [4, 20, 8.3], "metal", ["z", 22.5, [4, 16, 8]])
-        add([12, 16, 7.7], [14, 20, 8.3], "metal", ["z", -22.5, [12, 16, 8]])
+        sym([2, 16, 7.7], [4, 20, 8.3], "metal", ["z", 22.5, [4, 16, 8]])
+        sym([2.6, 16.4, 7.65], [3.2, 19.6, 8.35], "energy", ["z", 22.5, [4, 16, 8]])
     if stage >= 16:  # niv. 80 : cristal au zénith
-        crystal(add, 8, 24)
+        crystal(add, 8, 25)
     if stage >= 17:  # niv. 85 : cristaux latéraux
         crystal(add, -2.5, 11)
         crystal(add, 18.5, 11)
     if stage >= 18:  # niv. 90 : deuxième garde sertie
-        add([6.4, 5.75, 6.4], [9.6, 6.25, 9.6], "metal")
-        add([6.1, 5.6, 7.6], [6.4, 6.4, 8.4], "gem")
-        add([9.6, 5.6, 7.6], [9.9, 6.4, 8.4], "gem")
-    if stage >= 19:  # niv. 95 : anneau doré autour de la tête
-        add([3.25, 13.75, 3.25], [12.75, 14.25, 4], "metal")
-        add([3.25, 13.75, 12], [12.75, 14.25, 12.75], "metal")
-    if stage >= 20:  # niv. 100 : halo complet
+        add([6.4, 5.75, 6.4], [9.6, 6.25, 9.6], "trim")
+        sym([6.1, 5.6, 7.6], [6.4, 6.4, 8.4], "gem")
+    if stage >= 19:  # niv. 95 : second anneau d'énergie
+        halo_flat(add, 8, 8, 11.5, 5.25, depth=0.15, t=0.15)
+    if stage >= 20:  # niv. 100 : grand halo
+        halo_flat(add, 8, 8, 16.5, 7.5, depth=0.2, t=0.2)
         crystal(add, -1, 4)
         crystal(add, 17, 4)
     return E
@@ -637,7 +614,7 @@ def mace_elements(stage):
 def mace_model(stage):
     model = pickaxe_model(stage)
     model["credit"] = "Evo Tool - masse 3D générée par tools/generate_assets.py"
-    model["elements"] = mace_elements(stage)
+    model["elements"] = finalize(mace_elements(stage), stage)
     return model
 
 
@@ -655,25 +632,30 @@ def builder():
 
 
 def handle(add, top, grip_top=5.5):
+    """Manche commun : bois, tressage en cuir, bagues dorées et pommeau."""
     add([7.25, -3, 7.25], [8.75, top, 8.75], "handle")
-    add([6.75, -4.75, 6.75], [9.25, -3, 9.25], "metal")
-    for y in (-2.25, -0.25, 1.75, 3.75):
-        if y + 1.25 <= grip_top:
-            add([6.9, y, 6.9], [9.1, y + 1.25, 9.1], "grip")
-    add([7.1, -2.5, 7.1], [8.9, grip_top, 8.9], "grip")
+    add([6.85, -4.6, 6.85], [9.15, -3, 9.15], "dark")                  # pommeau
+    add([7.1, -5.1, 7.1], [8.9, -4.6, 8.9], "trim")                    # capuchon
+    for y in (-2.5, -1.25, 0, 1.25, 2.5, 3.75):                         # tressage
+        if y + 0.75 <= grip_top:
+            add([6.95, y, 6.95], [9.05, y + 0.75, 9.05], "grip")
+    add([7.1, -2.75, 7.1], [8.9, grip_top, 8.9], "grip")
+    add([6.9, grip_top, 6.9], [9.1, grip_top + 0.35, 9.1], "trim")     # bagues
+    add([6.9, -3.0, 6.9], [9.1, -2.75, 9.1], "trim")
 
 
-def common_decor(add, stage, runes, crystals, second_guard_y=5.75):
+def common_decor(add, stage, runes, crystals, second_guard_y=5.75, aura=None):
     """Décorations communes à tous les outils, qui s'ajoutent forme après forme."""
     if stage >= 3:   # niv. 15 : pommeau en gemme
-        add([7.25, -5.75, 7.25], [8.75, -4.75, 8.75], "gem")
-    if stage >= 9:   # niv. 45 : garde sur le manche
-        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "metal")
+        add([7.25, -5.9, 7.25], [8.75, -5.1, 8.75], "gem")
+    if stage >= 9:   # niv. 45 : garde sur le manche + anneaux d'énergie
+        add([6.5, 0.75, 6.5], [9.5, 1.5, 9.5], "trim")
+        add([7.0, -1.6, 7.0], [9.0, -1.4, 9.0], "energy")
     if stage >= 12:  # niv. 60 : runes lumineuses
         for (y, z0, z1) in runes:
-            add([7.75, y, z0], [8.25, y + 0.75, z1], "gem")
+            add([7.75, y, z0], [8.25, y + 0.75, z1], "energy")
     if stage >= 13:  # niv. 65 : cristal sous le pommeau
-        add([7.6, -7.5, 7.6], [8.4, -6.25, 8.4], "gem", ["y", 45, [8, -7, 8]])
+        add([7.6, -7.6, 7.6], [8.4, -6.35, 8.4], "gem", ["y", 45, [8, -7, 8]])
     if stage >= 14:  # niv. 70 : deux cristaux flottants
         for c in crystals[0:2]:
             crystal(add, *c)
@@ -684,105 +666,158 @@ def common_decor(add, stage, runes, crystals, second_guard_y=5.75):
             crystal(add, *c)
     if stage >= 18:  # niv. 90 : deuxième garde sertie
         y = second_guard_y
-        add([6.4, y, 6.4], [9.6, y + 0.5, 9.6], "metal")
+        add([6.4, y, 6.4], [9.6, y + 0.5, 9.6], "trim")
         add([6.1, y - 0.15, 7.6], [6.4, y + 0.65, 8.4], "gem")
         add([9.6, y - 0.15, 7.6], [9.9, y + 0.65, 8.4], "gem")
     if stage >= 20:  # niv. 100 : halo complet
         for c in crystals[5:7]:
             crystal(add, *c)
+        if aura:
+            halo(add, *aura, z=10.6, depth=0.2)
 
 
 def handle_runes(*ys):
-    return [r for y in ys for r in ((y, 7.0, 7.25), (y, 8.75, 9.0))]
+    return [r for y in ys for r in ((y, 7.05, 7.2), (y, 8.8, 8.95))]
 
 
 def sword_elements(stage):
+    """Épée de chevalier : lame à gorge lumineuse, garde ciselée, ailes et halo aux dernières formes."""
     E, add = builder()
-    bt = 24 if stage < 8 else 26                                     # haut de la lame
-    handle(add, 5.5, 5)
-    add([3, 5.5, 7], [13, 7, 9], "metal")                            # garde
-    add([6.5, 7, 7.6], [9.5, bt, 8.4], "metal")                      # lame
-    add([6.25, 7, 7.75], [6.5, bt, 8.25], "metal")                   # tranchants
-    add([9.5, 7, 7.75], [9.75, bt, 8.25], "metal")
-    add([6.94, bt - 1.06, 7.6], [9.06, bt + 1.06, 8.4], "metal", ["z", 45, [8, bt, 8]])  # pointe
-    if stage >= 1:   # embouts de garde
-        add([2.5, 5.25, 6.75], [3.5, 7.25, 9.25], "metal")
-        add([12.5, 5.25, 6.75], [13.5, 7.25, 9.25], "metal")
-    if stage >= 2:   # gouttière en gemme
-        if stage >= 20:
-            add([7.5, 8, 7.45], [8.5, bt - 2, 8.55], "gem")
-        else:
-            add([7.75, 8, 7.5], [8.25, bt - 2, 8.5], "gem")
-    if stage >= 4:   # gemme au centre de la garde
-        add([7, 5.25, 6.75], [9, 7.25, 9.25], "gem")
-    if stage >= 5:   # gemmes sur la garde
-        add([4.5, 5.75, 6.9], [5.5, 6.75, 9.1], "gem")
-        add([10.5, 5.75, 6.9], [11.5, 6.75, 9.1], "gem")
-    if stage >= 6:   # quillons relevés
-        add([0.5, 6, 7.6], [3, 7.5, 8.4], "metal", ["z", -22.5, [3, 6.75, 8]])
-        add([13, 6, 7.6], [15.5, 7.5, 8.4], "metal", ["z", 22.5, [13, 6.75, 8]])
-    if stage >= 7:   # talon de lame renforcé
-        add([6.25, 7, 7.4], [9.75, 9, 8.6], "metal")
-    if stage >= 10:  # losange de gemme à la base de la lame
-        add([7.25, 10, 7.35], [8.75, 11.5, 8.65], "gem", ["z", 45, [8, 10.75, 8]])
-    if stage >= 11:  # dents sur les tranchants
-        for y in (13, 16, 19):
-            add([5.7, y, 7.7], [6.5, y + 0.8, 8.3], "metal", ["z", 45, [6.1, y + 0.4, 8]])
-            add([9.5, y, 7.7], [10.3, y + 0.8, 8.3], "metal", ["z", 45, [9.9, y + 0.4, 8]])
-    if stage >= 15:  # ailes sur la garde
-        add([2, 7, 7.7], [4, 11, 8.3], "metal", ["z", 22.5, [4, 7, 8]])
-        add([12, 7, 7.7], [14, 11, 8.3], "metal", ["z", -22.5, [12, 7, 8]])
-    if stage >= 19:  # diadème
-        add([5.5, 7, 7.7], [10.5, 7.5, 8.3], "metal")
-    runes = [r for y in (12, 15, 18, 21) for r in ((y, 7.35, 7.6), (y, 8.4, 8.65))]
-    common_decor(add, stage, runes,
-                 [(3, 15), (13, 15), (8, bt + 4), (1, 21), (15, 21), (2, 2), (14, 2)], second_guard_y=-3.6)
+    sym = sym8(add)
+    bt = 24 + (1 if stage >= 6 else 0) + (2 if stage >= 8 else 0)      # haut de la lame
+    # --- poignée
+    add([7.3, -4, 7.3], [8.7, 4.5, 8.7], "grip")                       # fusée
+    for y in (-3.5, -2.0, -0.5, 1.0, 2.5):                              # tressage
+        add([7.15, y, 7.15], [8.85, y + 0.6, 8.85], "handle")
+    add([6.9, -5.25, 6.9], [9.1, -4, 9.1], "dark")                      # pommeau
+    add([7.15, -5.75, 7.15], [8.85, -5.25, 8.85], "trim")
+    add([7.4, -5.0, 6.7], [8.6, -4.25, 9.3], "gem")                     # gemme du pommeau
+    add([7.0, 4.5, 7.0], [9.0, 5.25, 9.0], "trim")                      # bague
+    # --- garde
+    add([3.75, 5.25, 7.15], [12.25, 6.75, 8.85], "metal")
+    add([4.25, 6.75, 7.4], [11.75, 7.15, 8.6], "edge")
+    add([4.75, 4.85, 7.4], [11.25, 5.25, 8.6], "dark")
+    add([6.5, 4.5, 6.75], [9.5, 7.5, 9.25], "dark")                     # coeur de la garde
+    add([7.2, 5.2, 6.5], [8.8, 6.8, 9.5], "gem")                        # gemme centrale
+    sym([2.9, 4.9, 7.0], [3.75, 7.1, 9.0], "trim")                      # embouts
+    # --- lame
+    add([6.2, 7.15, 7.45], [9.8, 9.25, 8.55], "dark")                   # talon gravé
+    add([6.6, 9.25, 7.6], [9.4, bt, 8.4], "metal")                      # plat de la lame
+    sym([6.0, 9.25, 7.75], [6.6, bt - 0.4, 8.25], "edge")               # tranchants polis
+    add([7.55, 8.5, 7.52], [8.45, bt - 2.5, 8.48], "dark")              # gorge
+    add([7.8, 9.0, 7.47], [8.2, bt - 3.0, 8.53], "energy")              # ligne d'énergie
+    add([6.75, bt - 1.3, 7.6], [9.25, bt + 1.2, 8.4], "metal", ["z", 45, [8, bt, 8]])   # pointe
+    add([7.35, bt + 0.6, 7.7], [8.65, bt + 1.9, 8.3], "edge", ["z", 45, [8, bt + 1.25, 8]])
+
+    if stage >= 1:   # niv. 5 : rivets dorés sur la garde
+        sym([4.55, 5.55, 7.05], [4.95, 6.45, 8.95], "trim")
+    if stage >= 2:   # niv. 10 : ligne d'énergie le long de la garde
+        add([4.5, 5.85, 7.08], [11.5, 6.15, 8.92], "energy")
+    if stage >= 3:   # niv. 15 : gemmes latérales de la garde
+        sym([5.0, 5.4, 6.95], [5.9, 6.6, 9.05], "gem")
+    if stage >= 4:   # niv. 20 : quillons recourbés
+        sym([0.6, 6.0, 7.4], [3.0, 7.0, 8.6], "metal", ["z", -22.5, [3.0, 6.5, 8]])
+        sym([-0.5, 6.55, 7.55], [0.8, 7.45, 8.45], "trim", ["z", -45, [0.8, 7.0, 8]])
+    if stage >= 5:   # niv. 25 : fils d'énergie entre les tranchants et la lame
+        sym([6.45, 10, 7.7], [6.65, bt - 1.5, 8.3], "energy")
+    if stage >= 6:   # niv. 30 : runes lumineuses sur le talon
+        sym([6.7, 7.55, 7.4], [7.2, 8.85, 8.6], "energy")
+    if stage >= 7:   # niv. 35 : ailes de garde
+        sym([2.0, 7.0, 7.7], [4.0, 10.5, 8.3], "metal", ["z", 22.5, [4.0, 7.0, 8]])
+        sym([2.7, 7.5, 7.65], [3.3, 10.0, 8.35], "energy", ["z", 22.5, [4.0, 7.0, 8]])
+    if stage >= 8:   # niv. 40 : lame plus longue, dents près du talon
+        for y in (10.4, 12.0):
+            sym([5.5, y, 7.8], [6.2, y + 0.7, 8.2], "edge", ["z", 45, [5.85, y + 0.35, 8]])
+    if stage >= 9:   # niv. 45 : pointe de pommeau, anneaux lumineux sur la fusée
+        add([7.6, -7.0, 7.6], [8.4, -5.75, 8.4], "trim", ["y", 45, [8, -6.4, 8]])
+        for y in (-1.25, 1.75):
+            add([7.05, y, 7.05], [8.95, y + 0.25, 8.95], "energy")
+    if stage >= 10:  # niv. 50 : losange de gemme à la base de la lame
+        add([7.1, 9.8, 7.3], [8.9, 11.6, 8.7], "gem", ["z", 45, [8, 10.7, 8]])
+    if stage >= 11:  # niv. 55 : gorges jumelles
+        sym([7.0, 12, 7.5], [7.25, bt - 4, 8.5], "energy")
+    if stage >= 12:  # niv. 60 : glyphes flottants autour de la lame
+        for y in (13, 17, 21):
+            sym([3.6, y, 7.85], [4.4, y + 1.2, 8.15], "energy")
+    if stage >= 13:  # niv. 65 : cornes sous la garde
+        sym([4.5, 2.5, 7.6], [5.3, 5.0, 8.4], "dark", ["z", -22.5, [5.3, 5.0, 8]])
+        sym([4.7, 2.9, 7.55], [5.0, 4.6, 8.45], "energy", ["z", -22.5, [5.3, 5.0, 8]])
+    if stage >= 14:  # niv. 70 : deux cristaux flottants
+        crystal(add, 2.5, 15)
+        crystal(add, 13.5, 15)
+    if stage >= 15:  # niv. 75 : grandes ailes
+        sym([0.0, 8.5, 7.75], [2.0, 14.5, 8.25], "metal", ["z", 22.5, [2.0, 8.5, 8]])
+        sym([0.6, 9.0, 7.7], [1.3, 14.0, 8.3], "energy", ["z", 22.5, [2.0, 8.5, 8]])
+        sym([-1.6, 9.5, 7.8], [0.0, 13.0, 8.2], "edge", ["z", 45, [0.0, 9.5, 8]])
+    if stage >= 16:  # niv. 80 : cristal au zénith, lignes d'aura le long de la lame
+        crystal(add, 8, bt + 3)
+        sym([5.2, 14, 7.95], [5.45, bt - 2, 8.05], "energy")
+    if stage >= 17:  # niv. 85 : cristaux latéraux
+        crystal(add, 0.5, 21)
+        crystal(add, 15.5, 21)
+    if stage >= 18:  # niv. 90 : deuxième garde sertie sur la fusée
+        add([6.9, -1.0, 6.9], [9.1, -0.5, 9.1], "trim")
+        sym([6.65, -1.1, 7.6], [6.9, -0.4, 8.4], "gem")
+    if stage >= 19:  # niv. 95 : diadème au-dessus de la garde
+        add([5.5, 7.15, 7.65], [10.5, 7.6, 8.35], "trim")
+        sym([5.6, 7.6, 7.75], [6.2, 8.4, 8.25], "gem")
+    if stage >= 20:  # niv. 100 : halo d'énergie autour de la lame
+        halo(add, 8, bt - 6, 5.2)
+        crystal(add, 2, 2)
+        crystal(add, 14, 2)
     return E
 
 
 def axe_elements(stage):
     E, add = builder()
     handle(add, 11)
-    add([6.75, 9.5, 6.75], [9.25, 11, 9.25], "metal")                # virole
-    add([6.5, 11, 6.5], [9.5, 16, 9.5], "metal")                     # douille
+    add([6.75, 9.5, 6.75], [9.25, 11, 9.25], "trim")                   # virole
+    add([6.5, 11, 6.5], [9.5, 16, 9.5], "dark")                        # douille
+    add([6.35, 11.2, 6.35], [9.65, 11.6, 9.65], "trim")
+    add([6.35, 15.4, 6.35], [9.65, 15.8, 9.65], "trim")
     if stage >= 20:
         add([6.75, 11.5, 6], [9.25, 15.5, 10], "gem")
     else:
         add([7, 12, 6.25], [9, 15, 9.75], "gem")
-    add([2.5, 10.5, 7.4], [6.5, 16.5, 8.6], "metal")                 # corps de la lame
-    add([1, 9.5, 7.6], [2.5, 17.5, 8.4], "metal")                    # tranchant
-    add([0.5, 16.5, 7.65], [2.5, 18, 8.35], "metal", ["z", -22.5, [2.5, 17.25, 8]])
-    add([0.5, 8, 7.65], [2.5, 9.5, 8.35], "metal", ["z", 22.5, [2.5, 8.75, 8]])
+    add([2.5, 10.5, 7.4], [6.5, 16.5, 8.6], "metal")                   # corps de la lame
+    add([3.0, 11.2, 7.32], [6.0, 15.8, 8.68], "dark")                  # plaque gravée
+    add([1, 9.5, 7.6], [2.5, 17.5, 8.4], "edge")                       # tranchant poli
+    add([0.5, 16.5, 7.65], [2.5, 18, 8.35], "edge", ["z", -22.5, [2.5, 17.25, 8]])
+    add([0.5, 8, 7.65], [2.5, 9.5, 8.35], "edge", ["z", 22.5, [2.5, 8.75, 8]])
     if stage < 10:
-        add([9.5, 12.5, 7.25], [11, 14.5, 8.75], "metal")            # talon
-    if stage >= 1:   # arête sur la lame
-        add([2.5, 16.5, 7.5], [6.5, 17, 8.5], "metal")
-    if stage >= 2:   # fil en gemme
-        add([0.5, 10, 7.7], [1, 17, 8.3], "gem")
-    if stage >= 4:   # cristal sur la douille
+        add([9.5, 12.5, 7.25], [11, 14.5, 8.75], "metal")              # talon
+    if stage >= 1:   # niv. 5 : liserés dorés
+        add([2.5, 16.5, 7.5], [6.5, 16.9, 8.5], "trim")
+        add([2.5, 10.1, 7.5], [6.5, 10.5, 8.5], "trim")
+    if stage >= 2:   # niv. 10 : fil d'énergie derrière le tranchant
+        add([2.4, 10.5, 7.52], [2.7, 16.5, 8.48], "energy")
+    if stage >= 4:   # niv. 20 : cristal sur la douille
         add([7, 16, 7], [9, 17.5, 9], "gem")
-    if stage >= 5:   # clous sur la lame
-        add([3.5, 12, 7.2], [4.5, 13, 8.8], "gem")
-        add([3.5, 14, 7.2], [4.5, 15, 8.8], "gem")
+    if stage >= 5:   # niv. 25 : gemme au centre de la plaque
+        add([4.0, 13.0, 7.22], [5.0, 14.0, 8.78], "gem")
     if 6 <= stage < 10:  # bec à l'arrière
-        add([11, 12.75, 7.5], [14, 14.25, 8.5], "metal", ["z", -22.5, [11, 13.5, 8]])
-    if stage >= 7:   # incrustation
-        add([5, 12.5, 7.3], [6.25, 14.5, 8.7], "gem")
-    if stage >= 8:   # corne au-dessus du tranchant
-        add([1, 17.5, 7.7], [2, 20, 8.3], "metal", ["z", 22.5, [1.5, 17.5, 8]])
-    if stage >= 10:  # hache double
+        add([11, 12.75, 7.5], [14, 14.25, 8.5], "edge", ["z", -22.5, [11, 13.5, 8]])
+    if stage >= 6:   # niv. 30 : cercle runique lumineux autour de la gemme
+        halo(add, 4.5, 13.5, 1.4, t=0.14, depth=0.75)
+    if stage >= 8:   # niv. 40 : corne au-dessus du tranchant
+        add([1, 17.5, 7.7], [2, 20, 8.3], "edge", ["z", 22.5, [1.5, 17.5, 8]])
+    if stage >= 10:  # niv. 50 : hache double
         add([9.5, 11, 7.45], [13, 16, 8.55], "metal")
-        add([13, 10, 7.6], [14.5, 17, 8.4], "metal")
+        add([10, 11.6, 7.38], [12.6, 15.4, 8.62], "dark")
+        add([13, 10, 7.6], [14.5, 17, 8.4], "edge")
+        add([12.9, 10.6, 7.55], [13.15, 16.4, 8.45], "energy")
         add([14.5, 10.5, 7.7], [15, 16.5, 8.3], "gem")
-    if stage >= 11:  # barbes sous la lame
-        add([3, 9.25, 7.6], [4, 10.5, 8.4], "metal", ["z", 45, [3.5, 10.5, 8]])
-    if stage >= 15:  # ailes
+    if stage >= 11:  # niv. 55 : barbes sous la lame
+        add([3, 9.25, 7.6], [4, 10.5, 8.4], "edge", ["z", 45, [3.5, 10.5, 8]])
+    if stage >= 15:  # niv. 75 : ailes
         add([5.5, 16, 7.7], [7, 19.5, 8.3], "metal", ["z", 22.5, [7, 16, 8]])
         add([9, 16, 7.7], [10.5, 19.5, 8.3], "metal", ["z", -22.5, [9, 16, 8]])
-    if stage >= 19:  # diadème
-        add([6, 16, 7.75], [10, 16.5, 8.25], "metal")
+        add([6.0, 16.4, 7.65], [6.5, 19.1, 8.35], "energy", ["z", 22.5, [7, 16, 8]])
+        add([9.5, 16.4, 7.65], [10.0, 19.1, 8.35], "energy", ["z", -22.5, [9, 16, 8]])
+    if stage >= 19:  # niv. 95 : diadème
+        add([6, 16, 7.75], [10, 16.5, 8.25], "gem")
     common_decor(add, stage, handle_runes(6.75, 8.25),
-                 [(4, 21), (12, 21), (8, 24), (-2, 13), (18, 13), (-1, 4), (17, 4)])
+                 [(4, 21), (12, 21), (8, 24), (-2, 13), (18, 13), (-1, 4), (17, 4)], aura=(7, 13.5, 8))
     return E
 
 
@@ -790,44 +825,52 @@ def shovel_elements(stage):
     E, add = builder()
     top = 19 if stage < 8 else 20                                    # haut de la lame
     handle(add, 9)
-    add([6.75, 9, 6.75], [9.25, 10.5, 9.25], "metal")                # virole
-    add([7.25, 10.5, 7.5], [8.75, 12, 8.5], "metal")                 # col
+    add([6.75, 9, 6.75], [9.25, 10.5, 9.25], "trim")                 # virole
+    add([7.25, 10.5, 7.5], [8.75, 12, 8.5], "dark")                  # col
     add([5, 12, 7.5], [11, top, 8.5], "metal")                       # lame
-    add([4.75, 12, 7.6], [5, top, 8.4], "metal")
-    add([11, 12, 7.6], [11.25, top, 8.4], "metal")
-    add([5.5, top, 7.55], [10.5, top + 1, 8.45], "metal")            # bout arrondi
-    add([6.5, top + 1, 7.6], [9.5, top + 2, 8.4], "metal")
-    add([7.25, top + 2, 7.65], [8.75, top + 2.75, 8.35], "metal")
+    add([5.6, 12.6, 7.42], [10.4, top - 0.6, 8.58], "dark")          # plaque gravée
+    add([4.75, 12, 7.6], [5, top, 8.4], "edge")
+    add([11, 12, 7.6], [11.25, top, 8.4], "edge")
+    add([5.5, top, 7.55], [10.5, top + 1, 8.45], "edge")             # bout arrondi poli
+    add([6.5, top + 1, 7.6], [9.5, top + 2, 8.4], "edge")
+    add([7.25, top + 2, 7.65], [8.75, top + 2.75, 8.35], "edge")
     if stage >= 20:
         add([6.25, 13.25, 7.2], [9.75, 16.75, 8.8], "gem")
     else:
         add([6.5, 13.5, 7.25], [9.5, 16.5, 8.75], "gem")
-    if stage >= 1:   # nervure au dos
-        add([7.75, 12, 8.5], [8.25, top, 8.75], "metal")
-    if stage >= 2:   # bord en gemme
-        add([5, 12, 7.4], [11, 12.75, 8.6], "gem")
+    if stage >= 1:   # nervure au dos + liseré
+        add([7.75, 12, 8.5], [8.25, top, 8.75], "trim")
+        add([5, 12, 7.45], [11, 12.4, 8.55], "trim")
+    if stage >= 2:   # lignes d'énergie qui encadrent la gemme
+        add([5.9, 17, 7.38], [10.1, 17.3, 8.62], "energy")
+        add([5.9, 12.7, 7.38], [10.1, 13.0, 8.62], "energy")
     if stage >= 4:   # pointe en gemme
         add([7.5, top + 2.5, 7.7], [8.5, top + 3.5, 8.3], "gem", ["z", 45, [8, top + 3, 8]])
     if stage >= 5:   # clous
-        add([5.5, 17, 7.3], [6.25, 17.75, 8.7], "gem")
-        add([9.75, 17, 7.3], [10.5, 17.75, 8.7], "gem")
+        add([5.5, 17.6, 7.3], [6.25, 18.35, 8.7], "gem")
+        add([9.75, 17.6, 7.3], [10.5, 18.35, 8.7], "gem")
     if stage >= 6:   # épaulettes
         add([3.5, 11.5, 7.7], [5, 14, 8.3], "metal", ["z", -22.5, [5, 12, 8]])
         add([11, 11.5, 7.7], [12.5, 14, 8.3], "metal", ["z", 22.5, [11, 12, 8]])
     if stage >= 7:   # collier
-        add([6, 11.75, 7.25], [10, 12.25, 8.75], "metal")
+        add([6, 11.75, 7.25], [10, 12.25, 8.75], "trim")
+    if stage >= 8:   # veines d'énergie verticales
+        add([5.3, 13, 7.5], [5.55, top - 0.5, 8.5], "energy")
+        add([10.45, 13, 7.5], [10.7, top - 0.5, 8.5], "energy")
     if stage >= 10:  # grand losange de gemme
         add([6.9, 15, 7.15], [9.1, 17.2, 8.85], "gem", ["z", 45, [8, 16.1, 8]])
     if stage >= 11:  # pointes latérales
-        add([3.75, 15, 7.7], [4.75, 16, 8.3], "metal", ["z", 45, [4.25, 15.5, 8]])
-        add([11.25, 15, 7.7], [12.25, 16, 8.3], "metal", ["z", 45, [11.75, 15.5, 8]])
+        add([3.75, 15, 7.7], [4.75, 16, 8.3], "edge", ["z", 45, [4.25, 15.5, 8]])
+        add([11.25, 15, 7.7], [12.25, 16, 8.3], "edge", ["z", 45, [11.75, 15.5, 8]])
     if stage >= 15:  # ailes
         add([4, 8.5, 7.7], [6, 12, 8.3], "metal", ["z", 22.5, [6, 9, 8]])
         add([10, 8.5, 7.7], [12, 12, 8.3], "metal", ["z", -22.5, [10, 9, 8]])
+        add([4.6, 9.0, 7.65], [5.2, 11.6, 8.35], "energy", ["z", 22.5, [6, 9, 8]])
+        add([10.8, 9.0, 7.65], [11.4, 11.6, 8.35], "energy", ["z", -22.5, [10, 9, 8]])
     if stage >= 19:  # diadème
-        add([5, top - 0.5, 7.4], [11, top, 8.6], "metal")
+        add([5, top - 0.5, 7.4], [11, top, 8.6], "gem")
     common_decor(add, stage, handle_runes(6, 7.5),
-                 [(2, 20), (14, 20), (8, top + 6), (-1, 14), (17, 14), (0, 4), (16, 4)])
+                 [(2, 20), (14, 20), (8, top + 6), (-1, 14), (17, 14), (0, 4), (16, 4)], aura=(8, 16, 7))
     return E
 
 
@@ -835,105 +878,112 @@ def hoe_elements(stage):
     E, add = builder()
     bottom = 9.5 if stage < 8 else 8.5                               # bas de la lame
     handle(add, 13)
-    add([6.75, 11.5, 6.75], [9.25, 13, 9.25], "metal")               # virole
-    add([6.5, 13, 6.5], [9.5, 16, 9.5], "metal")                     # douille
+    add([6.75, 11.5, 6.75], [9.25, 13, 9.25], "trim")                # virole
+    add([6.5, 13, 6.5], [9.5, 16, 9.5], "dark")                      # douille
+    add([6.35, 15.6, 6.35], [9.65, 16.0, 9.65], "trim")
     if stage >= 20:
         add([6.75, 13.25, 6], [9.25, 15.75, 10], "gem")
     else:
         add([7, 13.5, 6.25], [9, 15.5, 9.75], "gem")
     add([1.5, 13.75, 7.25], [6.5, 15.75, 8.75], "metal")             # bras
+    add([2.0, 14.2, 7.18], [6.0, 15.3, 8.82], "dark")
     add([0, bottom, 6.5], [2.5, 15.75, 9.5], "metal")                # lame
-    add([0.25, bottom - 1, 6.75], [2.25, bottom, 9.25], "metal")     # tranchant
-    add([9.5, 14, 7.25], [11.5, 15.5, 8.75], "metal")                # contrepoids
+    add([0.25, bottom - 1, 6.75], [2.25, bottom, 9.25], "edge")      # tranchant
+    add([9.5, 14, 7.25], [11.5, 15.5, 8.75], "dark")                 # contrepoids
     if stage >= 1:   # arête du bras
-        add([2, 15.75, 7.5], [6.5, 16.25, 8.5], "metal")
-    if stage >= 2:   # fil en gemme
-        add([-0.25, bottom - 0.5, 6.6], [0.25, 15, 9.4], "gem")
+        add([2, 15.75, 7.5], [6.5, 16.25, 8.5], "trim")
+    if stage >= 2:   # fil d'énergie le long du bras et de la lame
+        add([2.2, 14.6, 7.12], [5.8, 14.9, 8.88], "energy")
+        add([-0.25, bottom - 0.5, 6.6], [0.05, 15, 9.4], "energy")
     if stage >= 4:   # cristal sur la douille
         add([7, 16, 7], [9, 17.5, 9], "gem")
-    if stage >= 5:   # clous sur le bras
-        add([3.5, 13.5, 7], [4.5, 14.5, 9], "gem")
+    if stage >= 5:   # clou sur le bras
+        add([3.5, 13.5, 7.05], [4.5, 14.5, 8.95], "gem")
     if stage >= 6:   # pointe du contrepoids
-        add([11.5, 14.25, 7.5], [14, 15.25, 8.5], "metal", ["z", 22.5, [11.5, 14.75, 8]])
+        add([11.5, 14.25, 7.5], [14, 15.25, 8.5], "edge", ["z", 22.5, [11.5, 14.75, 8]])
     if stage >= 7:   # incrustation sur la lame
         add([0.6, 11, 6.35], [2, 13, 9.65], "gem")
     if stage >= 10:  # dents
         for (z0, z1) in ((6.75, 7.5), (7.6, 8.4), (8.5, 9.25)):
-            add([0.5, bottom - 3, z0], [1.75, bottom - 1, z1], "metal")
+            add([0.5, bottom - 3, z0], [1.75, bottom - 1, z1], "edge")
     if stage >= 11:  # barbe sous le bras
-        add([3, 12.5, 7.6], [4, 13.75, 8.4], "metal", ["z", 45, [3.5, 13.75, 8]])
+        add([3, 12.5, 7.6], [4, 13.75, 8.4], "edge", ["z", 45, [3.5, 13.75, 8]])
     if stage >= 15:  # ailes
         add([5.5, 16, 7.7], [7, 19.5, 8.3], "metal", ["z", 22.5, [7, 16, 8]])
         add([9, 16, 7.7], [10.5, 19.5, 8.3], "metal", ["z", -22.5, [9, 16, 8]])
+        add([6.0, 16.4, 7.65], [6.5, 19.1, 8.35], "energy", ["z", 22.5, [7, 16, 8]])
+        add([9.5, 16.4, 7.65], [10.0, 19.1, 8.35], "energy", ["z", -22.5, [9, 16, 8]])
     if stage >= 19:  # diadème
-        add([6, 16, 7.75], [10, 16.5, 8.25], "metal")
+        add([6, 16, 7.75], [10, 16.5, 8.25], "gem")
     common_decor(add, stage, handle_runes(7, 8.5),
-                 [(4, 20), (13, 19.5), (8, 22.5), (-3, 12), (18, 12), (-2, 3), (17, 3)])
+                 [(4, 20), (13, 19.5), (8, 22.5), (-3, 12), (18, 12), (-2, 3), (17, 3)], aura=(6, 14, 7))
     return E
 
 
 def spear_elements(stage):
-    """Lance : long manche, fer en feuille, ailerons ; s'enrichit à chaque forme."""
+    """Lance : long manche, fer en feuille aux lignes d'énergie, ailerons ; s'enrichit à chaque forme."""
     E, add = builder()
+    sym = sym8(add)
     top = 27.5 if stage < 8 else 29.5                                # pointe du fer
     # manche
     add([7.4, -10, 7.4], [8.6, 18, 8.6], "handle")
-    add([7.1, -11.5, 7.1], [8.9, -10, 8.9], "metal")                 # talon
-    for y in (-3, -1, 1):
-        add([7.2, y, 7.2], [8.8, y + 1, 8.8], "grip")
+    add([7.1, -11.5, 7.1], [8.9, -10, 8.9], "dark")                  # talon
+    add([7.25, -11.75, 7.25], [8.75, -11.5, 8.75], "trim")
+    for y in (-3, -1.5, 0, 1.5):
+        add([7.2, y, 7.2], [8.8, y + 0.9, 8.8], "grip")
     add([7.3, -3.5, 7.3], [8.7, 3, 8.7], "grip")
-    add([7, 17, 7], [9, 19, 9], "metal")                             # douille
+    add([7.15, 3, 7.15], [8.85, 3.35, 8.85], "trim")
+    add([7, 17, 7], [9, 19, 9], "dark")                              # douille
+    add([6.85, 18.6, 6.85], [9.15, 19.0, 9.15], "trim")
     # fer en forme de feuille
     add([6.5, 19, 7.6], [9.5, 22, 8.4], "metal")
     add([6, 22, 7.65], [10, top - 3.5, 8.35], "metal")
-    add([6.75, top - 3.5, 7.7], [9.25, top - 1, 8.3], "metal")
-    add([7.1, top - 1.9, 7.7], [8.9, top - 0.1, 8.3], "metal", ["z", 45, [8, top - 1, 8]])
+    sym([5.7, 22.3, 7.75], [6.0, top - 3.8, 8.25], "edge")           # tranchants polis
+    add([6.75, top - 3.5, 7.7], [9.25, top - 1, 8.3], "edge")
+    add([7.1, top - 1.9, 7.7], [8.9, top - 0.1, 8.3], "edge", ["z", 45, [8, top - 1, 8]])
+    add([7.6, 22.5, 7.58], [8.4, top - 3.0, 8.42], "dark")           # arête centrale
     if stage >= 20:
         add([7, 20.5, 7.35], [9, 24, 8.65], "gem")
     else:
         add([7.25, 21, 7.4], [8.75, 23.5, 8.6], "gem")
     if stage >= 1:   # niv. 5 : anneaux de douille
-        add([6.8, 16.5, 6.8], [9.2, 17, 9.2], "metal")
-    if stage >= 2:   # niv. 10 : nervure lumineuse
-        add([7.8, 23.5, 7.55], [8.2, top - 1.5, 8.45], "gem")
+        add([6.8, 16.5, 6.8], [9.2, 17, 9.2], "trim")
+    if stage >= 2:   # niv. 10 : nervure d'énergie
+        add([7.82, 23.5, 7.53], [8.18, top - 1.5, 8.47], "energy")
     if stage >= 3:   # niv. 15 : talon serti
-        add([7.4, -12.5, 7.4], [8.6, -11.5, 8.6], "gem")
-    if stage >= 4:   # niv. 20 : ailerons (lance à ailettes)
+        add([7.4, -12.6, 7.4], [8.6, -11.75, 8.6], "gem")
+    if stage >= 4:   # niv. 20 : ailerons
         add([4.5, 18.5, 7.6], [11.5, 19.5, 8.4], "metal")
+        add([4.8, 18.85, 7.55], [11.2, 19.15, 8.45], "energy")
     if stage >= 5:   # niv. 25 : rubans
         add([6.4, 13, 7.6], [6.9, 16.5, 8.4], "grip")
         add([9.1, 13.5, 7.6], [9.6, 16.5, 8.4], "grip")
     if stage >= 6:   # niv. 30 : ailerons relevés
-        add([2.5, 18.5, 7.65], [4.5, 19.5, 8.35], "metal", ["z", -22.5, [4.5, 19, 8]])
-        add([11.5, 18.5, 7.65], [13.5, 19.5, 8.35], "metal", ["z", 22.5, [11.5, 19, 8]])
+        sym([2.5, 18.5, 7.65], [4.5, 19.5, 8.35], "edge", ["z", -22.5, [4.5, 19, 8]])
     if stage >= 7:   # niv. 35 : gemmes sur les ailerons
-        add([5, 18.25, 7.4], [6, 19.75, 8.6], "gem")
-        add([10, 18.25, 7.4], [11, 19.75, 8.6], "gem")
-    # niv. 40 : fer plus long (voir "top")
+        sym([5, 18.25, 7.4], [6, 19.75, 8.6], "gem")
     if stage >= 9:   # niv. 45 : garde sur le manche
-        add([7, 4, 7], [9, 4.75, 9], "metal")
+        add([7, 4, 7], [9, 4.75, 9], "trim")
     if stage >= 10:  # niv. 50 : lames latérales (pertuisane)
-        add([4, 20, 7.7], [6.5, 21.25, 8.3], "metal", ["z", 45, [6.5, 20.5, 8]])
-        add([9.5, 20, 7.7], [12, 21.25, 8.3], "metal", ["z", -45, [9.5, 20.5, 8]])
+        sym([4, 20, 7.7], [6.5, 21.25, 8.3], "edge", ["z", 45, [6.5, 20.5, 8]])
+        sym([4.6, 20.45, 7.65], [6.2, 20.8, 8.35], "energy", ["z", 45, [6.5, 20.5, 8]])
     if stage >= 11:  # niv. 55 : crochets
-        add([5.25, 22.5, 7.7], [6, 24, 8.3], "metal", ["z", 22.5, [6, 22.5, 8]])
-        add([10, 22.5, 7.7], [10.75, 24, 8.3], "metal", ["z", -22.5, [10, 22.5, 8]])
-    if stage >= 12:  # niv. 60 : runes sur le manche
+        sym([5.25, 22.5, 7.7], [6, 24, 8.3], "edge", ["z", 22.5, [6, 22.5, 8]])
+    if stage >= 12:  # niv. 60 : runes lumineuses sur le manche
         for y in (7, 9.5, 12):
-            add([7.8, y, 7.2], [8.2, y + 0.75, 7.4], "gem")
-            add([7.8, y, 8.6], [8.2, y + 0.75, 8.8], "gem")
+            add([7.8, y, 7.25], [8.2, y + 0.75, 7.4], "energy")
+            add([7.8, y, 8.6], [8.2, y + 0.75, 8.75], "energy")
     if stage >= 13:  # niv. 65 : pointe de talon
-        add([7.6, -14.5, 7.6], [8.4, -12.5, 8.4], "metal", ["y", 45, [8, -13.5, 8]])
+        add([7.6, -14.5, 7.6], [8.4, -12.6, 8.4], "edge", ["y", 45, [8, -13.5, 8]])
     if stage >= 15:  # niv. 75 : ailes
-        add([3, 19.5, 7.7], [5, 24, 8.3], "metal", ["z", 22.5, [5, 19.5, 8]])
-        add([11, 19.5, 7.7], [13, 24, 8.3], "metal", ["z", -22.5, [11, 19.5, 8]])
+        sym([3, 19.5, 7.7], [5, 24, 8.3], "metal", ["z", 22.5, [5, 19.5, 8]])
+        sym([3.6, 20.0, 7.65], [4.3, 23.5, 8.35], "energy", ["z", 22.5, [5, 19.5, 8]])
     if stage >= 18:  # niv. 90 : deuxième garde sertie
-        add([7, 5.5, 7], [9, 6, 9], "metal")
-        add([6.7, 5.4, 7.6], [7, 6.1, 8.4], "gem")
-        add([9, 5.4, 7.6], [9.3, 6.1, 8.4], "gem")
+        add([7, 5.5, 7], [9, 6, 9], "trim")
+        sym([6.7, 5.4, 7.6], [7, 6.1, 8.4], "gem")
     if stage >= 19:  # niv. 95 : diadème
         add([6, 19, 7.5], [10, 19.4, 8.5], "gem")
-    crystals = [(3, 27), (13, 27), (8, 30.8), (1, 15), (15, 15), (2, 5), (14, 5)]
+    crystals = [(3, 27), (13, 27), (8, 30.3), (1, 15), (15, 15), (2, 5), (14, 5)]
     if stage >= 14:
         for c in crystals[0:2]:
             crystal(add, *c)
@@ -945,6 +995,7 @@ def spear_elements(stage):
     if stage >= 20:
         for c in crystals[5:7]:
             crystal(add, *c)
+        halo(add, 8, 23, 5, z=8.0, depth=0.2)
     return E
 
 
@@ -1066,7 +1117,7 @@ def bow_normal(t):
 def bow_elements(stage, pull):
     E, add = builder()
     grid = bow_grid(stage, pull)
-    tex = {"L": "handle", "M": "metal", "G": "grip", "S": "gem" if stage >= 2 else "string",
+    tex = {"L": "handle", "M": "edge" if stage >= 3 else "metal", "G": "grip", "S": "energy" if stage >= 2 else "string",
            "A": "handle", "H": "gem" if stage >= 9 else "metal", "F": "gem" if stage >= 13 else "grip", "D": "gem"}
     for y in range(16):
         x = 0
@@ -1099,6 +1150,14 @@ def bow_elements(stage, pull):
         gx, gy = bow_arc(0.5)
         add([round(gx - 1, 3), round(15.5 - gy - 1, 3), 6.25], [round(gx + 1, 3), round(15.5 - gy + 1, 3), 9.75], "metal")
         add([round(gx - 0.6, 3), round(15.5 - gy - 0.6, 3), 5.9], [round(gx + 0.6, 3), round(15.5 - gy + 0.6, 3), 10.1], "gem")
+    if stage >= 1:   # niv. 5 : veines d'énergie le long des branches, sur les deux faces
+        for a0, b0 in ((0.1, 0.42), (0.58, 0.9)):
+            for k in range(13):
+                t = a0 + (b0 - a0) * k / 12
+                x, y = bow_arc(t)
+                cx, cy = round(x + 0.5, 3), round(15.5 - y, 3)
+                for z0, z1 in ((7.15, 7.25), (8.75, 8.85)):
+                    add([cx - 0.25, cy - 0.25, z0], [cx + 0.25, cy + 0.25, z1], "energy")
     if stage >= 6:   # niv. 30 : plaques d'armure superposées sur les branches
         for i, t in enumerate([0.12, 0.2, 0.28, 0.36, 0.64, 0.72, 0.8, 0.88]):
             x, y = bow_arc(t)
@@ -1133,7 +1192,7 @@ def bow_elements(stage, pull):
                     px, py = along(t, d + 0.6)
                     paint(px, py, "frame" if d > span - 0.6 or k < 4 else "membrane")
                     d += 0.2
-    depth = {"fin": (7.6, 8.4, "metal"), "edge": (7.4, 8.6, "gem"), "frame": (7.45, 8.55, "metal"), "membrane": (7.8, 8.2, "gem")}
+    depth = {"fin": (7.6, 8.4, "metal"), "edge": (7.4, 8.6, "energy"), "frame": (7.45, 8.55, "trim"), "membrane": (7.8, 8.2, "gem")}
     for y in range(min([c[1] for c in deco] or [0]), max([c[1] for c in deco] or [-1]) + 1):
         xs = sorted(c[0] for c in deco if c[1] == y)
         i = 0
@@ -1154,13 +1213,13 @@ def bow_elements(stage, pull):
             a = 2 * math.pi * i / 28
             x, y = cx + math.cos(a) * 9.5, cy + math.sin(a) * 9.5
             add([round(x - 0.45, 3), round(y - 0.45, 3), 4.4], [round(x + 0.45, 3), round(y + 0.45, 3), 5.2],
-                "gem" if i % 4 == 0 else "metal")
+                "gem" if i % 4 == 0 else "energy" if i % 2 == 0 else "trim")
     if stage >= 18:  # niv. 90 : anneau runique devant l'arc
         cx, cy = 7.5, 8.5
         for i in range(16):
             a = 2 * math.pi * i / 16 + 0.2
             x, y = cx + math.cos(a) * 6.5, cy + math.sin(a) * 6.5
-            add([round(x - 0.35, 3), round(y - 0.35, 3), 10.8], [round(x + 0.35, 3), round(y + 0.35, 3), 11.4], "gem")
+            add([round(x - 0.35, 3), round(y - 0.35, 3), 10.8], [round(x + 0.35, 3), round(y + 0.35, 3), 11.4], "energy")
     if stage >= 20:  # niv. 100 : couronne de pointes de lumière autour du halo
         cx, cy = 7.5, 8.5
         for i in range(8):
@@ -1185,13 +1244,11 @@ def bow_gui_scale(elements):
 
 
 def bow_model(stage, pull):
-    st = f"{MOD}:item/pickaxe/stage{stage}_"
     return {
         "credit": "Evo Tool - arc 3D généré par tools/generate_assets.py",
         "gui_light": "front",
-        "textures": {"particle": st + "handle", "handle": st + "handle", "grip": st + "grip",
-                     "metal": st + "metal", "gem": st + "gem", "string": f"{MOD}:item/bow/string"},
-        "elements": (elements := bow_elements(stage, pull)),
+        "textures": stage_textures(stage, {"string": f"{MOD}:item/bow/string"}),
+        "elements": (elements := finalize(bow_elements(stage, pull), stage)),
         # mêmes transformations que l'arc vanilla (models/item/bow.json + item/generated)
         "display": {
             "thirdperson_righthand": {"rotation": [-80, 260, -40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
@@ -1246,7 +1303,7 @@ def gen_bow():
 
 TOOL_MODELS = {
     # id: (éléments, hauteur approximative pour l'échelle d'affichage)
-    "evolving_sword": (sword_elements, 34),
+    "evolving_sword": (sword_elements, 36),
     "evolving_axe": (axe_elements, 28),
     "evolving_shovel": (shovel_elements, 30),
     "evolving_hoe": (hoe_elements, 27),
@@ -1272,7 +1329,7 @@ def tool_model(item, stage):
     elements, height = TOOL_MODELS[item]
     model = pickaxe_model(stage)
     model["credit"] = "Evo Tool - modèle 3D généré par tools/generate_assets.py"
-    model["elements"] = elements(stage)
+    model["elements"] = finalize(elements(stage), stage)
     model["display"] = spear_display() if item == "evolving_spear" else display(height)
     return model
 
@@ -1315,56 +1372,65 @@ def mirror_x(add):
 
 
 def helmet_elements(stage):
-    """Heaume de chevalier à cornes, face avant = nord. 16 unités du modèle ~ 1,25 tête une fois porté."""
+    """Heaume de chevalier à cornes aux yeux lumineux, face avant = nord. 16 unités ~ 1,25 tête une fois porté."""
     E, add = builder()
     sym = mirror_x(add)
     add([1, 0.5, 1], [15, 14.5, 15], "metal")                        # coque
     add([2, 14.5, 2], [14, 16, 14], "metal")                         # dôme
-    add([1.5, 0.5, 0.5], [14.5, 13.5, 1], "metal")                   # plaque frontale
-    add([2.5, 8, 0.25], [13.5, 9.25, 0.5], "gem" if stage >= 12 else "visor")   # fente des yeux
+    add([1.5, 0.5, 0.5], [14.5, 13.5, 1], "dark")                    # plaque frontale gravée
+    add([2.5, 8, 0.25], [13.5, 9.25, 0.5], "energy" if stage >= 12 else "visor")   # fente des yeux
+    sym([3.5, 8.3, 0.1], [6.5, 8.95, 0.25], "energy")                # yeux lumineux
+    add([1.25, 9.25, 0.3], [14.75, 9.65, 0.55], "trim")              # sourcils dorés
     for x in (9.5, 11, 12.5):                                        # trous d'aération
         for y in (3, 4.75):
             add([x, y, 0.25], [x + 0.75, y + 0.75, 0.5], "visor")
-    add([7.5, 9.25, 0.25], [8.5, 13.5, 0.5], "metal")                # arête du nez
-    add([7.5, 0.5, 0.25], [8.5, 8, 0.5], "metal")
+    add([7.5, 9.65, 0.25], [8.5, 13.5, 0.5], "edge")                 # arête du nez
+    add([7.5, 0.5, 0.25], [8.5, 8, 0.5], "edge")
+    add([0.85, 0.5, 0.85], [15.15, 1.0, 15.15], "trim")              # rebord
     # cornes : base, segment montant, puis (plus tard) pointe recourbée et bout en gemme
     sym([-1.75, 9.75, 6.5], [1, 12.75, 9.5], "horn")
     sym([-4.75, 11, 6.9], [-1.5, 13.25, 9.1], "horn", ["z", -22.5, [-1.5, 12.1, 8]])
-    if stage >= 1:   # bandeau
-        add([0.75, 9.5, 0.75], [15.25, 10, 15.25], "metal")
+    if stage >= 1:   # bandeau doré
+        add([0.75, 9.75, 0.75], [15.25, 10.25, 15.25], "trim")
     if stage >= 2:   # protège-joues
-        sym([0.5, 1, 2], [1, 8, 10], "metal")
+        sym([0.5, 1, 2], [1, 8, 10], "dark")
+        sym([0.35, 1, 1.75], [0.6, 8, 2.25], "trim")
     if stage >= 3:   # gemme frontale
         add([7, 10.5, -0.25], [9, 12.5, 0.25], "gem")
     if stage >= 4:   # cornes plus longues
         sym([-6, 12.5, 7.2], [-3.75, 17.5, 8.8], "horn", ["z", 22.5, [-4.9, 12.5, 8]])
-    if stage >= 5:   # rivets sertis
+    if stage >= 5:   # rivets sertis + ligne d'énergie autour du bandeau
         for z in (4, 11):
             sym([0.75, 12, z], [1, 13, z + 1], "gem")
+        add([0.7, 10.85, 0.7], [15.3, 11.1, 15.3], "energy")
     if stage >= 6:   # crête
         add([7.25, 16, 3], [8.75, 17.5, 13], "metal")
+        add([7.6, 17.5, 3.5], [8.4, 17.75, 12.5], "energy")
     if stage >= 7:   # protège-nuque
-        add([1.5, 0, 15], [14.5, 4, 15.75], "metal")
-    if stage >= 8:   # pointes sur la crête
+        add([1.5, 0, 15], [14.5, 4, 15.75], "dark")
+        add([1.5, 3.6, 15.1], [14.5, 3.9, 15.85], "trim")
+    if stage >= 8:   # pointes sur la crête, anneaux lumineux à la base des cornes
         for z in (5, 8, 11):
-            add([7.5, 17.5, z], [8.5, 19 + (0.5 if z == 8 else 0), z + 1], "metal")
+            add([7.5, 17.75, z], [8.5, 19 + (0.5 if z == 8 else 0), z + 1], "edge")
+        sym([-1.05, 9.6, 6.35], [-0.7, 12.9, 9.65], "energy")
     if stage >= 9:   # mentonnière
-        add([2.5, 0, 0], [13.5, 1.5, 0.5], "metal")
+        add([2.5, 0, 0], [13.5, 1.5, 0.5], "trim")
     if stage >= 10:  # bouts de cornes en gemme
         sym([-7.25, 17, 7.5], [-5.75, 20, 8.5], "gem", ["z", 45, [-6.5, 17, 8]])
     if stage >= 11:  # petites cornes frontales
         sym([3, 14, 1.5], [4, 16.5, 2.5], "horn", ["z", 22.5, [3.5, 14, 2]])
+    if stage >= 13:  # pointes à l'arrière du casque
+        for y in (6, 10):
+            add([7.5, y, 15], [8.5, y + 1, 17], "edge")
     if stage >= 15:  # ailes
         sym([-1, 13, 9.5], [1, 18, 10], "metal", ["z", 22.5, [1, 13, 9.75]])
+        sym([-0.4, 13.5, 9.45], [0.3, 17.5, 10.05], "energy", ["z", 22.5, [1, 13, 9.75]])
     if stage >= 18:  # couronne de gemmes
         for (x, z) in ((3, 3), (12, 3), (3, 12), (12, 12)):
             add([x, 16, z], [x + 1, 17, z + 1], "gem")
     if stage >= 19:  # diadème
         add([2, 13.5, 0.25], [14, 14, 0.5], "gem")
     crystals = [(-1, 20), (17, 20), (8, 23), (-6, 9), (22, 9), (-4, 3), (20, 3)]
-    if stage >= 13:  # pointes à l'arrière du casque
-        for y in (6, 10):
-            add([7.5, y, 15], [8.5, y + 1, 17], "metal")
     if stage >= 14:
         for c in crystals[0:2]:
             crystal(add, *c)
@@ -1376,37 +1442,21 @@ def helmet_elements(stage):
     if stage >= 20:
         for c in crystals[5:7]:
             crystal(add, *c)
+        halo_flat(add, 8, 8, 19.5, 6.5, depth=0.2, t=0.2)
     return E
 
 
 def helmet_model(stage):
-    st = f"{MOD}:item/pickaxe/stage{stage}_"
     return {
         "credit": "Evo Tool - heaume 3D généré par tools/generate_assets.py",
         "gui_light": "side",
-        "textures": {
-            "particle": st + "metal",
-            "metal": st + "metal",
-            "gem": st + "gem",
-            "horn": f"{MOD}:item/armor/stage{stage}_horn",
-            "visor": f"{MOD}:item/armor/visor",
-        },
-        "elements": helmet_elements(stage),
-        "display": {
-            # Porté : rendu sur la tête comme une citrouille sculptée (face avant = nord).
-            "head": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
-            "gui": {"rotation": [20, 200, 0], "translation": [0, 0, 0], "scale": [0.48, 0.48, 0.48]},
-            "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.3, 0.3, 0.3]},
-            "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [0.5, 0.5, 0.5]},
-            "thirdperson_righthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
-            "thirdperson_lefthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
-            "firstperson_righthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
-            "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
-        },
+        "textures": stage_textures(stage, {"horn": f"{MOD}:item/armor/stage{stage}_horn",
+                                           "visor": f"{MOD}:item/armor/visor"}),
+        "elements": finalize(helmet_elements(stage), stage),
+        "display": armor_display(0.48),
     }
 
 
-# Disposition de la texture d'armure (64x32) : (u, v, largeur, hauteur, profondeur) de chaque boîte.
 BODY = (16, 16, 8, 12, 4)
 ARM = (40, 16, 4, 12, 4)
 LEG = (0, 16, 4, 12, 4)
@@ -1421,281 +1471,151 @@ def box_faces(box):
     }
 
 
-def plate_pixel(st, x, y, w, h, r, light=1.0):
-    """Plaque de métal : dégradé vertical, bords plus sombres, léger bruit."""
-    f = light * (1.12 - 0.28 * (y / max(1, h - 1))) + r.uniform(-0.04, 0.04)
-    if x == 0 or x == w - 1:
-        f *= 0.82
-    return shade(st["metal"], f)
-
-
-def paint_side(img, rect, st, r, rows, kind, stage, face):
-    """Peint une face (x0, y0, w, h) d'une boîte, uniquement sur les lignes « rows » (relatives)."""
-    x0, y0, w, h = rect
-    dark = shade(st["metal"], 0.45)
-    trim = st["gem"][2] if stage >= 9 else shade(st["metal"], 1.35)
-    cloth = st["grip"]
-    for y in rows:
-        for x in range(w):
-            c = plate_pixel(st, x, y, w, h, r, 1.08 if face in ("top", "front") else 0.95)
-            if kind == "chest":
-                if y in (7, 9):                                  # lames de la braconnière
-                    c = dark
-                elif y == 11:
-                    c = trim
-                elif face == "front" and y < 7 and x in (3, 4):  # arête centrale du plastron
-                    c = shade(st["metal"], 1.3)
-            elif kind == "arm":
-                if y == 4:                                       # bas de l'épaulière
-                    c = dark
-                elif 5 <= y <= 7:                                # cotte de mailles
-                    c = shade(cloth, 0.9 if (x + y) % 2 else 0.6)
-                elif y == 8:
-                    c = trim
-            elif kind == "belt":
-                c = shade(cloth, 1.0 - 0.15 * ((x + y) % 2))
-                if y == 0 or y == 4:
-                    c = shade(cloth, 0.6)
-            elif kind == "thigh":
-                if y in (3, 9):
-                    c = dark
-                elif 5 <= y <= 7 and face == "front":            # genouillère
-                    c = shade(st["metal"], 1.35 if y == 6 else 1.15)
-            elif kind == "boot":
-                if y == 6:
-                    c = trim
-                elif y == 11:
-                    c = dark                                     # semelle
-                elif face == "front" and y >= 9:
-                    c = shade(st["metal"], 1.3)                  # bout ferré
-            img.putpixel((x0 + x, y0 + y), c)
-
-
-def paint_box(img, box, st, stage, kind, rows_main, seed):
-    r = random.Random(seed)
-    for face, (x0, y0, w, h) in box_faces(box).items():
-        if face in ("top", "bottom"):
-            continue
-        paint_side(img, (x0, y0, w, h), st, r, [y for y in rows_main if y < h], kind, stage, face)
-
-
-def put(img, box, face, x, y, color):
-    """Pose un pixel sur une face d'une boîte (coordonnées relatives à la face)."""
-    x0, y0, w, h = box_faces(box)[face]
-    if 0 <= x < w and 0 <= y < h:
-        img.putpixel((x0 + x, y0 + y), color)
-
-
 SIDES = ("front", "back", "right", "left")
 
 
 def armor_textures(stage):
-    """Textures portées. Chaque forme (tous les 5 niveaux) ajoute un nouveau détail aux précédents."""
+    """Textures portées HD (256x128) + masques des lignes lumineuses.
+    Chaque forme (tous les 5 niveaux) ajoute de nouveaux détails aux précédents."""
     st = STAGES[stage]
-    gem = st["gem"]
+    H = ArmorPainter(st, stage, 10 + stage)        # couche « humanoid » : plastron, bras, bottes
+    L = ArmorPainter(st, stage, 50 + stage)        # couche « humanoid_leggings » : ceinture, cuissards
     metal = st["metal"]
-    light = shade(metal, 1.35)
-    humanoid = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
-    leggings = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
 
-    # --- Base (niv. 0) : plastron + bras, bottes, ceinture + cuissardes
-    paint_box(humanoid, BODY, st, stage, "chest", range(12), 1)
-    paint_box(humanoid, ARM, st, stage, "arm", range(12), 2)
-    for box, top_light in ((BODY, 1.2), (ARM, 1.3)):
-        faces = box_faces(box)
-        for face in ("top", "bottom"):
-            x0, y0, w, h = faces[face]
-            for y in range(h):
-                for x in range(w):
-                    humanoid.putpixel((x0 + x, y0 + y), shade(metal, top_light if face == "top" else 0.6))
-    paint_box(humanoid, LEG, st, stage, "boot", range(6, 12), 3)
-    x0, y0, w, h = box_faces(LEG)["bottom"]
-    for y in range(h):
-        for x in range(w):
-            humanoid.putpixel((x0 + x, y0 + y), shade(metal, 0.4))
-    paint_box(leggings, BODY, st, stage, "belt", range(7, 12), 4)
-    paint_box(leggings, LEG, st, stage, "thigh", range(0, 10), 5)
-    x0, y0, w, h = box_faces(LEG)["top"]
-    for y in range(h):
-        for x in range(w):
-            leggings.putpixel((x0 + x, y0 + y), shade(metal, 1.1))
-    put(humanoid, BODY, "front", 4, 3, gem[2])                       # petite gemme
-    for (x, y) in ((3, 8), (4, 8), (3, 9), (4, 9)):                  # boucle de ceinture
-        put(leggings, BODY, "front", x, y, gem[2] if y == 8 else gem[1])
+    # --- Bases (niv. 0)
+    for face in SIDES:
+
+        # plastron : plaque haute (rangées 0-6) puis braconnière (7-11)
+        H.plate(BODY, face, range(12), 1.08 if face == "front" else 0.95)
+        H.seam(BODY, face, 7)
+        H.seam(BODY, face, 9)
+        H.trim(BODY, face, 11)
+        if face == "front":
+            H.fill(BODY, "front", 3.5, 0, 1, 7, lambda hx, hy, W, Hh: shade(metal, 1.45 - 0.1 * (hx > 1)))
+        # bras : épaulière (0-4), cotte de mailles (5-7), liseré (8), canon d'avant-bras (9-11)
+        H.plate(ARM, face, range(0, 5), 1.15)
+        H.seam(ARM, face, 2)
+        H.seam(ARM, face, 4)
+        H.chain(ARM, face, range(5, 8))
+        H.trim(ARM, face, 8)
+        H.plate(ARM, face, range(9, 12), 1.0)
+        # bottes : tige (6-8), liseré (6), pied (9-10), semelle (11)
+        H.plate(LEG, face, range(6, 11), 1.0)
+        H.trim(LEG, face, 6)
+        H.fill(LEG, face, 0, 11, 4, 1, lambda hx, hy, W, Hh: shade(metal, 0.3 + 0.1 * (hy == 0)))
+        if face == "front":
+            H.fill(LEG, "front", 0, 9, 4, 2, lambda hx, hy, W, Hh: shade(metal, 1.4 - 0.25 * hy / Hh))
+        # ceinture (jambières, rangées 7-11) et cuissards (0-9)
+        L.cloth(BODY, face, range(7, 12))
+        L.trim(BODY, face, 7)
+        L.trim(BODY, face, 11)
+        L.plate(LEG, face, range(0, 10), 1.0)
+        L.seam(LEG, face, 3)
+        L.seam(LEG, face, 9)
+        if face == "front":
+            L.fill(LEG, "front", 0, 5, 4, 2, lambda hx, hy, W, Hh: shade(metal, 1.5 - 0.3 * abs(hy - Hh / 2) / Hh))
+
+    for painter, boxes in ((H, (BODY, ARM)), (L, (LEG,))):
+        for box in boxes:
+            for face, f in (("top", 1.25), ("bottom", 0.55)):
+                x0, y0, w, h = painter.rect(box, face)
+                for hy in range(h):
+                    for hx in range(w):
+                        painter.img.putpixel((x0 + hx, y0 + hy), shade(metal, f + painter.r.uniform(-0.04, 0.04)))
+    x0, y0, w, h = H.rect(LEG, "bottom")
+    for hy in range(h):
+        for hx in range(w):
+            H.img.putpixel((x0 + hx, y0 + hy), shade(metal, 0.3))
+    H.gem(BODY, "front", 4, 3.5, 0.9)                                 # petite gemme
+    L.gem(BODY, "front", 4, 9, 1.0)                                   # boucle de ceinture
+    H.energy(BODY, "front", [(1.2, 6.3), (6.8, 6.3)])                 # première ligne d'énergie
 
     if stage >= 1:   # niv. 5 : rivets
         for face in ("front", "back"):
-            for (x, y) in ((1, 1), (6, 1), (1, 5), (6, 5)):
-                put(humanoid, BODY, face, x, y, light)
+            for (x, y) in ((0.6, 0.6), (6.6, 0.6), (0.6, 5.2), (6.6, 5.2)):
+                H.rivet(BODY, face, x, y)
         for face in SIDES:
-            put(humanoid, ARM, face, 1, 10, light)
-            put(humanoid, ARM, face, 2, 10, light)
+            H.rivet(ARM, face, 0.5, 9.6)
+            H.rivet(ARM, face, 2.8, 9.6)
     if stage >= 2:   # niv. 10 : jointures lumineuses entre les lames
         for face in SIDES:
-            for x in range(8 if face in ("front", "back") else 4):
-                put(humanoid, BODY, face, x, 9, gem[1])
+            W = 8 if face in ("front", "back") else 4
+            H.energy(BODY, face, [(0.3, 9.4), (W - 0.3, 9.4)])
     if stage >= 3:   # niv. 15 : grosse gemme au centre du plastron
-        for (x, y) in ((3, 2), (4, 2), (3, 3), (4, 3)):
-            put(humanoid, BODY, "front", x, y, gem[2] if y == 2 else gem[1])
-        put(humanoid, BODY, "front", 3, 2, gem[4])
-    if stage >= 4:   # niv. 20 : bordure colorée des épaulières
+        H.gem(BODY, "front", 4, 3.2, 1.6)
+    if stage >= 4:   # niv. 20 : bordure lumineuse des épaulières
         for face in SIDES:
-            for x in range(4):
-                put(humanoid, ARM, face, x, 4, gem[1])
+            H.energy(ARM, face, [(0.2, 4.4), (3.8, 4.4)])
     if stage >= 5:   # niv. 25 : gemmes sur les genouillères
-        put(leggings, LEG, "front", 1, 6, gem[2])
-        put(leggings, LEG, "front", 2, 6, gem[3])
+        L.gem(LEG, "front", 2, 6, 1.0)
     if stage >= 6:   # niv. 30 : épaulières à pointes
-        for (x, y) in ((1, 1), (2, 2), (1, 2), (2, 1)):
-            put(humanoid, ARM, "top", x, y, shade(metal, 1.6))
-        for (x, y) in ((1, 1), (2, 0), (2, 1), (1, 2)):
-            put(humanoid, ARM, "right", x, y, shade(metal, 1.55))
-    if stage >= 7:   # niv. 35 : blason en croix sur le plastron
-        for x in range(1, 7):
-            if x not in (3, 4):
-                put(humanoid, BODY, "front", x, 3, light)
-        for y in (0, 1, 5, 6):
-            put(humanoid, BODY, "front", 3, y, light)
-            put(humanoid, BODY, "front", 4, y, light)
-    if stage >= 8:   # niv. 40 : manchettes des gantelets
+        for face in ("right", "front", "back"):
+            H.fill(ARM, face, 1, 0, 2, 1.2, lambda hx, hy, W, Hh: shade(metal, 1.6 - 0.6 * hy / Hh) if abs(hx - W / 2) < (Hh - hy) else None)
+    if stage >= 7:   # niv. 35 : filigranes gravés
+        H.filigree(BODY, "front", 0.5, 1.5, 2.6, 1.2)
+        H.filigree(BODY, "front", 4.9, 1.5, 2.6, 1.2)
         for face in SIDES:
-            for x in range(4):
-                put(humanoid, ARM, face, x, 11, gem[1])
-    # niv. 45 : les bordures passent à la couleur de la gemme (voir paint_side, stage >= 9)
+            H.filigree(ARM, face, 0.3, 0.6, 3.4, 1.0)
+    if stage >= 8:   # niv. 40 : manchettes lumineuses des gantelets
+        for face in SIDES:
+            H.energy(ARM, face, [(0.2, 11.4), (3.8, 11.4)])
+    if stage >= 9:   # niv. 45 : circuits d'énergie sur le plastron
+        H.energy(BODY, "front", [(4, 4.8), (4, 6.3)])
+        H.energy(BODY, "front", [(1.2, 6.3), (0.6, 7.0)])
+        H.energy(BODY, "front", [(6.8, 6.3), (7.4, 7.0)])
     if stage >= 10:  # niv. 50 : éperons et bouts de bottes sertis
-        put(humanoid, LEG, "back", 1, 9, gem[2])
-        put(humanoid, LEG, "back", 2, 9, gem[2])
-        put(humanoid, LEG, "front", 1, 10, gem[3])
-        put(humanoid, LEG, "front", 2, 10, gem[3])
-    if stage >= 11:  # niv. 55 : clous sur la ceinture
+        H.gem(LEG, "front", 2, 9.8, 0.9)
+        H.energy(LEG, "back", [(1, 9.5), (3, 9.5)])
+    if stage >= 11:  # niv. 55 : clous lumineux sur la ceinture
         for face in ("front", "back"):
-            for x in (1, 6):
-                put(leggings, BODY, face, x, 9, gem[3])
+            for x in (1.2, 6.8):
+                L.node(BODY, face, x, 9.4, 0.7)
     if stage >= 12:  # niv. 60 : runes lumineuses
-        for (x, y) in ((1, 4), (6, 4), (1, 5), (6, 5)):
-            put(humanoid, BODY, "front", x, y, gem[3])
-        put(leggings, LEG, "front", 1, 1, gem[3])
-        put(leggings, LEG, "front", 2, 1, gem[3])
+        for x in (1.3, 6.7):
+            H.energy(BODY, "front", [(x, 1.4), (x, 4.6)])
+            H.node(BODY, "front", x, 1.4, 0.6)
+        L.energy(LEG, "front", [(2, 0.6), (2, 2.6)])
     if stage >= 13:  # niv. 65 : cape dans le dos
-        for y in range(1, 12):
-            for x in range(1, 7):
-                put(humanoid, BODY, "back", x, y, shade(st["grip"], 1.05 - 0.04 * y + (0.06 if x % 2 else 0)))
-        put(humanoid, BODY, "back", 3, 0, gem[2])
-        put(humanoid, BODY, "back", 4, 0, gem[2])
-    if stage >= 14:  # niv. 70 : runes sur les bras
+        cape = st["grip"]
+        H.fill(BODY, "back", 0.5, 0.5, 7, 11.5,
+               lambda hx, hy, W, Hh: shade(cape, 1.1 - 0.35 * hy / Hh + (0.08 if (hx // 3) % 2 else 0)))
+        H.gem(BODY, "back", 4, 1.2, 0.9)
+    if stage >= 14:  # niv. 70 : lignes lumineuses sur les bras
         for face in ("right", "left"):
-            put(humanoid, ARM, face, 1, 9, gem[3])
-            put(humanoid, ARM, face, 2, 9, gem[3])
-    if stage >= 15:  # niv. 75 : ailes brodées sur la cape
-        for i in range(4):
-            put(humanoid, BODY, "back", 3 - i, 2 + i, gem[2])
-            put(humanoid, BODY, "back", 4 + i, 2 + i, gem[2])
-    if stage >= 16:  # niv. 80 : ailettes sur les bottes
+            H.energy(ARM, face, [(2, 0.8), (2, 4.0)])
+            H.energy(ARM, face, [(2, 9.2), (2, 11.2)])
+    if stage >= 15:  # niv. 75 : ailes brodées en lumière sur la cape
+        H.energy(BODY, "back", [(4, 2.5), (1.0, 4.5), (0.8, 8.5)])
+        H.energy(BODY, "back", [(4, 2.5), (7.0, 4.5), (7.2, 8.5)])
+        H.energy(BODY, "back", [(4, 2.5), (2.2, 6.0)])
+        H.energy(BODY, "back", [(4, 2.5), (5.8, 6.0)])
+    if stage >= 16:  # niv. 80 : ailettes lumineuses sur les bottes
         for face in ("right", "left"):
-            for (x, y) in ((1, 7), (2, 7), (2, 8)):
-                put(humanoid, LEG, face, x, y, gem[3])
-    if stage >= 17:  # niv. 85 : bandes lumineuses sur les cuissardes
+            H.energy(LEG, face, [(0.6, 8.5), (2.0, 7.2), (3.4, 6.9)])
+    if stage >= 17:  # niv. 85 : bandes lumineuses sur les cuissards
         for face in ("right", "left"):
-            for y in range(9):
-                put(leggings, LEG, face, 2, y, gem[1])
-    if stage >= 18:  # niv. 90 : bordures en gemme sur le plastron
-        for y in range(7):
-            put(humanoid, BODY, "front", 0, y, gem[2])
-            put(humanoid, BODY, "front", 7, y, gem[2])
-    if stage >= 19:  # niv. 95 : filigrane doré
-        for x in range(0, 8, 2):
-            put(humanoid, BODY, "front", x, 0, gem[3])
-            put(leggings, BODY, "front", x, 7, gem[3])
+            L.energy(LEG, face, [(2, 0.4), (2, 8.6)])
+    if stage >= 18:  # niv. 90 : bordures lumineuses du plastron
+        H.energy(BODY, "front", [(0.25, 0.3), (0.25, 6.6)])
+        H.energy(BODY, "front", [(7.75, 0.3), (7.75, 6.6)])
+    if stage >= 19:  # niv. 95 : filigrane doré et noeuds d'énergie
+        for x in (1, 3, 5, 7):
+            H.node(BODY, "front", x, 0.4, 0.45)
+            L.node(BODY, "front", x, 7.5, 0.45)
         for face in SIDES:
-            put(humanoid, ARM, face, 0, 0, gem[3])
-            put(humanoid, ARM, face, 3, 0, gem[3])
+            H.node(ARM, face, 0.4, 0.4, 0.4)
+            H.node(ARM, face, 3.6, 0.4, 0.4)
     if stage >= 20:  # niv. 100 : armure ultime, toutes les jointures brillent
         for face in SIDES:
-            for x in range(8 if face in ("front", "back") else 4):
-                put(humanoid, BODY, face, x, 7, gem[2])
-                put(humanoid, BODY, face, x, 11, gem[3])
-        for face in SIDES:
-            put(leggings, LEG, face, 0, 3, gem[2])
-            put(leggings, LEG, face, 3, 3, gem[2])
+            W = 8 if face in ("front", "back") else 4
+            H.energy(BODY, face, [(0.3, 7.4), (W - 0.3, 7.4)])
+            H.energy(BODY, face, [(0.3, 11.5), (W - 0.3, 11.5)])
+            L.energy(LEG, face, [(0.3, 3.4), (3.7, 3.4)])
+            H.energy(ARM, face, [(0.2, 2.4), (3.8, 2.4)])
         r = random.Random(100)
         for _ in range(6):
-            put(humanoid, BODY, "front", r.randrange(8), r.randrange(7), gem[4])
-    return humanoid, leggings
-
-
-ICONS = {
-    "evolving_chestplate": [
-        "................",
-        "..ooo......ooo..",
-        ".olllo....olllo.",
-        ".ollmmoooommllo.",
-        ".olmmmmttmmmmlo.",
-        ".ommmmmggmmmmmo.",
-        ".odmmmmggmmmmdo.",
-        "..oommmttmmmoo..",
-        "....ommmmmmo....",
-        "....ommmmmmo....",
-        "....oddddddo....",
-        "....ommmmmmo....",
-        "....oddddddo....",
-        "....otttttto....",
-        ".....oooooo.....",
-        "................",
-    ],
-    "evolving_leggings": [
-        "................",
-        "...oooooooooo...",
-        "...otttggttto...",
-        "...oooooooooo...",
-        "...ommmmmmmmo...",
-        "...omlmmmmlmo...",
-        "...ommmoommmo...",
-        "...ommo..ommo...",
-        "...oddo..oddo...",
-        "...ollo..ollo...",
-        "...ommo..ommo...",
-        "...ommo..ommo...",
-        "...ommo..ommo...",
-        "...oddo..oddo...",
-        "...oooo..oooo...",
-        "................",
-    ],
-    "evolving_boots": [
-        "................",
-        "................",
-        "................",
-        "................",
-        "................",
-        "..oooo....oooo..",
-        "..ommo....ommo..",
-        "..olmo....olmo..",
-        "..ttto....ttto..",
-        "..ommo....ommo..",
-        "..ommoo...ommoo.",
-        "..ommllo..ommllo",
-        "..ommmmo..ommmmo",
-        "..oddddo..oddddo",
-        "..oooooo..oooooo",
-        "................",
-    ],
-}
-
-
-def armor_icon(item, stage):
-    st = STAGES[stage]
-    rows = ICONS[item]
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    trim = st["gem"][2] if stage >= 9 else st["grip"]
-    colors = {"o": shade(st["metal"], 0.3), "m": st["metal"], "l": shade(st["metal"], 1.35),
-              "d": shade(st["metal"], 0.65), "g": st["gem"][2], "t": trim}
-    for y, row in enumerate(rows):
-        assert len(row) == 16, (item, y, row)
-        for x, ch in enumerate(row):
-            if ch in colors:
-                img.putpixel((x, y), colors[ch])
-    if stage >= 12 and img.getpixel((7, 5))[3] > 0:
-        img.putpixel((7, 5), st["gem"][4])
-    return img
+            H.node(BODY, "front", r.uniform(1, 7), r.uniform(1, 6), 0.35)
+    return H.img, L.img, H.glow, L.glow
 
 
 ARMOR_ITEMS = ["evolving_helmet", "evolving_chestplate", "evolving_leggings", "evolving_boots"]
@@ -1705,9 +1625,11 @@ def gen_armor():
     save_png(visor_texture(), "item", "armor", "visor")
     for i, st in enumerate(STAGES):
         save_png(horn_texture(st, i), "item", "armor", f"stage{i}_horn")
-        humanoid, leggings = armor_textures(i)
+        humanoid, leggings, humanoid_glow, leggings_glow = armor_textures(i)
         save_png(humanoid, "entity", "equipment", "humanoid", f"evolium_stage{i}")
         save_png(leggings, "entity", "equipment", "humanoid_leggings", f"evolium_stage{i}")
+        save_png(humanoid_glow, "entity", "evolium_glow", "humanoid", f"stage{i}")
+        save_png(leggings_glow, "entity", "evolium_glow", "humanoid_leggings", f"stage{i}")
         write_json(os.path.join(ASSETS, "equipment", f"evolium_stage{i}.json"), {
             "layers": {
                 "humanoid": [{"texture": f"{MOD}:evolium_stage{i}"}],
@@ -1716,9 +1638,7 @@ def gen_armor():
         })
         write_json(os.path.join(ASSETS, "models", "item", f"evolving_helmet_stage{i}.json"), helmet_model(i))
         for item in ARMOR_ITEMS[1:]:
-            save_png(armor_icon(item, i), "item", "armor", f"{item}_stage{i}")
-            write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"),
-                       {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/armor/{item}_stage{i}"}})
+            write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"), armor_icon_model(item, i))
     for item in ARMOR_ITEMS:
         write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item))
 
@@ -1749,6 +1669,456 @@ def mod_icon():
     return img.resize((128, 128), Image.NEAREST)
 
 
+def gem_light(stage):
+    """Les gemmes brillent un peu dès le début, puis de plus en plus fort."""
+    return min(15, 5 + stage // 2)
+
+
+def energy_light(stage):
+    """Les lignes d'énergie brillent toujours, au maximum dès le niveau 90."""
+    return min(15, 9 + stage // 3)
+
+
+def finalize(elements, stage):
+    """Rend lumineux (light_emission) les éléments en gemme et les lignes d'énergie."""
+    for el in elements:
+        tex = next(iter(el["faces"].values()))["texture"]
+        if tex == "#gem":
+            el["light_emission"] = gem_light(stage)
+        elif tex == "#energy":
+            el["light_emission"] = energy_light(stage)
+            el["shade"] = False
+    return elements
+
+
+def stage_textures(stage, extra=None):
+    """Jeu de textures d'une forme (partagé par tous les outils, armes et pièces d'armure 3D)."""
+    st = f"{MOD}:item/pickaxe/stage{stage}_"
+    tex = {"particle": st + "metal"}
+    for name in ("handle", "grip", "metal", "gem", "energy", "edge", "dark", "trim"):
+        tex[name] = st + name
+    tex.update(extra or {})
+    return tex
+
+
+def sym8(add):
+    """Ajoute un élément et son symétrique par rapport au plan x = 8 (angles z et y inversés)."""
+    def both(frm, to, tex, rot=None):
+        add(frm, to, tex, rot)
+        mfrm = [16 - to[0], frm[1], frm[2]]
+        mto = [16 - frm[0], to[1], to[2]]
+        mrot = None
+        if rot:
+            axis, angle, origin = rot
+            mrot = [axis, -angle if axis in ("z", "y") else angle, [16 - origin[0], origin[1], origin[2]]]
+        add(mfrm, mto, tex, mrot)
+    return both
+
+
+def halo(add, cx, cy, r, tex="energy", t=0.25, z=8.0, depth=0.25):
+    """Anneau octogonal dans le plan x-y (4 barres droites + 4 barres à 45°)."""
+    s = 2 * r * math.tan(math.pi / 8)
+    h = s / 2
+    z0, z1 = z - depth, z + depth
+    add([cx - h, cy + r - t, z0], [cx + h, cy + r + t, z1], tex)
+    add([cx - h, cy - r - t, z0], [cx + h, cy - r + t, z1], tex)
+    add([cx - r - t, cy - h, z0], [cx - r + t, cy + h, z1], tex)
+    add([cx + r - t, cy - h, z0], [cx + r + t, cy + h, z1], tex)
+    d = r / math.sqrt(2)
+    for sx, sy in ((1, 1), (-1, -1), (-1, 1), (1, -1)):
+        px, py = cx + sx * d, cy + sy * d
+        angle = -45 if sx == sy else 45
+        add([px - h, py - t, z0], [px + h, py + t, z1], tex, ["z", angle, [px, py, z]])
+
+
+def halo_flat(add, cx, cz, y, r, tex="energy", t=0.25, depth=0.25):
+    """Anneau octogonal horizontal (plan x-z), autour d'une tête de masse par exemple."""
+    s = 2 * r * math.tan(math.pi / 8)
+    h = s / 2
+    y0, y1 = y - depth, y + depth
+    add([cx - h, y0, cz + r - t], [cx + h, y1, cz + r + t], tex)
+    add([cx - h, y0, cz - r - t], [cx + h, y1, cz - r + t], tex)
+    add([cx - r - t, y0, cz - h], [cx - r + t, y1, cz + h], tex)
+    add([cx + r - t, y0, cz - h], [cx + r + t, y1, cz + h], tex)
+    d = r / math.sqrt(2)
+    for sx, sz in ((1, 1), (-1, -1), (-1, 1), (1, -1)):
+        px, pz = cx + sx * d, cz + sz * d
+        angle = 45 if sx == sz else -45
+        add([px - h, y0, pz - t], [px + h, y1, pz + t], tex, ["y", angle, [px, y, pz]])
+
+
+def energy_frames(st, frames=8):
+    """Texture animée des lignes lumineuses : de l'énergie qui coule le long des lignes."""
+    dark, mid, light, bright, spark = st["gem"]
+    img = Image.new("RGBA", (16, 16 * frames))
+    for f in range(frames):
+        for y in range(16):
+            for x in range(16):
+                phase = (y / 16.0) * 2 - f / frames
+                wave = 0.5 + 0.5 * math.sin(2 * math.pi * phase)
+                ripple = 0.5 + 0.5 * math.sin(2 * math.pi * ((x + y) / 8.0 + f / frames))
+                v = 0.55 * wave + 0.25 * ripple + 0.2
+                c = lerp(mid, light, min(1.0, v * 1.15))
+                if v > 0.72:
+                    c = lerp(c, bright, (v - 0.72) / 0.28)
+                if v > 0.93:
+                    c = lerp(c, spark, (v - 0.93) / 0.07 * 0.6)
+                if st.get("rainbow"):
+                    h = ((x + y) / 32.0 + f / frames) % 1.0
+                    rr, gg, bb = colorsys.hsv_to_rgb(h, 0.55, 1.0)
+                    c = lerp(c, (int(rr * 255), int(gg * 255), int(bb * 255)), 0.5)
+                img.putpixel((x, y + 16 * f), c)
+    return img
+
+
+def save_animated(img, frametime, *parts):
+    save_png(img, *parts)
+    path = os.path.join(ASSETS, "textures", *parts) + ".png.mcmeta"
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"animation": {"frametime": frametime, "interpolate": True}}, f, indent=2)
+        f.write("\n")
+
+
+def edge_texture(st, seed):
+    """Tranchant poli : métal très clair avec un reflet net."""
+    base = shade(st["metal"], 1.45)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 1.0 + 0.12 * math.sin((x + y * 0.4) * 0.9) + r.uniform(-0.03, 0.03)
+            if (x + y) % 9 == 0:
+                f = 1.25
+            img.putpixel((x, y), shade(base, f))
+    return img
+
+
+def dark_texture(st, seed):
+    """Métal sombre gravé de filigranes (gorges, talons, plaques intérieures)."""
+    base = shade(st["metal"], 0.5)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            f = 1.0 + r.uniform(-0.05, 0.05)
+            scroll = math.sin(x * 0.8 + math.sin(y * 0.6) * 2.0)
+            if abs(scroll) < 0.18:
+                f = 0.55
+            elif 0.18 <= scroll < 0.32:
+                f = 1.45
+            img.putpixel((x, y), shade(base, f))
+    for p in ((3, 3), (12, 12)):
+        img.putpixel(p, st["gem"][2])
+    return img
+
+
+def trim_color(st):
+    return lerp(st["gem"][2], hexc("ffe39a"), 0.45)
+
+
+def trim_texture(st, seed):
+    """Dorures : liserés et ornements, teintés par la gemme de la forme."""
+    base = trim_color(st)
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            band = 1.18 if y % 4 == 0 else 0.8 if y % 4 == 3 else 1.0
+            f = band + 0.08 * math.sin(x * 1.3) + r.uniform(-0.03, 0.03)
+            img.putpixel((x, y), shade(base, f))
+    return img
+
+
+def armor_display(gui_scale):
+    return {
+        # Porté (casque) : rendu sur la tête comme une citrouille sculptée (face avant = nord).
+        "head": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+        "gui": {"rotation": [20, 200, 0], "translation": [0, 0, 0], "scale": [gui_scale] * 3},
+        "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.3, 0.3, 0.3]},
+        "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [0.5, 0.5, 0.5]},
+        "thirdperson_righthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
+        "thirdperson_lefthand": {"rotation": [75, 225, 0], "translation": [0, 2.5, 0], "scale": [0.3, 0.3, 0.3]},
+        "firstperson_righthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
+        "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.3, 0.3, 0.3]},
+    }
+
+
+def chestplate_elements(stage):
+    """Plastron 3D (icône) : face avant = nord, comme le heaume."""
+    E, add = builder()
+    sym = mirror_x(add)
+    add([3.5, 1.5, 6], [12.5, 12.5, 10], "metal")                    # torse
+    add([4, 6, 5.5], [12, 12.25, 6], "metal")                        # pectoral
+    for y in (1.75, 3.25, 4.75):                                     # lames de la braconnière
+        add([4, y, 5.6], [12, y + 1.1, 6], "dark")
+    add([7.6, 6, 5.25], [8.4, 12.25, 5.5], "edge")                   # arête centrale
+    add([7.1, 8.6, 5.0], [8.9, 10.4, 5.5], "gem")                    # gemme
+    sym([0.5, 9.5, 5.25], [3.75, 13.25, 10.75], "metal")             # épaulières
+    sym([0.25, 9.25, 5.0], [3.75, 9.75, 11.0], "trim")
+    add([5, 12.5, 6.5], [11, 13.5, 9.5], "trim")                     # col
+    add([4, 2, 10], [12, 12, 10.4], "dark")                          # dos
+    add([4, 1.25, 5.45], [12, 1.75, 10.55], "trim")                  # ceinture
+    if stage >= 1:   # rivets
+        for (x, y) in ((4.6, 11.3), (10.9, 11.3), (4.6, 7), (10.9, 7)):
+            add([x, y, 5.35], [x + 0.5, y + 0.5, 5.5], "trim")
+    if stage >= 2:   # jointures lumineuses
+        add([4.1, 2.95, 5.52], [11.9, 3.2, 5.6], "energy")
+        add([4.1, 4.45, 5.52], [11.9, 4.7, 5.6], "energy")
+    if stage >= 3:   # grosse gemme
+        add([6.8, 8.3, 4.8], [9.2, 10.7, 5.1], "gem")
+    if stage >= 4:   # bordure colorée des épaulières
+        sym([0.25, 13.25, 5.0], [3.75, 13.6, 11.0], "gem")
+    if stage >= 6:   # épaulières à pointes
+        sym([0.6, 13.2, 7.6], [1.6, 15.2, 8.4], "edge", ["z", 22.5, [1.1, 13.2, 8]])
+    if stage >= 7:   # blason en croix
+        add([5, 9.25, 5.3], [11, 9.75, 5.5], "trim")
+    if stage >= 10:  # lignes d'énergie du pectoral
+        sym([4.5, 10.8, 5.4], [7.3, 11.1, 5.5], "energy")
+        sym([4.5, 6.4, 5.4], [7.3, 6.7, 5.5], "energy")
+    if stage >= 12:  # runes lumineuses sur les épaulières
+        sym([0.35, 10.5, 6.5], [0.5, 12.5, 9.5], "energy")
+    if stage >= 13:  # cape
+        add([4, 0, 10.4], [12, 12, 10.9], "grip")
+    if stage >= 15:  # ailes dans le dos
+        sym([-1, 5, 10.6], [4.5, 13, 11.1], "metal", ["z", -22.5, [4.5, 9, 10.85]])
+        sym([-0.4, 6, 10.55], [3.8, 12.2, 11.15], "energy", ["z", -22.5, [4.5, 9, 10.85]])
+    if stage >= 18:  # bordures en gemme
+        sym([3.85, 6, 5.4], [4.15, 12.25, 5.6], "gem")
+    if stage >= 20:  # halo
+        halo(add, 8, 8, 7.5, z=11.5, depth=0.2)
+    return E
+
+
+def leggings_elements(stage):
+    E, add = builder()
+    sym = mirror_x(add)
+    add([3.5, 11.5, 6], [12.5, 13.5, 10], "grip")                    # ceinture
+    add([7, 11.75, 5.6], [9, 13.25, 6], "trim")                      # boucle
+    add([7.5, 12.1, 5.4], [8.5, 12.9, 5.7], "gem")
+    sym([3.75, 1, 6.5], [7.75, 11.5, 9.5], "metal")                  # jambes
+    sym([3.6, 8, 6.2], [7.9, 11, 6.5], "dark")                       # cuissards
+    sym([3.5, 5, 6.0], [8.0, 7.25, 6.6], "edge")                     # genouillères
+    sym([3.6, 1, 6.2], [7.9, 4.5, 6.5], "dark")                      # jambières
+    if stage >= 5:   # gemmes sur les genouillères
+        sym([5.2, 5.6, 5.75], [6.3, 6.7, 6.05], "gem")
+    if stage >= 11:  # clous sur la ceinture
+        for x in (4.25, 11.25):
+            add([x, 12.25, 5.8], [x + 0.5, 12.75, 6.05], "gem")
+    if stage >= 12:  # runes lumineuses
+        sym([5.5, 8.6, 6.1], [6.0, 10.4, 6.25], "energy")
+    if stage >= 17:  # bandes lumineuses sur les côtés
+        sym([3.6, 1.5, 7.5], [3.8, 11, 8.5], "energy")
+    if stage >= 20:
+        sym([3.6, 2.2, 6.05], [7.9, 2.5, 6.25], "energy")
+        halo(add, 8, 7, 6.5, z=11.0, depth=0.2)
+    return E
+
+
+def boots_elements(stage):
+    E, add = builder()
+    sym = mirror_x(add)
+    sym([3, 1, 7], [7.25, 7, 10], "metal")                           # tiges
+    sym([3, 0.75, 4.25], [7.25, 3, 7], "metal")                      # pieds
+    sym([2.85, 0, 4], [7.4, 0.75, 10.15], "dark")                    # semelles
+    sym([2.75, 6.5, 6.75], [7.5, 7.75, 10.25], "trim")               # revers
+    sym([3.2, 1.0, 4.0], [7.05, 2.8, 4.3], "edge")                   # bouts ferrés
+    if stage >= 2:
+        sym([2.95, 3.4, 6.9], [7.3, 3.7, 10.1], "energy")             # ligne lumineuse
+    if stage >= 10:  # bouts sertis
+        sym([4.5, 1.5, 3.85], [5.75, 2.4, 4.1], "gem")
+    if stage >= 16:  # ailettes
+        sym([0.5, 4, 8], [3, 7.5, 8.5], "metal", ["z", 22.5, [3, 4, 8.25]])
+        sym([1.0, 4.4, 7.95], [2.3, 7.1, 8.55], "energy", ["z", 22.5, [3, 4, 8.25]])
+    if stage >= 20:
+        halo_flat(add, 8, 7, 9, 6.5, depth=0.2, t=0.2)
+    return E
+
+
+ARMOR_ICON_MODELS = {
+    "evolving_chestplate": (chestplate_elements, 0.62),
+    "evolving_leggings": (leggings_elements, 0.62),
+    "evolving_boots": (boots_elements, 0.66),
+}
+
+
+def armor_icon_model(item, stage):
+    elements, scale = ARMOR_ICON_MODELS[item]
+    return {
+        "credit": "Evo Tool - pièce d'armure 3D générée par tools/generate_assets.py",
+        "gui_light": "side",
+        "textures": stage_textures(stage),
+        "elements": finalize(elements(stage), stage),
+        "display": armor_display(scale),
+    }
+
+
+# --------------------------------------------------------------------------- armure portée (textures HD)
+
+
+HD = 4  # les textures d'armure sont peintes en 256x128 (4 fois la résolution vanilla), même disposition
+
+
+class ArmorPainter:
+    """Peint une texture d'armure 64x32 en haute définition, avec un masque des lignes lumineuses."""
+
+    def __init__(self, st, stage, seed):
+        self.st, self.stage = st, stage
+        self.img = Image.new("RGBA", (64 * HD, 32 * HD), (0, 0, 0, 0))
+        self.glow = Image.new("RGBA", (64 * HD, 32 * HD), (0, 0, 0, 0))
+        self.r = random.Random(seed)
+
+    def rect(self, box, face):
+        x0, y0, w, h = box_faces(box)[face]
+        return x0 * HD, y0 * HD, w * HD, h * HD
+
+    def set(self, box, face, hx, hy, color, glow=False):
+        x0, y0, w, h = self.rect(box, face)
+        hx, hy = int(round(hx)), int(round(hy))
+        if 0 <= hx < w and 0 <= hy < h:
+            self.img.putpixel((x0 + hx, y0 + hy), color)
+            if glow:
+                self.glow.putpixel((x0 + hx, y0 + hy), color)
+
+    def get(self, box, face, hx, hy):
+        x0, y0, w, h = self.rect(box, face)
+        return self.img.getpixel((x0 + min(w - 1, max(0, hx)), y0 + min(h - 1, max(0, hy))))
+
+    def block(self, box, face, x, y, color, glow=False):
+        """Un pixel « vanilla » (4x4 en HD)."""
+        for dy in range(HD):
+            for dx in range(HD):
+                self.set(box, face, x * HD + dx, y * HD + dy, color, glow)
+
+    def plate(self, box, face, rows, light=1.0):
+        """Plaques de métal brossé : dégradé, reflets en haut à gauche, ombres en bas."""
+        st = self.st
+        x0, y0, w, h = self.rect(box, face)
+        for hy in range(h):
+            if hy // HD not in rows:
+                continue
+            for hx in range(w):
+                f = light * (1.16 - 0.3 * (hy / max(1, h - 1)))
+                f += 0.05 * math.sin(hy * 2.1 + hx * 0.15) + self.r.uniform(-0.035, 0.035)
+                if hx == 0 or hy % (3 * HD) == 0:
+                    f *= 1.2
+                if hx == w - 1:
+                    f *= 0.7
+                self.img.putpixel((x0 + hx, y0 + hy), shade(st["metal"], f))
+
+    def fill(self, box, face, x, y, w, h, fn):
+        """Remplit une zone en pixels vanilla (x, y, w, h) avec fn(hx, hy, W, H) -> couleur."""
+        for hy in range(int(h * HD)):
+            for hx in range(int(w * HD)):
+                c = fn(hx, hy, int(w * HD), int(h * HD))
+                if c:
+                    self.set(box, face, x * HD + hx, y * HD + hy, c)
+
+    def seam(self, box, face, y, x0=0, x1=None, color=None):
+        """Jointure entre deux plaques : trait sombre et reflet juste en dessous."""
+        w = self.rect(box, face)[2]
+        x1 = w if x1 is None else x1 * HD
+        dark = color or shade(self.st["metal"], 0.35)
+        for hx in range(x0 * HD, x1):
+            self.set(box, face, hx, y * HD + 1, dark)
+            self.set(box, face, hx, y * HD + 2, dark)
+            self.set(box, face, hx, y * HD + 3, shade(self.st["metal"], 1.45))
+
+    def trim(self, box, face, y, x0=0, x1=None):
+        """Liseré doré sur une rangée vanilla."""
+        w = self.rect(box, face)[2]
+        x1 = w if x1 is None else x1 * HD
+        c = trim_color(self.st)
+        for hx in range(x0 * HD, x1):
+            for k, f in ((0, 1.35), (1, 1.1), (2, 0.95), (3, 0.6)):
+                self.set(box, face, hx, y * HD + k, shade(c, f if hx % 6 else f * 1.15))
+
+    def energy(self, box, face, pts, width=1):
+        """Ligne lumineuse (polyligne en pixels vanilla, flottants) : coeur éclatant et halo coloré."""
+        dark, mid, light, bright, spark = self.st["gem"]
+        for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+            n = int(max(abs(bx - ax), abs(by - ay)) * HD * 2) + 1
+            for i in range(n + 1):
+                t = i / n
+                hx = (ax + (bx - ax) * t) * HD
+                hy = (ay + (by - ay) * t) * HD
+                for dx in range(-width - 1, width + 2):
+                    for dy in range(-width - 1, width + 2):
+                        d = max(abs(dx), abs(dy))
+                        if d < width:
+                            self.set(box, face, hx + dx, hy + dy, spark if self.stage >= 16 else bright, True)
+                        elif d == width:
+                            self.set(box, face, hx + dx, hy + dy, light, True)
+                        else:
+                            base = self.get(box, face, int(hx + dx), int(hy + dy))
+                            if base[3] and base not in (bright, spark, light):
+                                self.set(box, face, hx + dx, hy + dy, lerp(base, mid, 0.35))
+
+    def node(self, box, face, x, y, r=1.2):
+        """Noeud lumineux (point d'énergie) au bout des lignes."""
+        dark, mid, light, bright, spark = self.st["gem"]
+        for dy in range(-int(r * HD), int(r * HD) + 1):
+            for dx in range(-int(r * HD), int(r * HD) + 1):
+                d = math.hypot(dx, dy) / (r * HD)
+                if d <= 1:
+                    c = spark if d < 0.35 else bright if d < 0.7 else light
+                    self.set(box, face, x * HD + dx, y * HD + dy, c, True)
+
+    def gem(self, box, face, x, y, r=1.5):
+        """Gemme sertie : losange à facettes avec monture dorée."""
+        dark, mid, light, bright, spark = self.st["gem"]
+        rim = trim_color(self.st)
+        R = r * HD
+        for dy in range(-int(R) - 1, int(R) + 2):
+            for dx in range(-int(R) - 1, int(R) + 2):
+                d = (abs(dx) + abs(dy)) / R
+                if d <= 1:
+                    c = (bright if dx + dy < 0 else light) if d < 0.55 else (mid if dx < 0 else dark)
+                    if d < 0.2 and dx < 0 and dy < 0:
+                        c = spark
+                    self.set(box, face, x * HD + dx, y * HD + dy, c, d < 0.55)
+                elif d <= 1.0 + 1.5 / R:
+                    self.set(box, face, x * HD + dx, y * HD + dy, shade(rim, 1.2 if dy < 0 else 0.8))
+
+    def rivet(self, box, face, x, y):
+        m = self.st["metal"]
+        for (dx, dy, f) in ((0, 0, 1.6), (1, 0, 1.3), (0, 1, 1.3), (1, 1, 0.9), (2, 1, 0.5), (1, 2, 0.5), (2, 2, 0.4)):
+            self.set(box, face, x * HD + dx, y * HD + dy, shade(m, f))
+
+    def chain(self, box, face, rows):
+        """Cotte de mailles."""
+        cloth = self.st["grip"]
+        m = shade(self.st["metal"], 0.8)
+        x0, y0, w, h = self.rect(box, face)
+        for hy in range(h):
+            if hy // HD not in rows:
+                continue
+            for hx in range(w):
+                ring = (hx % 3 == 1) != (hy % 3 == 1)
+                ofs = (hy // 3) % 2
+                c = shade(m, 1.25 if (hx + ofs) % 3 == 0 else 0.95) if ring else shade(cloth, 0.55)
+                self.img.putpixel((x0 + hx, y0 + hy), c)
+
+    def cloth(self, box, face, rows, light=1.0):
+        c = self.st["grip"]
+        x0, y0, w, h = self.rect(box, face)
+        for hy in range(h):
+            if hy // HD not in rows:
+                continue
+            for hx in range(w):
+                weave = 1.08 if (hx // 2 + hy // 2) % 2 else 0.9
+                self.img.putpixel((x0 + hx, y0 + hy), shade(c, light * weave + self.r.uniform(-0.03, 0.03)))
+
+    def filigree(self, box, face, x, y, w, h):
+        """Filigrane gravé (volutes)."""
+        m = self.st["metal"]
+        for hx in range(int(w * HD)):
+            t = hx / (w * HD)
+            for k in (0, 1):
+                hy = (h * HD / 2) + math.sin(t * math.pi * 2 * 2 + k * math.pi) * (h * HD / 2 - 1)
+                self.set(box, face, x * HD + hx, y * HD + hy, shade(m, 0.45))
+                self.set(box, face, x * HD + hx, y * HD + hy + 1, shade(m, 1.5))
+
+
 # --------------------------------------------------------------------------- génération
 
 def gen_textures():
@@ -1770,6 +2140,10 @@ def gen_textures():
         save_png(grip_texture(st["grip"], i), "item", "pickaxe", f"stage{i}_grip")
         save_png(metal_texture(st, i), "item", "pickaxe", f"stage{i}_metal")
         save_png(gem_texture(st, i), "item", "pickaxe", f"stage{i}_gem")
+        save_animated(energy_frames(st), 2, "item", "pickaxe", f"stage{i}_energy")
+        save_png(edge_texture(st, i), "item", "pickaxe", f"stage{i}_edge")
+        save_png(dark_texture(st, i), "item", "pickaxe", f"stage{i}_dark")
+        save_png(trim_texture(st, i), "item", "pickaxe", f"stage{i}_trim")
     mod_icon().save(os.path.join(ASSETS, "icon.png"))
 
 

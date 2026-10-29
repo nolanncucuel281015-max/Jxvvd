@@ -2,11 +2,15 @@
   "credit": "Evo Tool - arc 3D généré par tools/generate_assets.py",
   "gui_light": "front",
   "textures": {
-    "particle": "evotool:item/pickaxe/stage0_handle",
+    "particle": "evotool:item/pickaxe/stage0_metal",
     "handle": "evotool:item/pickaxe/stage0_handle",
     "grip": "evotool:item/pickaxe/stage0_grip",
     "metal": "evotool:item/pickaxe/stage0_metal",
     "gem": "evotool:item/pickaxe/stage0_gem",
+    "energy": "evotool:item/pickaxe/stage0_energy",
+    "edge": "evotool:item/pickaxe/stage0_edge",
+    "dark": "evotool:item/pickaxe/stage0_dark",
+    "trim": "evotool:item/pickaxe/stage0_trim",
     "string": "evotool:item/bow/string"
   },
   "elements": [
