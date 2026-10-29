@@ -65,6 +65,7 @@ final class SelfTest {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			try {
 				checks = run(server, FAILURES);
+				prepareArena(server);
 				// Objet géant : il doit rester dans le monde (bug corrigé : il était supprimé dès son apparition).
 				ServerWorld world = server.getOverworld();
 				world.setChunkForced(0, 0, true);
@@ -111,7 +112,6 @@ final class SelfTest {
 			// Après le géant : le scan génère beaucoup de chunks et décharge ceux du spawn.
 			try {
 				checks += checkOres(server, FAILURES);
-				checks += checkWeapons(server, FAILURES);
 				checks += checkDimension(server, FAILURES);
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
@@ -120,6 +120,7 @@ final class SelfTest {
 			if (boss != null) {
 				bossTick = server.getTicks();
 			} else {
+				checks += checkWeapons(server, FAILURES);
 				finish(server);
 			}
 		});
@@ -141,6 +142,12 @@ final class SelfTest {
 				FAILURES.add("apparence du boss non construite (" + parts + " morceaux, vivant=" + boss.isAlive() + ")");
 			}
 			boss.discard();
+			try {
+				checks += checkWeapons(server, FAILURES);
+			} catch (Throwable t) {
+				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
+				FAILURES.add("crash: " + t);
+			}
 			finish(server);
 		});
 	}
@@ -343,19 +350,30 @@ final class SelfTest {
 		return checks;
 	}
 
+	private static final BlockPos ARENA = new BlockPos(3000, 250, 3000);
+
+	/**
+	 * Arène des armes, préparée dès le démarrage : un chunk tout juste chargé n'est pas encore « suivi »
+	 * et ses entités restent invisibles quelques ticks, le temps que le chargement forcé soit pris en compte.
+	 */
+	private static void prepareArena(MinecraftServer server) {
+		ServerWorld world = server.getOverworld();
+		for (int dz = 0; dz <= 16; dz += 16) {
+			world.setChunkForced(ARENA.getX() >> 4, (ARENA.getZ() + dz) >> 4, true);
+			world.getChunk(ARENA.getX() >> 4, (ARENA.getZ() + dz) >> 4);
+		}
+		for (int dx = -4; dx <= 4; dx++) {
+			for (int dz = -4; dz <= 14; dz++) {
+				world.setBlockState(ARENA.add(dx, -1, dz), net.minecraft.block.Blocks.STONE.getDefaultState());
+			}
+		}
+	}
+
 	/** Attaques spéciales des armes moddées, sur un zombie posé devant un faux joueur. */
 	private static int checkWeapons(MinecraftServer server, List<String> failures) {
 		int checks = 0;
 		ServerWorld world = server.getOverworld();
-		BlockPos center = new BlockPos(3000, 250, 3000);
-		world.setChunkForced(center.getX() >> 4, center.getZ() >> 4, true);
-		world.getChunk(center.getX() >> 4, center.getZ() >> 4);
-		world.getChunk(center.getX() >> 4, (center.getZ() + 14) >> 4);
-		for (int dx = -4; dx <= 4; dx++) {
-			for (int dz = -4; dz <= 14; dz++) {
-				world.setBlockState(center.add(dx, -1, dz), net.minecraft.block.Blocks.STONE.getDefaultState());
-			}
-		}
+		BlockPos center = ARENA;
 		FakePlayer player = FakePlayer.get(world);
 		for (WeaponKind kind : WeaponKind.values()) {
 			checks++;
@@ -369,6 +387,11 @@ final class SelfTest {
 			zombie.refreshPositionAndAngles(center.getX() + 0.5, center.getY(), center.getZ() + 2.5, 180.0F, 0.0F);
 			zombie.setAiDisabled(true);
 			world.spawnEntity(zombie);
+			if (world.getEntitiesByClass(ZombieEntity.class, zombie.getBoundingBox().expand(0.5), z -> z == zombie).isEmpty()) {
+				failures.add("zombie de test invisible (chunk de l'arène pas encore suivi)");
+				zombie.discard();
+				break;
+			}
 			float health = zombie.getHealth();
 			WeaponPowers.activate(kind, world, player);
 			switch (kind) {
@@ -389,7 +412,9 @@ final class SelfTest {
 			EvoTool.LOGGER.info("EVOTOOL weapon {}: zombie {} -> {}", kind, health, zombie.getHealth());
 			zombie.discard();
 		}
-		world.setChunkForced(center.getX() >> 4, center.getZ() >> 4, false);
+		for (int dz = 0; dz <= 16; dz += 16) {
+			world.setChunkForced(ARENA.getX() >> 4, (ARENA.getZ() + dz) >> 4, false);
+		}
 		return checks;
 	}
 
