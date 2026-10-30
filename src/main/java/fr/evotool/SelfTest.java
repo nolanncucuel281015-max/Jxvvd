@@ -352,9 +352,9 @@ final class SelfTest {
 		checks++;
 		boss.applyForm(0, true);
 		boss.advanceEvolution(evo, EvoDimension.intervalTicks() - 1);
-		int before = boss.getForm();
+		int formBefore = boss.getForm();
 		boss.advanceEvolution(evo, 1);
-		if (before != 0 || boss.getForm() != 1) {
+		if (formBefore != 0 || boss.getForm() != 1) {
 			failures.add("le boss n'évolue pas au bout de " + EvoDimension.minutes() + " minutes (forme " + boss.getForm() + ")");
 		}
 		// Trois phases : à 2/3 de la vie le boss se transforme (invulnérable), à 1/3 c'est l'ascension dorée.
@@ -513,12 +513,17 @@ final class SelfTest {
 	/** Commande /dimension : la vitesse d'évolution se règle et se garde. */
 	private static int checkCommand(MinecraftServer server, List<String> failures) {
 		int checks = 1;
-		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension speed 3");
-		boolean set = EvoDimension.minutes() == 3 && EvoDimension.intervalTicks() == 3 * 60 * 20;
-		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension locate");
-		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension speed " + EvoDimension.DEFAULT_MINUTES);
-		if (!set || EvoDimension.minutes() != EvoDimension.DEFAULT_MINUTES) {
-			failures.add("/dimension speed ne règle pas la vitesse d'évolution");
+		var dispatcher = server.getCommandManager().getDispatcher();
+		try {
+			dispatcher.execute("dimension speed 3", server.getCommandSource());
+			boolean set = EvoDimension.minutes() == 3 && EvoDimension.intervalTicks() == 3 * 60 * 20;
+			dispatcher.execute("dimension locate", server.getCommandSource());
+			dispatcher.execute("dimension speed " + EvoDimension.DEFAULT_MINUTES, server.getCommandSource());
+			if (!set || EvoDimension.minutes() != EvoDimension.DEFAULT_MINUTES) {
+				failures.add("/dimension speed ne règle pas la vitesse d'évolution");
+			}
+		} catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
+			failures.add("/dimension refusée : " + e.getMessage());
 		}
 		return checks;
 	}
