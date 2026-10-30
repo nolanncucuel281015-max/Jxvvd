@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " B ",
+    "GEG",
+    " B "
+  ],
+  "key": {
+    "B": "minecraft:blaze_powder",
+    "G": "minecraft:gold_ingot",
+    "E": "evotool:evolium"
+  },
+  "result": {
+    "id": "evotool:solar_chakram",
+    "count": 1
+  }
+}

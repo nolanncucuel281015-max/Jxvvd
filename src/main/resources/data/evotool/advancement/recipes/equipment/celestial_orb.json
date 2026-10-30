@@ -1,0 +1,54 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:celestial_orb"
+      }
+    },
+    "has_evolium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:evolium"
+          }
+        ]
+      }
+    },
+    "has_glowstone_dust": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:glowstone_dust"
+          }
+        ]
+      }
+    },
+    "has_gold_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:gold_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_evolium",
+      "has_glowstone_dust",
+      "has_gold_ingot"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:celestial_orb"
+    ]
+  }
+}

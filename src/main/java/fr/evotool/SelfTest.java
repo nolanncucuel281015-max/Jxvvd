@@ -6,6 +6,12 @@ import fr.evotool.component.EvoData;
 import fr.evotool.dimension.EvoDimension;
 import fr.evotool.dimension.EvolvingBlock;
 import fr.evotool.dimension.RubyPortal;
+import fr.evotool.dimension.Sanctuary;
+import fr.evotool.dimension.SanctuaryAltarBlock;
+import fr.evotool.command.DimensionCommand;
+import fr.evotool.item.MagicWeaponItem;
+import fr.evotool.weapon.ArcaneWeapons;
+import fr.evotool.weapon.MagicKind;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProgression;
@@ -60,6 +66,7 @@ final class SelfTest {
 	private static int trackedTicks;
 	private static int bossTick = -1;
 	private static BellBossEntity boss;
+	private static BlockPos altarPos;
 
 	static void register() {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
@@ -141,8 +148,13 @@ final class SelfTest {
 			if (!boss.isAlive() || parts < 5) {
 				FAILURES.add("apparence du boss non construite (" + parts + " morceaux, vivant=" + boss.isAlive() + ")");
 			}
+			checks++;
+			if (SanctuaryAltarBlock.summon((ServerWorld) boss.getEntityWorld(), altarPos, null) != null) {
+				FAILURES.add("l'autel réveille un deuxième boss alors que le premier est là");
+			}
 			boss.discard();
 			try {
+				checks += checkCommand(server, FAILURES);
 				checks += checkWeapons(server, FAILURES);
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
@@ -303,12 +315,26 @@ final class SelfTest {
 			failures.add("bloc évolutif : évolution " + evolution + " au lieu de 3");
 		}
 
-		// Boss : chaque forme est plus grande et plus solide que la précédente.
-		evo.setChunkForced(arrival.getX() >> 4, arrival.getZ() >> 4, true);
-		boss = EvoDimension.spawnBoss(evo, arrival.add(1, 0, 2), 0);
+		// Sanctuaire : généré avec le monde à l'endroit annoncé par /dimension locate, avec son autel.
+		checks++;
+		BlockPos center = Sanctuary.nearest(evo.getSeed(), arrival.getX(), arrival.getZ());
+		altarPos = DimensionCommand.findAltar(evo, center);
+		EvoTool.LOGGER.info("EVOTOOL sanctuary near {}: center {}, altar {}", arrival, center, altarPos);
+		if (altarPos == null) {
+			failures.add("pas de sanctuaire (autel) généré en " + center);
+			altarPos = arrival.add(1, 0, 2);
+		}
+		checks++;
+		if (center.getSquaredDistance(arrival.getX(), center.getY(), arrival.getZ()) > 600 * 600) {
+			failures.add("sanctuaire le plus proche trop loin : " + center);
+		}
+
+		// Boss : réveillé par un clic droit sur l'autel ; chaque forme est plus grande et plus solide.
+		evo.setChunkForced(altarPos.getX() >> 4, altarPos.getZ() >> 4, true);
+		boss = SanctuaryAltarBlock.summon(evo, altarPos, null);
 		checks++;
 		if (boss == null) {
-			failures.add("le boss n'apparaît pas");
+			failures.add("l'autel ne réveille pas le boss");
 			return checks;
 		}
 		float height = 0;
@@ -321,6 +347,15 @@ final class SelfTest {
 			}
 			height = boss.getHeight();
 			health = boss.getMaxHealth();
+		}
+		// Minuteur : le boss prend la forme suivante à chaque intervalle (5 minutes par défaut).
+		checks++;
+		boss.applyForm(0, true);
+		boss.advanceEvolution(evo, EvoDimension.intervalTicks() - 1);
+		int before = boss.getForm();
+		boss.advanceEvolution(evo, 1);
+		if (before != 0 || boss.getForm() != 1) {
+			failures.add("le boss n'évolue pas au bout de " + EvoDimension.minutes() + " minutes (forme " + boss.getForm() + ")");
 		}
 		// Trois phases : à 2/3 de la vie le boss se transforme (invulnérable), à 1/3 c'est l'ascension dorée.
 		boss.applyForm(3, true);
@@ -393,9 +428,17 @@ final class SelfTest {
 				break;
 			}
 			float health = zombie.getHealth();
-			WeaponPowers.activate(kind, world, player);
+			WeaponPowers.activate(kind, world, player, new ItemStack(ModItems.itemFor(fr.evotool.evo.EvoKind.valueOf(kind.name()))));
+			if (kind == WeaponKind.BLAST_BLADE) {
+				// chaque coup d'épée : slash explosif devant le joueur, sans casser de bloc
+				int blocks = countBlocks(world, center, 4);
+				WeaponPowers.blastSlash(world, player, 1.0F);
+				if (countBlocks(world, center, 4) != blocks) {
+					failures.add("la Lame Détonante casse des blocs");
+				}
+			}
 			switch (kind) {
-				case SCYTHE, KATANA, WARHAMMER, HALBERD -> {
+				case SCYTHE, KATANA, WARHAMMER, HALBERD, BLAST_BLADE -> {
 					if (zombie.isAlive() && zombie.getHealth() >= health) {
 						failures.add(kind + " : l'attaque spéciale ne touche pas le zombie devant le joueur");
 					}
@@ -412,8 +455,70 @@ final class SelfTest {
 			EvoTool.LOGGER.info("EVOTOOL weapon {}: zombie {} -> {}", kind, health, zombie.getHealth());
 			zombie.discard();
 		}
+		// Armes magiques : chaque sort coûte une charge, les charges reviennent avec le temps.
+		for (MagicKind kind : MagicKind.values()) {
+			checks++;
+			player.refreshPositionAndAngles(center.getX() + 0.5, center.getY(), center.getZ() + 0.5, 0.0F, 0.0F);
+			ZombieEntity zombie = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+			if (zombie == null) {
+				return checks;
+			}
+			zombie.refreshPositionAndAngles(center.getX() + 0.5, center.getY(), center.getZ() + 3.5, 180.0F, 0.0F);
+			zombie.setAiDisabled(true);
+			world.spawnEntity(zombie);
+			ItemStack stack = new ItemStack(ModItems.itemFor(fr.evotool.evo.EvoKind.valueOf(kind.name())));
+			int charges = ArcaneWeapons.charges(stack, kind);
+			float health = zombie.getHealth();
+			boolean cast = ArcaneWeapons.cast(kind, stack, world, player);
+			if (!cast || ArcaneWeapons.charges(stack, kind) >= charges) {
+				failures.add(kind + " : le sort ne coûte pas de charge (" + charges + " -> " + ArcaneWeapons.charges(stack, kind) + ")");
+			}
+			if ((kind == MagicKind.EVOLIUM_BLASTER || kind == MagicKind.THUNDER_GAUNTLET) && zombie.getHealth() >= health) {
+				failures.add(kind + " : le sort ne touche pas le zombie visé");
+			}
+			// recharge : deux intervalles plus tard, deux charges de plus
+			checks++;
+			stack.set(ModComponents.CHARGES, 0);
+			long now = world.getTime();
+			stack.set(ModComponents.CHARGE_CLOCK, now - 2L * ArcaneWeapons.rechargeTicks(stack, kind));
+			ArcaneWeapons.recharge(stack, kind, now);
+			if (ArcaneWeapons.charges(stack, kind) != 2 || ArcaneWeapons.cast(kind, stack, world, player) == false) {
+				failures.add(kind + " : recharge incorrecte (" + ArcaneWeapons.charges(stack, kind) + " charges)");
+			}
+			checks++;
+			stack.set(ModComponents.CHARGES, 0);
+			stack.set(ModComponents.CHARGE_CLOCK, world.getTime());
+			if (ArcaneWeapons.cast(kind, stack, world, player)) {
+				failures.add(kind + " : sort lancé sans charge");
+			}
+			EvoTool.LOGGER.info("EVOTOOL magic {}: zombie {} -> {}", kind, health, zombie.getHealth());
+			zombie.discard();
+		}
 		for (int dz = 0; dz <= 16; dz += 16) {
 			world.setChunkForced(ARENA.getX() >> 4, (ARENA.getZ() + dz) >> 4, false);
+		}
+		return checks;
+	}
+
+	private static int countBlocks(ServerWorld world, BlockPos center, int radius) {
+		int count = 0;
+		for (BlockPos p : BlockPos.iterate(center.add(-radius, -2, -radius), center.add(radius, 2, radius + 4))) {
+			if (!world.getBlockState(p).isAir()) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	/** Commande /dimension : la vitesse d'évolution se règle et se garde. */
+	private static int checkCommand(MinecraftServer server, List<String> failures) {
+		int checks = 1;
+		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension speed 3");
+		boolean set = EvoDimension.minutes() == 3 && EvoDimension.intervalTicks() == 3 * 60 * 20;
+		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension locate");
+		server.getCommandManager().executeWithPrefix(server.getCommandSource(), "dimension speed " + EvoDimension.DEFAULT_MINUTES);
+		if (!set || EvoDimension.minutes() != EvoDimension.DEFAULT_MINUTES) {
+			failures.add("/dimension speed ne règle pas la vitesse d'évolution");
 		}
 		return checks;
 	}

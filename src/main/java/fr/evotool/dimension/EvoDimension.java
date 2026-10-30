@@ -4,15 +4,22 @@ import com.mojang.serialization.Codec;
 import fr.evotool.EvoTool;
 import fr.evotool.boss.BellBossEntity;
 import fr.evotool.boss.ModEntities;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.block.Block;
@@ -31,23 +38,23 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 /**
  * Dimension évolutive : plus un joueur y reste longtemps, plus tout évolue autour de lui.
- * Toutes les 10 minutes passées dans la dimension (sans en sortir), la dimension passe une phase (0 à 5) :
- * les blocs évolutifs proches rattrapent cette phase et le boss, le Slime Cloche, prend une nouvelle forme.
+ * Toutes les 5 minutes (réglable avec /dimension speed) passées dans la dimension, sans en sortir,
+ * la dimension passe une phase (0 à 5) et les blocs évolutifs proches rattrapent cette phase.
+ * Le boss, lui, se réveille à l'autel d'un sanctuaire ({@link Sanctuary}) et évolue avec son propre minuteur.
  */
 public final class EvoDimension {
 	public static final RegistryKey<World> WORLD = RegistryKey.of(RegistryKeys.WORLD, EvoTool.id("evolutive"));
 	public static final int MAX_PHASE = 5;
-	public static final int PHASE_TICKS = 20 * 60 * 10;
-	/** Le boss apparaît 30 secondes après l'arrivée, puis 3 minutes après avoir été vaincu. */
-	private static final int FIRST_BOSS_DELAY = 20 * 30;
-	private static final int BOSS_RESPAWN_DELAY = 20 * 60 * 3;
-	private static final int BOSS_SEARCH_RANGE = 96;
+	public static final int DEFAULT_MINUTES = 5;
+	public static final int MAX_MINUTES = 120;
+	/** Minutes entre deux évolutions (blocs de la dimension et boss), sauvegardées dans evotool.properties du monde. */
+	private static int minutes = DEFAULT_MINUTES;
 	/** Rayon de l'onde d'évolution lancée à chaque nouvelle phase. */
 	private static final int WAVE_RADIUS = 40;
 	private static final int WAVE_HALF_HEIGHT = 20;
@@ -57,7 +64,6 @@ public final class EvoDimension {
 			builder -> builder.persistent(Codec.INT).initializer(() -> 0));
 
 	private static final Map<UUID, ServerBossBar> BARS = new HashMap<>();
-	private static final Map<UUID, Integer> NEXT_BOSS = new HashMap<>();
 	private static final List<Wave> WAVES = new ArrayList<>();
 
 	private record Wave(ServerWorld world, BlockPos center, int phase, int[] radius) {
@@ -78,6 +84,54 @@ public final class EvoDimension {
 			}
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> removeBar(handler.getPlayer().getUuid()));
+		ServerLifecycleEvents.SERVER_STARTED.register(EvoDimension::loadSettings);
+	}
+
+	public static int minutes() {
+		return minutes;
+	}
+
+	/** Durée d'une phase d'évolution, en ticks. */
+	public static int intervalTicks() {
+		return minutes * 60 * 20;
+	}
+
+	private static Path settingsFile(MinecraftServer server) {
+		return server.getSavePath(WorldSavePath.ROOT).resolve("evotool.properties");
+	}
+
+	private static void loadSettings(MinecraftServer server) {
+		minutes = DEFAULT_MINUTES;
+		Path file = settingsFile(server);
+		if (Files.exists(file)) {
+			Properties properties = new Properties();
+			try (Reader reader = Files.newBufferedReader(file)) {
+				properties.load(reader);
+				minutes = Math.max(1, Math.min(MAX_MINUTES, Integer.parseInt(properties.getProperty("evolution_minutes", "" + DEFAULT_MINUTES).trim())));
+			} catch (IOException | NumberFormatException e) {
+				EvoTool.LOGGER.info("Evo Tool : réglages de la dimension illisibles, on garde {} minutes", DEFAULT_MINUTES);
+			}
+		}
+	}
+
+	/** Change la vitesse d'évolution (blocs et boss) et la sauvegarde avec le monde. */
+	public static void setMinutes(MinecraftServer server, int value) {
+		minutes = Math.max(1, Math.min(MAX_MINUTES, value));
+		Properties properties = new Properties();
+		properties.setProperty("evolution_minutes", Integer.toString(minutes));
+		try (Writer writer = Files.newBufferedWriter(settingsFile(server))) {
+			properties.store(writer, "Evo Tool : minutes entre deux evolutions de la dimension evolutive et du boss");
+		} catch (IOException e) {
+			EvoTool.LOGGER.info("Evo Tool : impossible de sauvegarder les réglages de la dimension ({})", e.getMessage());
+		}
+	}
+
+	/** Place le joueur au début de la phase voulue (commande /dimension phase). */
+	public static void setPhase(ServerPlayerEntity player, int phase) {
+		player.setAttached(TIME, Math.max(0, Math.min(MAX_PHASE, phase)) * intervalTicks() + 1);
+		if (player.getEntityWorld() instanceof ServerWorld world && world.getRegistryKey() == WORLD) {
+			startWave(world, player.getBlockPos(), phase(player));
+		}
 	}
 
 	public static int time(PlayerEntity player) {
@@ -86,7 +140,7 @@ public final class EvoDimension {
 	}
 
 	public static int phaseOf(int ticks) {
-		return Math.min(MAX_PHASE, ticks / PHASE_TICKS);
+		return Math.min(MAX_PHASE, ticks / intervalTicks());
 	}
 
 	public static int phase(PlayerEntity player) {
@@ -107,9 +161,6 @@ public final class EvoDimension {
 					phaseUp(world, player, phaseOf(after));
 				}
 				updateBar(player, after);
-				if (after % 100 == 0) {
-					maybeSpawnBoss(world, player, after);
-				}
 			}
 		}
 		tickWaves();
@@ -231,10 +282,11 @@ public final class EvoDimension {
 			bar.setColor(BossBar.Color.YELLOW);
 			return;
 		}
-		int left = (PHASE_TICKS - ticks % PHASE_TICKS) / 20;
+		int interval = intervalTicks();
+		int left = (interval - ticks % interval) / 20;
 		bar.setName(Text.translatable("bar.evotool.dimension", phase, MAX_PHASE,
 				String.format("%d:%02d", left / 60, left % 60)).formatted(Formatting.LIGHT_PURPLE));
-		bar.setPercent((ticks % PHASE_TICKS) / (float) PHASE_TICKS);
+		bar.setPercent((ticks % interval) / (float) interval);
 	}
 
 	private static void removeBar(UUID player) {
@@ -242,32 +294,6 @@ public final class EvoDimension {
 		if (bar != null) {
 			bar.clearPlayers();
 		}
-	}
-
-	private static void maybeSpawnBoss(ServerWorld world, ServerPlayerEntity player, int ticks) {
-		if (ticks < FIRST_BOSS_DELAY) {
-			return;
-		}
-		Integer next = NEXT_BOSS.get(player.getUuid());
-		if (next != null && world.getServer().getTicks() < next) {
-			return;
-		}
-		if (!world.getEntitiesByType(ModEntities.BELL_BOSS, player.getBoundingBox().expand(BOSS_SEARCH_RANGE), e -> e.isAlive()).isEmpty()) {
-			return;
-		}
-		double angle = world.getRandom().nextDouble() * Math.PI * 2;
-		int x = (int) Math.floor(player.getX() + Math.cos(angle) * 18);
-		int z = (int) Math.floor(player.getZ() + Math.sin(angle) * 18);
-		if (!world.isChunkLoaded(x >> 4, z >> 4)) {
-			return;
-		}
-		int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
-		if (y <= world.getBottomY() + 2) {
-			return;
-		}
-		spawnBoss(world, new BlockPos(x, y, z), phase(player));
-		player.sendMessage(Text.translatable("message.evotool.boss_awakens",
-				Text.translatable(BellBossEntity.formKey(phase(player)))).formatted(Formatting.RED, Formatting.BOLD), false);
 	}
 
 	public static BellBossEntity spawnBoss(ServerWorld world, BlockPos pos, int form) {
@@ -282,15 +308,5 @@ public final class EvoDimension {
 		world.playSound(null, pos, SoundEvents.BLOCK_BELL_USE, SoundCategory.HOSTILE, 4.0F, 0.5F);
 		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 1, 0, 0, 0, 0);
 		return boss;
-	}
-
-	/** Le boss est vaincu : les joueurs proches auront un nouveau boss dans 3 minutes. */
-	public static void onBossDefeated(ServerWorld world, BlockPos pos) {
-		int next = world.getServer().getTicks() + BOSS_RESPAWN_DELAY;
-		for (ServerPlayerEntity player : world.getPlayers()) {
-			if (player.getBlockPos().isWithinDistance(pos, BOSS_SEARCH_RANGE)) {
-				NEXT_BOSS.put(player.getUuid(), next);
-			}
-		}
 	}
 }

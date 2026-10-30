@@ -4,6 +4,7 @@ import fr.evotool.EvoTool;
 import fr.evotool.component.EvoData;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
+import fr.evotool.weapon.MagicKind;
 import fr.evotool.weapon.WeaponKind;
 import java.util.List;
 import java.util.Map;
@@ -123,9 +124,23 @@ public final class ModItems {
 	public static final Item SHADOW_DAGGER = weapon(WeaponKind.DAGGER, EVOLIUM_MATERIAL, Rarity.RARE);
 	public static final Item ROYAL_HALBERD = weapon(WeaponKind.HALBERD, EVOLIUM_MATERIAL, Rarity.EPIC);
 	public static final Item CRYSTAL_STAFF = weapon(WeaponKind.STAFF, EVOLIUM_MATERIAL, Rarity.EPIC);
+	public static final Item BLAST_BLADE = weapon(WeaponKind.BLAST_BLADE, EVOLITE_MATERIAL, Rarity.EPIC);
 
 	public static final List<Item> MODDED_WEAPONS = List.of(
-			EVOLIUM_SCYTHE, RUBY_KATANA, SAPPHIRE_WARHAMMER, EVOLITE_GREATSWORD, SHADOW_DAGGER, ROYAL_HALBERD, CRYSTAL_STAFF);
+			EVOLIUM_SCYTHE, RUBY_KATANA, SAPPHIRE_WARHAMMER, EVOLITE_GREATSWORD, SHADOW_DAGGER, ROYAL_HALBERD, CRYSTAL_STAFF,
+			BLAST_BLADE);
+
+	// --- armes magiques à charges (les charges reviennent avec le temps)
+	public static final Item ARCANE_WAND = magic(MagicKind.ARCANE_WAND);
+	public static final Item THUNDER_GAUNTLET = magic(MagicKind.THUNDER_GAUNTLET);
+	public static final Item CELESTIAL_ORB = magic(MagicKind.CELESTIAL_ORB);
+	public static final Item VOID_GRIMOIRE = magic(MagicKind.VOID_GRIMOIRE);
+	public static final Item SOLAR_CHAKRAM = magic(MagicKind.SOLAR_CHAKRAM);
+	public static final Item SPIRIT_LANTERN = magic(MagicKind.SPIRIT_LANTERN);
+	public static final Item EVOLIUM_BLASTER = magic(MagicKind.EVOLIUM_BLASTER);
+
+	public static final List<Item> MAGIC_WEAPONS = List.of(
+			ARCANE_WAND, THUNDER_GAUNTLET, CELESTIAL_ORB, VOID_GRIMOIRE, SOLAR_CHAKRAM, SPIRIT_LANTERN, EVOLIUM_BLASTER);
 
 	public static final List<Item> EVOLVING_ITEMS = List.of(
 			EVOLVING_PICKAXE, EVOLVING_SHOVEL, EVOLVING_AXE, EVOLVING_HOE, EVOLVING_SWORD, EVOLVING_SPEAR, EVOLVING_BOW, EVOLIUM_MACE,
@@ -148,6 +163,21 @@ public final class ModItems {
 			case CHESTPLATE -> EVOLVING_CHESTPLATE;
 			case LEGGINGS -> EVOLVING_LEGGINGS;
 			case BOOTS -> EVOLVING_BOOTS;
+			case SCYTHE -> EVOLIUM_SCYTHE;
+			case KATANA -> RUBY_KATANA;
+			case WARHAMMER -> SAPPHIRE_WARHAMMER;
+			case GREATSWORD -> EVOLITE_GREATSWORD;
+			case DAGGER -> SHADOW_DAGGER;
+			case HALBERD -> ROYAL_HALBERD;
+			case STAFF -> CRYSTAL_STAFF;
+			case BLAST_BLADE -> BLAST_BLADE;
+			case ARCANE_WAND -> ARCANE_WAND;
+			case THUNDER_GAUNTLET -> THUNDER_GAUNTLET;
+			case CELESTIAL_ORB -> CELESTIAL_ORB;
+			case VOID_GRIMOIRE -> VOID_GRIMOIRE;
+			case SOLAR_CHAKRAM -> SOLAR_CHAKRAM;
+			case SPIRIT_LANTERN -> SPIRIT_LANTERN;
+			case EVOLIUM_BLASTER -> EVOLIUM_BLASTER;
 		};
 	}
 
@@ -173,11 +203,27 @@ public final class ModItems {
 				.maxCount(1);
 	}
 
+	/** Arme moddée évolutive : incassable, résiste à la lave, données d'évolution. */
 	private static Item weapon(WeaponKind kind, ToolMaterial material, Rarity rarity) {
 		return register(kind.id(), s -> new ModdedWeaponItem(kind, s),
 				new Item.Settings().sword(material, 0.0F, 0.0F)
 						.attributeModifiers(ModdedWeaponItem.attributes(kind))
+						.component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+						.component(ModComponents.EVO_DATA, EvoData.DEFAULT)
+						.fireproof()
 						.rarity(rarity));
+	}
+
+	/** Arme magique évolutive : charges pleines au départ. */
+	private static Item magic(MagicKind kind) {
+		return register(kind.id(), s -> new MagicWeaponItem(kind, s),
+				new Item.Settings()
+						.attributeModifiers(MagicWeaponItem.attributes(kind))
+						.component(ModComponents.CHARGES, kind.maxCharges())
+						.component(ModComponents.EVO_DATA, EvoData.DEFAULT)
+						.fireproof()
+						.maxCount(1)
+						.rarity(Rarity.EPIC));
 	}
 
 	private static Item register(String name, Function<Item.Settings, Item> factory, Item.Settings settings) {

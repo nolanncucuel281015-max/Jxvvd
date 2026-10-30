@@ -1,0 +1,54 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:arcane_wand"
+      }
+    },
+    "has_evolium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:evolium"
+          }
+        ]
+      }
+    },
+    "has_amethyst_shard": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:amethyst_shard"
+          }
+        ]
+      }
+    },
+    "has_blaze_rod": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:blaze_rod"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_evolium",
+      "has_amethyst_shard",
+      "has_blaze_rod"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:arcane_wand"
+    ]
+  }
+}

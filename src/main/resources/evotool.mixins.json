@@ -6,7 +6,8 @@
 	"mixins": [
 		"AnvilScreenHandlerMixin",
 		"ForgingScreenHandlerAccessor",
-		"PlayerEntityMixin"
+		"PlayerEntityMixin",
+		"ServerPlayNetworkHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

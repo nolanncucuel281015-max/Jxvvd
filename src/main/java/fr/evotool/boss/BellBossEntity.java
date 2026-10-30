@@ -1,11 +1,15 @@
 package fr.evotool.boss;
 
+import com.mojang.serialization.Codec;
+import fr.evotool.EvoTool;
 import fr.evotool.block.ModBlocks;
 import fr.evotool.dimension.EvoDimension;
 import fr.evotool.item.ModItems;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
@@ -69,6 +73,9 @@ public class BellBossEntity extends HostileEntity {
 	private static final String PHASE_TAG = "evotool_phase_";
 	/** Durée de la transformation entre deux phases (invulnérable). */
 	private static final int TRANSITION_TICKS = 50;
+	/** Ticks depuis la dernière évolution ; à chaque intervalle (5 minutes par défaut), le boss prend la forme suivante. */
+	public static final AttachmentType<Integer> EVOLVE_TIMER = AttachmentRegistry.<Integer>create(EvoTool.id("boss_evolve_timer"),
+			builder -> builder.persistent(Codec.INT).initializer(() -> 0));
 	private static final TrackedData<Integer> FORM = DataTracker.registerData(BellBossEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
 	private static final float[] WIDTH = {1.0F, 1.1F, 1.3F, 1.4F, 1.7F, 1.9F};
@@ -202,8 +209,40 @@ public class BellBossEntity extends HostileEntity {
 		setBase(EntityAttributes.ATTACK_DAMAGE, DAMAGE[form] * (1.0 + 0.2 * (phase - 1)));
 		setBase(EntityAttributes.MOVEMENT_SPEED, SPEED[form] * (1.0 + 0.15 * (phase - 1)));
 		setBase(EntityAttributes.ARMOR, ARMOR[form] + 4.0 * (phase - 1));
-		bossBar.setName(Text.translatable("boss.evotool.phase", Text.translatable(formKey(form)), phase).formatted(Formatting.BOLD));
+		updateBarName();
 		bossBar.setColor(phase == 1 ? COLORS[form] : phase == 2 ? BossBar.Color.RED : BossBar.Color.YELLOW);
+	}
+
+	/** Nom de la barre : forme, phase du combat et temps avant la prochaine évolution. */
+	private void updateBarName() {
+		int form = getForm();
+		Text name = Text.translatable(formKey(form));
+		if (form < FORMS - 1) {
+			int left = Math.max(0, EvoDimension.intervalTicks() - evolveTimer()) / 20;
+			bossBar.setName(Text.translatable("boss.evotool.phase_timer", name, phase,
+					String.format("%d:%02d", left / 60, left % 60)).formatted(Formatting.BOLD));
+		} else {
+			bossBar.setName(Text.translatable("boss.evotool.phase", name, phase).formatted(Formatting.BOLD));
+		}
+	}
+
+	public int evolveTimer() {
+		Integer t = getAttached(EVOLVE_TIMER);
+		return t == null ? 0 : t;
+	}
+
+	/** Fait avancer le minuteur d'évolution ; à chaque intervalle le boss prend la forme suivante. */
+	public void advanceEvolution(ServerWorld world, int ticks) {
+		if (getForm() >= FORMS - 1) {
+			return;
+		}
+		int t = evolveTimer() + ticks;
+		if (t >= EvoDimension.intervalTicks()) {
+			setAttached(EVOLVE_TIMER, 0);
+			evolve(world, getForm() + 1);
+		} else {
+			setAttached(EVOLVE_TIMER, t);
+		}
 	}
 
 	/** Passe à la phase suivante quand la vie descend sous 2/3 puis 1/3 (une seule fois par phase). */
@@ -311,8 +350,8 @@ public class BellBossEntity extends HostileEntity {
 		}
 		int form = getForm();
 		if (age % 20 == 0) {
-			syncWithPlayers(world);
 			updateBarPlayers(world);
+			updateBarName();
 		}
 		bossBar.setPercent(getHealth() / getMaxHealth());
 		if (ringTicks > 0) {
@@ -325,6 +364,7 @@ public class BellBossEntity extends HostileEntity {
 			hurtTicks--;
 		}
 		checkPhase(world);
+		advanceEvolution(world, 1);
 		tickPillars(world, form);
 		if (transitionTicks > 0) {
 			tickTransition(world, form);
@@ -439,20 +479,8 @@ public class BellBossEntity extends HostileEntity {
 		}
 	}
 
-	/** Toutes les 10 minutes passées par un joueur proche dans la dimension, le boss évolue avec lui. */
-	private void syncWithPlayers(ServerWorld world) {
-		int phase = getForm();
-		for (ServerPlayerEntity player : world.getPlayers()) {
-			if (!player.isSpectator() && player.squaredDistanceTo(this) < 96 * 96) {
-				phase = Math.max(phase, EvoDimension.phase(player));
-			}
-		}
-		if (phase > getForm()) {
-			evolve(world, phase);
-		}
-	}
-
 	public void evolve(ServerWorld world, int form) {
+		setAttached(EVOLVE_TIMER, 0);
 		applyForm(form, true);
 		world.playSound(null, getBlockPos(), SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.HOSTILE, 5.0F, 0.5F);
 		world.playSound(null, getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 2.0F, 1.4F);
@@ -642,7 +670,6 @@ public class BellBossEntity extends HostileEntity {
 	public void onDeath(DamageSource source) {
 		super.onDeath(source);
 		if (getEntityWorld() instanceof ServerWorld world) {
-			EvoDimension.onBossDefeated(world, getBlockPos());
 			world.playSound(null, getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.HOSTILE, 3.0F, 1.0F);
 			world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, getX(), getY() + 1, getZ(), 3, 1, 1, 1, 0);
 			for (ServerPlayerEntity player : world.getPlayers()) {

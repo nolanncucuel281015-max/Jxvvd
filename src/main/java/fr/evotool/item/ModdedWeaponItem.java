@@ -1,6 +1,8 @@
 package fr.evotool.item;
 
 import fr.evotool.EvoTool;
+import fr.evotool.evo.EvoKind;
+import fr.evotool.evo.EvolvingItem;
 import fr.evotool.weapon.WeaponKind;
 import fr.evotool.weapon.WeaponPowers;
 import net.minecraft.component.type.AttributeModifierSlot;
@@ -18,7 +20,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 /** Arme moddée : modèle 3D unique, passif à chaque coup et attaque spéciale au clic droit ({@link WeaponPowers}). */
-public class ModdedWeaponItem extends Item {
+public class ModdedWeaponItem extends Item implements EvolvingItem {
 	private static final Identifier REACH_MODIFIER_ID = EvoTool.id("weapon_reach");
 
 	private final WeaponKind kind;
@@ -33,15 +35,29 @@ public class ModdedWeaponItem extends Item {
 	}
 
 	@Override
+	public EvoKind evoKind() {
+		return switch (kind) {
+			case SCYTHE -> EvoKind.SCYTHE;
+			case KATANA -> EvoKind.KATANA;
+			case WARHAMMER -> EvoKind.WARHAMMER;
+			case GREATSWORD -> EvoKind.GREATSWORD;
+			case DAGGER -> EvoKind.DAGGER;
+			case HALBERD -> EvoKind.HALBERD;
+			case STAFF -> EvoKind.STAFF;
+			case BLAST_BLADE -> EvoKind.BLAST_BLADE;
+		};
+	}
+
+	@Override
 	public ActionResult use(World world, PlayerEntity user, Hand hand) {
 		ItemStack stack = user.getStackInHand(hand);
 		if (user.getItemCooldownManager().isCoolingDown(stack)) {
 			return ActionResult.FAIL;
 		}
 		if (world instanceof ServerWorld serverWorld && user instanceof ServerPlayerEntity player) {
-			WeaponPowers.activate(kind, serverWorld, player);
+			WeaponPowers.activate(kind, serverWorld, player, stack);
 		}
-		user.getItemCooldownManager().set(stack, kind.cooldown());
+		user.getItemCooldownManager().set(stack, WeaponPowers.cooldown(kind, stack));
 		return ActionResult.SUCCESS;
 	}
 

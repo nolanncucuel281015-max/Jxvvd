@@ -4,6 +4,8 @@ import fr.evotool.EvoTool;
 import fr.evotool.dimension.EvolutionPortalBlock;
 import fr.evotool.dimension.EvolvingBlock;
 import fr.evotool.dimension.EvolvingPillarBlock;
+import fr.evotool.dimension.SanctuaryAltarBlock;
+import fr.evotool.dimension.SanctuaryFeature;
 import java.util.function.Function;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -19,6 +21,8 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.intprovider.UniformIntProvider;
+import net.minecraft.world.gen.feature.DefaultFeatureConfig;
+import net.minecraft.world.gen.feature.Feature;
 
 public final class ModBlocks {
 	// Évolium : uniquement dans l'ardoise des abîmes, plus rare que le diamant, pioche en diamant requise.
@@ -81,6 +85,16 @@ public final class ModBlocks {
 	public static final Block EVOLUTION_PORTAL = registerBlockOnly("evolution_portal", EvolutionPortalBlock::new,
 			AbstractBlock.Settings.create().noCollision().strength(-1.0F).sounds(BlockSoundGroup.GLASS)
 					.luminance(state -> 12).dropsNothing().pistonBehavior(PistonBehavior.BLOCK));
+
+	/** Autel des sanctuaires de la dimension évolutive : un clic droit réveille le boss. Incassable en survie. */
+	public static final Block SANCTUARY_ALTAR = register("sanctuary_altar", SanctuaryAltarBlock::new,
+			AbstractBlock.Settings.copy(Blocks.QUARTZ_BLOCK).strength(-1.0F, 3600000.0F).luminance(state -> 13)
+					.nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.BLOCK),
+			Rarity.EPIC);
+
+	/** Génération des sanctuaires (voir worldgen/configured_feature/sanctuary.json). */
+	public static final Feature<DefaultFeatureConfig> SANCTUARY_FEATURE = Registry.register(Registries.FEATURE,
+			EvoTool.id("sanctuary"), new SanctuaryFeature(DefaultFeatureConfig.CODEC));
 
 	private ModBlocks() {
 	}

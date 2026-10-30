@@ -1,0 +1,54 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:thunder_gauntlet"
+      }
+    },
+    "has_evolium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:evolium"
+          }
+        ]
+      }
+    },
+    "has_iron_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:iron_ingot"
+          }
+        ]
+      }
+    },
+    "has_lightning_rod": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:lightning_rod"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_evolium",
+      "has_iron_ingot",
+      "has_lightning_rod"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:thunder_gauntlet"
+    ]
+  }
+}

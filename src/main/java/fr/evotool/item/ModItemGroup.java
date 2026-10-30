@@ -17,6 +17,8 @@ public final class ModItemGroup {
 					.entries((context, entries) -> {
 						ModItems.EVOLVING_ITEMS.forEach(entries::add);
 						ModItems.MODDED_WEAPONS.forEach(entries::add);
+						ModItems.MAGIC_WEAPONS.forEach(entries::add);
+						entries.add(ModBlocks.SANCTUARY_ALTAR);
 						entries.add(ModItems.EVOLITE_INGOT);
 						entries.add(ModBlocks.EVOLITE_BLOCK);
 						entries.add(ModBlocks.EVOLITE_ORE);

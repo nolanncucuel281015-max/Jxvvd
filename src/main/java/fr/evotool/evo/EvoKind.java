@@ -83,9 +83,45 @@ public enum EvoKind {
 	HELMET(new EvoProfile().armor(EquipmentSlot.HEAD)),
 	CHESTPLATE(new EvoProfile().armor(EquipmentSlot.CHEST)),
 	LEGGINGS(new EvoProfile().armor(EquipmentSlot.LEGS)),
-	BOOTS(new EvoProfile().armor(EquipmentSlot.FEET));
+	BOOTS(new EvoProfile().armor(EquipmentSlot.FEET)),
+
+	// --- armes moddées (voir fr.evotool.weapon.WeaponKind) : leur attaque spéciale grandit aussi avec le niveau
+	SCYTHE(weapon().power(Power.LIFESTEAL, 10).power(Power.SHOCKWAVE, 30).power(Power.WIDE_SHOCKWAVE, 75)),
+	KATANA(weapon().power(Power.LIFESTEAL, 10).power(Power.LIGHTNING, 50)),
+	WARHAMMER(weapon().power(Power.SHOCKWAVE, 10).power(Power.WIDE_SHOCKWAVE, 50)),
+	GREATSWORD(weapon().power(Power.SHOCKWAVE, 20).power(Power.LIGHTNING, 50).power(Power.WIDE_SHOCKWAVE, 75)),
+	DAGGER(weapon().power(Power.LIFESTEAL, 10).power(Power.LIGHTNING, 60)),
+	HALBERD(weapon().power(Power.SHOCKWAVE, 20).power(Power.LIGHTNING, 50)),
+	STAFF(weapon().power(Power.LIGHTNING, 20).power(Power.LIFESTEAL, 40)),
+	BLAST_BLADE(weapon().power(Power.SHOCKWAVE, 20).power(Power.WIDE_SHOCKWAVE, 50).power(Power.LIGHTNING, 70)),
+
+	// --- armes magiques à charges (voir fr.evotool.weapon.MagicKind) : + 1 charge tous les 25 niveaux
+	ARCANE_WAND(magic()),
+	THUNDER_GAUNTLET(magic().power(Power.LIGHTNING, 30)),
+	CELESTIAL_ORB(magic()),
+	VOID_GRIMOIRE(magic()),
+	SOLAR_CHAKRAM(magic()),
+	SPIRIT_LANTERN(magic()),
+	EVOLIUM_BLASTER(magic());
 
 	private final EvoProfile profile;
+
+	/** Arme moddée : évolue en tuant des monstres, Tranchant, Butin et Aura de feu, exécution au niveau 100. */
+	private static EvoProfile weapon() {
+		return new EvoProfile()
+				.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
+				.power(Power.EXECUTION, 100)
+				.enchant(Enchantments.SHARPNESS, "sharpness", 15, 25, 35, 45, 55)
+				.enchant(Enchantments.LOOTING, "looting", 30, 50, 70)
+				.enchant(Enchantments.FIRE_ASPECT, "fire_aspect", 65, 85);
+	}
+
+	/** Arme magique : évolue en tuant des monstres (au corps à corps ou avec ses sorts). */
+	private static EvoProfile magic() {
+		return new EvoProfile()
+				.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
+				.power(Power.LIFESTEAL, 10).power(Power.EXECUTION, 100);
+	}
 
 	EvoKind(EvoProfile profile) {
 		this.profile = profile;

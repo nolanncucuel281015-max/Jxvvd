@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " E ",
+    "SLS",
+    " G "
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "S": "minecraft:soul_sand",
+    "L": "minecraft:soul_lantern",
+    "G": "minecraft:gold_ingot"
+  },
+  "result": {
+    "id": "evotool:spirit_lantern",
+    "count": 1
+  }
+}

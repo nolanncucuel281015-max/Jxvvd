@@ -1,0 +1,160 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "evotool:item/celestial_orb_stage0"
+    },
+    "entries": [
+      {
+        "threshold": 0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage0"
+        }
+      },
+      {
+        "threshold": 1,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage1"
+        }
+      },
+      {
+        "threshold": 2,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage2"
+        }
+      },
+      {
+        "threshold": 3,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage3"
+        }
+      },
+      {
+        "threshold": 4,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage4"
+        }
+      },
+      {
+        "threshold": 5,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage5"
+        }
+      },
+      {
+        "threshold": 6,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage6"
+        }
+      },
+      {
+        "threshold": 7,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage7"
+        }
+      },
+      {
+        "threshold": 8,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage8"
+        }
+      },
+      {
+        "threshold": 9,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage9"
+        }
+      },
+      {
+        "threshold": 10,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage10"
+        }
+      },
+      {
+        "threshold": 11,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage11"
+        }
+      },
+      {
+        "threshold": 12,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage12"
+        }
+      },
+      {
+        "threshold": 13,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage13"
+        }
+      },
+      {
+        "threshold": 14,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage14"
+        }
+      },
+      {
+        "threshold": 15,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage15"
+        }
+      },
+      {
+        "threshold": 16,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage16"
+        }
+      },
+      {
+        "threshold": 17,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage17"
+        }
+      },
+      {
+        "threshold": 18,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage18"
+        }
+      },
+      {
+        "threshold": 19,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage19"
+        }
+      },
+      {
+        "threshold": 20,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/celestial_orb_stage20"
+        }
+      }
+    ]
+  }
+}

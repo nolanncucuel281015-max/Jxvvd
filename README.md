@@ -228,9 +228,15 @@ dès que tu ramasses un de leurs ingrédients (évolium, rubis, saphir, évolite
 
 ## Armes moddées
 
-Sept armes avec leur **propre modèle 3D** (rien à voir avec les armes vanilla), des lignes lumineuses,
-un **passif** à chaque coup et une **attaque spéciale au clic droit**. Elles n'évoluent pas, mais acceptent
-les enchantements d'épée (Tranchant, Aura de feu, Butin…). Toutes se fabriquent à la **table de craft**.
+Huit armes avec leur **propre modèle 3D** (rien à voir avec les armes vanilla), des lignes lumineuses,
+un **passif** à chaque coup et une **attaque spéciale au clic droit**. Toutes se fabriquent à la **table de craft**.
+
+**Elles sont évolutives**, comme l'épée : elles gagnent de l'XP en tuant des monstres (niveau 0 à 100,
+21 formes : runes, cristaux flottants, ailes d'énergie, anneau puis halo doré à la forme 20), débloquent
+Tranchant, Butin, Aura de feu, vol de vie, onde de choc, foudre et exécution, et leur **attaque spéciale grandit**
+avec le niveau (dégâts x2 et recharge 2 fois plus courte au niveau 100). Améliorées à l'évolite (enclume),
+elles deviennent **sublimées** : attaque spéciale 50 % plus forte et deux fois plus souvent. `/upgrade faux 100`,
+`/upgrade dague 50`… marchent aussi.
 
 | Arme | Dégâts / vitesse | Passif | Clic droit (recharge) | Recette (lignes de la grille) |
 |------|-----------------|--------|-----------------------|-------------------------------|
@@ -238,13 +244,36 @@ les enchantements d'épée (Tranchant, Aura de feu, Butin…). Toutes se fabriqu
 | **Katana de Rubis** | 7 / 2,0 | saignement | **Iaijutsu** : ruée de 8 blocs qui tranche tout sur le passage (5 s) | `..R` / `.R.` / `E..` |
 | **Marteau de Guerre Saphir** | 12 / 0,7 | soulève et ralentit | **Séisme** : onde de choc de 6 blocs, projette en l'air (8 s) | `SBS` / `.\|.` / `.\|.` |
 | **Espadon d'Évolite** | 14 / 0,8, allonge +1 | fendoir : 40 % aux ennemis autour | **Lame céleste** : vague d'énergie sur 16 blocs (7 s) | `.V.` / `.V.` / `E\|E` |
-| **Dague d'Ombre** | 5 / 2,8 | coup dans le dos : dégâts x2 | **Pas de l'ombre** : téléportation dans le dos de la cible visée, invisible (4 s) | `E` / `P` / `\|` |
+| **Dague d'Ombre** | 5 / 2,8 | coup dans le dos : dégâts x2 | **Pas de l'ombre** : téléportation dans le dos de la cible visée jusqu'à **32 blocs**, puis **invisible 20 secondes** (4 s) | `E` / `P` / `\|` |
 | **Hallebarde Royale** | 10 / 0,9, allonge +2 | transperce l'ennemi suivant (70 %) | **Fauchage royal** : balayage en demi-cercle de 5,5 blocs (5 s) | `EEG` / `E\|.` / `.\|.` |
 | **Sceptre de Cristal** | 4 / 1,6 | cristallise (ralentit) | **Éclat de cristal** : projectile magique à 32 blocs (0,8 s) | `.C.` / `G\|G` / `.\|.` |
+| **Lame Détonante** | 9 / 1,2 | **chaque coup d'épée explose** devant toi (même dans le vide), sans casser le sol | **Détonation** : une ligne d'explosions sur 14 blocs (7 s) | `TET` / `.E.` / `.\|.` |
 
 E = évolium, R = rubis, S = saphir, B = bloc de saphir, V = lingot d'évolite, P = perle de l'Ender,
-G = lingot d'or, C = cristal évolutif (dimension évolutive), | = bâton, . = case vide.
-Les attaques ne touchent ni les joueurs, ni les animaux apprivoisés, ni les villageois.
+G = lingot d'or, C = cristal évolutif (dimension évolutive), T = TNT, | = bâton, . = case vide.
+Les attaques ne touchent ni les joueurs, ni les animaux apprivoisés, ni les villageois, et aucune explosion
+ne casse de bloc.
+
+## Armes magiques (à charges)
+
+Sept armes de mage, elles aussi évolutives. Chaque sort coûte **une charge** ; les charges **reviennent toutes
+seules** avec le temps (barre colorée sous l'objet, même dans l'inventaire). Au corps à corps, chaque coup a
+20 % de chances de rendre une charge. **Accroupi + clic droit** lance la variante puissante.
+Tous les 25 niveaux : + 1 charge ; au niveau 100 la recharge est 2 fois plus rapide.
+
+| Arme | Charges | Clic droit | Accroupi + clic droit | Recette |
+|------|--------:|-----------|-----------------------|---------|
+| **Baguette Arcanique** | 6 (une / 2 s) | missile arcanique à tête chercheuse | salve : toutes les charges d'un coup | `..A` / `.E.` / `B..` |
+| **Gantelet du Tonnerre** | 3 (une / 4 s) | éclair en chaîne sur 5 ennemis | onde de tonnerre autour de soi | `ELE` / `IEI` / `.I.` |
+| **Orbe Céleste** | 2 (une / 12 s) | 4 éclats d'étoile en orbite (10 s) | lance tous les éclats | `.T.` / `TET` / `.G.` |
+| **Grimoire du Néant** | 2 (une / 12 s) | trou noir qui aspire puis implose | trou noir sur soi | `.P.` / `OBO` / `.E.` |
+| **Chakram Solaire** | 3 (une / 3 s) | disque boomerang enflammé | trois disques (2 charges) | `.B.` / `GEG` / `.B.` |
+| **Lanterne des Âmes** | 4 (une / 5 s) | 3 feux follets qui drainent la vie | soin des âmes + régénération | `.E.` / `SLS` / `.G.` |
+| **Canon d'Évolium** | 8 (une / 1 s) | rayon perforant de 40 blocs | surcharge : toutes les charges en un rayon géant | `EEA` / `IRI` / `I..` |
+
+A = éclat d'améthyste, B = bâton de blaze (baguette) ou poudre de blaze (chakram), L = paratonnerre,
+I = lingot de fer, T = poudre de pierre lumineuse, P = perle de l'Ender, O = obsidienne, B = livre (grimoire),
+S = sable des âmes, L = lanterne des âmes (lanterne), R = bloc de redstone, G = lingot d'or, E = évolium.
 
 ## Modèle 3D — 21 formes
 
@@ -288,22 +317,42 @@ les coins sont facultatifs) et allume-le avec le **briquet d'évolium** (1 évol
 **La dimension** : ciel violet, collines, forêts de cristal et champs prismatiques, faits de **blocs évolutifs**
 (pierre, herbe, terre, bois, feuilles, cristal, minerai). Chaque bloc a **6 niveaux d'évolution**.
 
-**Plus tu restes, plus tout évolue** : toutes les **10 minutes** passées dans la dimension (barre violette en haut
-de l'écran), la dimension passe une **phase**. Une onde d'évolution part de toi et les blocs autour de toi
+**Plus tu restes, plus tout évolue** : toutes les **5 minutes** passées dans la dimension (barre violette en haut
+de l'écran, réglable avec `/dimension speed`), la dimension passe une **phase**. Une onde d'évolution part de toi et les blocs autour de toi
 évoluent (veines d'énergie, cristaux, dorures, puis arc-en-ciel), et ils brillent de plus en plus.
 Le minerai évolutif donne 1 évolium de plus par niveau d'évolution ; la pierre au niveau 5 lâche parfois de l'évolium.
 Le temps repart à zéro quand tu quittes la dimension.
 
-**Le boss : le Slime Cloche**. Il apparaît 30 secondes après ton arrivée et évolue avec toi :
+**Les sanctuaires** : il faut **explorer** la dimension pour les trouver (un par région de 320 x 320 blocs).
+Ce sont des temples ronds en quartz, or et améthyste, entourés de 8 colonnes couronnées de cristaux lumineux.
+Au centre, un **clic droit sur l'Autel du Sanctuaire** réveille le boss.
 
-| Temps | Forme | Attaques |
-|------:|-------|----------|
-| 0 min  | Slime Évolutif  | bondit sur toi |
-| 10 min | Slime Cloche    | + onde de son (DONG) qui repousse |
-| 20 min | Cloche de Guerre | + invoque des slimes, pointes et runes |
-| 30 min | Cloche Colosse  | bras et jambes hyper musclés : coups de poing, bonds écrasants |
-| 40 min | Cloche Titan    | + couronne, rayon sonique |
-| 50 min | Cloche Divine   | + halo, ailes, foudre, régénération |
+**Le boss : le Slime Cloche**. Une fois réveillé, il **évolue toutes les 5 minutes** (le temps restant est
+affiché dans sa barre) :
+
+| Temps | Forme | Apparence | Attaques |
+|------:|-------|-----------|----------|
+| 0 min  | Slime Évolutif   | gelée translucide, cœur d'évolium, petite couronne d'or | bondit sur toi |
+| 5 min  | Slime Cloche     | cloche de gelée lisse cerclée d'or, masque doré | + onde de son (DONG) qui repousse |
+| 10 min | Cloche de Guerre | cloche de bronze à pointes, crocs, 2 cloches de guerre en orbite | + invoque des slimes |
+| 15 min | Cloche Colosse   | bras et jambes musclés (biceps, épaulières, poings dorés) | coups de poing, bonds écrasants |
+| 20 min | Cloche Titan     | armure, couronne de pointes, masse-cloche dans la main | + rayon sonique |
+| 25 min | Cloche Divine    | flotte dans une robe de lumière, cloche de marbre et d'or, 3e œil, grandes ailes à plumes, mains divines, halo, auréole en soleil, 4 cloches en orbite | + foudre, régénération |
+
+Toutes les formes sont de vraies formes arrondies (cloches lisses, muscles galbés, plumes, anneaux), animées :
+ailes qui battent, halo et auréole qui tournent, mains qui flottent, cloches qui gravitent.
+
+**Commande `/dimension`** (opérateurs) :
+
+| Commande | Effet |
+|----------|-------|
+| `/dimension spawn [forme]` | fait apparaître le boss devant soi (forme 0 à 5) |
+| `/dimension locate` | coordonnées du sanctuaire le plus proche (cliquer dessus pour y aller) |
+| `/dimension speed [minutes]` | minutes entre deux évolutions (blocs et boss), 5 par défaut ; sauvegardé avec le monde |
+| `/dimension tp` | aller dans la dimension évolutive (ou en revenir) |
+| `/dimension tp sanctuaire` | aller directement au sanctuaire le plus proche |
+| `/dimension phase <0-5>` | règle ta phase d'évolution dans la dimension |
+| `/dimension evolve` | le boss le plus proche évolue tout de suite |
 
 **3 phases de combat** (barre de boss en 3 parties) :
 
@@ -314,7 +363,7 @@ Le temps repart à zéro quand tu quittes la dimension.
 | 33 %  | Phase 3 — **Ascension dorée** | nouvelle transformation, devient **entièrement doré** et lumineux, attaques 2 fois plus fréquentes, **colonnes de lumière** annoncées par des cercles au sol |
 
 Chaque forme a plus de vie et frappe plus fort. Vaincu, il lâche de l'évolium, des blocs de rubis, une cloche,
-des lingots d'évolite et des blocs d'évolium (selon sa forme) ; un nouveau boss revient 3 minutes plus tard.
+des lingots d'évolite et des blocs d'évolium (selon sa forme) ; l'autel peut alors en réveiller un autre.
 
 ## Compiler
 

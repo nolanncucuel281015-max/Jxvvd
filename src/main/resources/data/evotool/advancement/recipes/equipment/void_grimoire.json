@@ -1,0 +1,65 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:void_grimoire"
+      }
+    },
+    "has_evolium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:evolium"
+          }
+        ]
+      }
+    },
+    "has_book": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:book"
+          }
+        ]
+      }
+    },
+    "has_ender_pearl": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:ender_pearl"
+          }
+        ]
+      }
+    },
+    "has_obsidian": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:obsidian"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_evolium",
+      "has_book",
+      "has_ender_pearl",
+      "has_obsidian"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:void_grimoire"
+    ]
+  }
+}

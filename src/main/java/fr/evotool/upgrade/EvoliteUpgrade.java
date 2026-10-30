@@ -40,7 +40,9 @@ public final class EvoliteUpgrade {
 		/** Jambières : monte les blocs sans sauter et plus aucun dégât de chute. */
 		CELESTIAL_LEGS,
 		/** Bottes : double saut = s'envoler sur un nuage magique, comme en créatif. */
-		MAGIC_CLOUD;
+		MAGIC_CLOUD,
+		/** Armes moddées et magiques : attaque spéciale 50 % plus forte et deux fois plus souvent (charges deux fois plus rapides). */
+		EMPOWERED;
 
 		public String translationKey() {
 			return "upgrade.evotool." + name().toLowerCase(Locale.ROOT);
@@ -65,6 +67,9 @@ public final class EvoliteUpgrade {
 			case CHESTPLATE -> Upgrade.MAGIC_SHIELD;
 			case LEGGINGS -> Upgrade.CELESTIAL_LEGS;
 			case BOOTS -> Upgrade.MAGIC_CLOUD;
+			case SCYTHE, KATANA, WARHAMMER, GREATSWORD, DAGGER, HALBERD, STAFF, BLAST_BLADE,
+					ARCANE_WAND, THUNDER_GAUNTLET, CELESTIAL_ORB, VOID_GRIMOIRE, SOLAR_CHAKRAM, SPIRIT_LANTERN, EVOLIUM_BLASTER
+					-> Upgrade.EMPOWERED;
 		};
 	}
 

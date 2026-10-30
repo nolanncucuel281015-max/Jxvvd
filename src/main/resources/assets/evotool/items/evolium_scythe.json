@@ -1,6 +1,160 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "evotool:item/evolium_scythe"
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "evotool:item/evolium_scythe_stage0"
+    },
+    "entries": [
+      {
+        "threshold": 0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage0"
+        }
+      },
+      {
+        "threshold": 1,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage1"
+        }
+      },
+      {
+        "threshold": 2,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage2"
+        }
+      },
+      {
+        "threshold": 3,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage3"
+        }
+      },
+      {
+        "threshold": 4,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage4"
+        }
+      },
+      {
+        "threshold": 5,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage5"
+        }
+      },
+      {
+        "threshold": 6,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage6"
+        }
+      },
+      {
+        "threshold": 7,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage7"
+        }
+      },
+      {
+        "threshold": 8,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage8"
+        }
+      },
+      {
+        "threshold": 9,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage9"
+        }
+      },
+      {
+        "threshold": 10,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage10"
+        }
+      },
+      {
+        "threshold": 11,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage11"
+        }
+      },
+      {
+        "threshold": 12,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage12"
+        }
+      },
+      {
+        "threshold": 13,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage13"
+        }
+      },
+      {
+        "threshold": 14,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage14"
+        }
+      },
+      {
+        "threshold": 15,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage15"
+        }
+      },
+      {
+        "threshold": 16,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage16"
+        }
+      },
+      {
+        "threshold": 17,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage17"
+        }
+      },
+      {
+        "threshold": 18,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage18"
+        }
+      },
+      {
+        "threshold": 19,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage19"
+        }
+      },
+      {
+        "threshold": 20,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolium_scythe_stage20"
+        }
+      }
+    ]
   }
 }

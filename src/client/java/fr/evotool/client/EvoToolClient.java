@@ -8,8 +8,12 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
 import fr.evotool.evo.Power;
+import fr.evotool.item.MagicWeaponItem;
 import fr.evotool.item.ModdedWeaponItem;
+import fr.evotool.weapon.ArcaneWeapons;
+import fr.evotool.weapon.MagicKind;
 import fr.evotool.weapon.WeaponKind;
+import fr.evotool.weapon.WeaponPowers;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -51,22 +55,33 @@ public class EvoToolClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
-			if (stack.getItem() instanceof ModdedWeaponItem weapon) {
-				WeaponKind w = weapon.weaponKind();
-				lines.add(1, Text.translatable("tooltip.evotool.weapon.passive", Text.translatable(w.passiveKey()))
-						.formatted(Formatting.GOLD));
-				lines.add(2, Text.translatable("tooltip.evotool.weapon.ability", Text.translatable(w.abilityKey()),
-						String.format(java.util.Locale.ROOT, "%.1f", w.cooldown() / 20.0)).formatted(Formatting.LIGHT_PURPLE));
-				return;
-			}
 			EvoKind kind = EvoProgression.kindOf(stack);
 			if (kind == null) {
 				return;
 			}
+			// armes moddées et magiques : pouvoirs propres, puis les lignes d'évolution communes
+			int index = 1;
+			if (stack.getItem() instanceof ModdedWeaponItem weapon) {
+				WeaponKind w = weapon.weaponKind();
+				lines.add(index++, Text.translatable("tooltip.evotool.weapon.passive", Text.translatable(w.passiveKey()))
+						.formatted(Formatting.GOLD));
+				lines.add(index++, Text.translatable("tooltip.evotool.weapon.ability", Text.translatable(w.abilityKey()),
+						String.format(java.util.Locale.ROOT, "%.1f", WeaponPowers.cooldown(w, stack) / 20.0)).formatted(Formatting.LIGHT_PURPLE));
+			}
+			if (stack.getItem() instanceof MagicWeaponItem magic) {
+				MagicKind m = magic.magicKind();
+				lines.add(index++, Text.translatable("tooltip.evotool.magic.charges", ArcaneWeapons.charges(stack, m),
+						ArcaneWeapons.maxCharges(stack, m),
+						String.format(java.util.Locale.ROOT, "%.1f", ArcaneWeapons.rechargeTicks(stack, m) / 20.0))
+						.formatted(Formatting.AQUA));
+				lines.add(index++, Text.translatable("tooltip.evotool.magic.ability", Text.translatable(m.abilityKey()))
+						.formatted(Formatting.LIGHT_PURPLE));
+				lines.add(index++, Text.translatable("tooltip.evotool.magic.sneak", Text.translatable(m.sneakKey()))
+						.formatted(Formatting.DARK_PURPLE));
+			}
 			EvoProfile profile = kind.profile();
 			EvoData data = EvoProgression.get(stack);
 			int level = data.level();
-			int index = 1;
 			lines.add(index++, Text.translatable("tooltip.evotool.level", level, EvoProgression.MAX_LEVEL)
 					.formatted(Formatting.LIGHT_PURPLE));
 			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),

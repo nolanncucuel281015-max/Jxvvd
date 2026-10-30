@@ -41,7 +41,9 @@
       "evotool:evolving_trees_dense",
       "evotool:evolving_crystal_spikes"
     ],
-    []
+    [
+      "evotool:sanctuary"
+    ]
   ],
   "has_precipitation": false,
   "spawn_costs": {},

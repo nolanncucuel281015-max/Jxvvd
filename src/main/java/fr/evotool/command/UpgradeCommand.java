@@ -38,6 +38,21 @@ public final class UpgradeCommand {
 			{"chestplate", "plastron"},
 			{"leggings", "jambieres"},
 			{"boots", "bottes"},
+			{"scythe", "faux"},
+			{"katana"},
+			{"warhammer", "marteau"},
+			{"greatsword", "espadon"},
+			{"dagger", "dague"},
+			{"halberd", "hallebarde"},
+			{"staff", "sceptre"},
+			{"blast_blade", "lame_detonante"},
+			{"wand", "baguette"},
+			{"gauntlet", "gantelet"},
+			{"orb", "orbe"},
+			{"grimoire"},
+			{"chakram"},
+			{"lantern", "lanterne"},
+			{"blaster", "canon"},
 	};
 	private static final EvoKind[] ARMOR = {EvoKind.HELMET, EvoKind.CHESTPLATE, EvoKind.LEGGINGS, EvoKind.BOOTS};
 

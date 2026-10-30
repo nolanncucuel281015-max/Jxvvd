@@ -1,0 +1,65 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:spirit_lantern"
+      }
+    },
+    "has_evolium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:evolium"
+          }
+        ]
+      }
+    },
+    "has_gold_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:gold_ingot"
+          }
+        ]
+      }
+    },
+    "has_soul_lantern": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:soul_lantern"
+          }
+        ]
+      }
+    },
+    "has_soul_sand": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:soul_sand"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_evolium",
+      "has_gold_ingot",
+      "has_soul_lantern",
+      "has_soul_sand"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:spirit_lantern"
+    ]
+  }
+}

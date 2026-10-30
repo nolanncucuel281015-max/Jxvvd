@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "EEA",
+    "IRI",
+    "I  "
+  ],
+  "key": {
+    "E": "evotool:evolium",
+    "A": "minecraft:amethyst_shard",
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone_block"
+  },
+  "result": {
+    "id": "evotool:evolium_blaster",
+    "count": 1
+  }
+}

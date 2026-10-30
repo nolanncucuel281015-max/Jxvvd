@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "  A",
+    " E ",
+    "B  "
+  ],
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "E": "evotool:evolium",
+    "B": "minecraft:blaze_rod"
+  },
+  "result": {
+    "id": "evotool:arcane_wand",
+    "count": 1
+  }
+}
