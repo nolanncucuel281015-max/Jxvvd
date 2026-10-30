@@ -86,10 +86,13 @@ public final class ModBlocks {
 			AbstractBlock.Settings.create().noCollision().strength(-1.0F).sounds(BlockSoundGroup.GLASS)
 					.luminance(state -> 12).dropsNothing().pistonBehavior(PistonBehavior.BLOCK));
 
-	/** Autel des sanctuaires de la dimension évolutive : un clic droit réveille le boss. Incassable en survie. */
+	/**
+	 * Autel des sanctuaires de la dimension évolutive : un clic droit réveille le boss.
+	 * Il se fabrique aussi (cloche, bloc d'évolium, or, quartz) et se récupère à la pioche.
+	 */
 	public static final Block SANCTUARY_ALTAR = register("sanctuary_altar", SanctuaryAltarBlock::new,
-			AbstractBlock.Settings.copy(Blocks.QUARTZ_BLOCK).strength(-1.0F, 3600000.0F).luminance(state -> 13)
-					.nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.BLOCK),
+			AbstractBlock.Settings.copy(Blocks.QUARTZ_BLOCK).strength(5.0F, 1200.0F).requiresTool().luminance(state -> 13)
+					.nonOpaque().pistonBehavior(PistonBehavior.BLOCK),
 			Rarity.EPIC);
 
 	/** Génération des sanctuaires (voir worldgen/configured_feature/sanctuary.json). */

@@ -34,8 +34,17 @@ def check_model_bounds(path, obj):
             assert ("axis" in rot and "angle" in rot) or all(k in rot for k in ("x", "y", "z")), f"{path}: rotation {rot}"
 
 
+def check_block_textures(path, obj):
+    """Un bloc posé n'est dessiné qu'avec l'atlas des blocs : ses textures doivent venir de textures/block/."""
+    if os.sep + os.path.join("models", "block") + os.sep in path and isinstance(obj, dict):
+        for name, ref in obj.get("textures", {}).items():
+            if not ref.startswith("#"):
+                assert ref.split(":")[-1].startswith("block/"), f"{path}: texture {name} = {ref} hors de block/"
+
+
 def write_json(path, obj, compact=False):
     check_model_bounds(path, obj)
+    check_block_textures(path, obj)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         if compact:
@@ -2462,7 +2471,7 @@ def gen_dimension_data():
     ids = lambda names: [f"{MOD}:{n}" for n in names]
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
                {"replace": False, "values": [f"{MOD}:{o}" for o in ORES] + [f"{MOD}:{g}_block" for g in GEMS]
-                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore"])})
+                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "shovel.json"),
                {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "axe.json"),
@@ -4390,9 +4399,18 @@ def gen_sanctuary():
     wg = os.path.join(DATA, "worldgen")
     write_json(os.path.join(wg, "configured_feature", "sanctuary.json"), {"type": f"{MOD}:sanctuary", "config": {}})
     write_json(os.path.join(wg, "placed_feature", "sanctuary.json"), {"feature": f"{MOD}:sanctuary", "placement": []})
-    tex = {"particle": f"{MOD}:item/boss/phase1/marble"}
+    # textures propres à l'autel, dans textures/block/ (un bloc posé ne voit pas les textures d'objets)
+    pal = BOSS_PALETTES[1]
+    out = ("block", "sanctuary_altar")
+    save_png(marble_texture(hexc(pal["marble"][0]), hexc(pal["marble"][1]), 6), *out, "marble")
+    save_png(bell_texture(hexc(pal["gold"]), 3), *out, "gold")
+    st = {"gem": gem_palette(pal["core"]), "trim": hexc(pal["trim"])}
+    save_png(trim_texture(st, 12), *out, "trim")
+    save_png(gem_texture(st, 11), *out, "core")
+    save_animated(energy_frames({"gem": gem_palette(pal["energy"])}), 2, *out, "energy")
+    tex = {"particle": f"{MOD}:block/sanctuary_altar/marble"}
     for name in ("marble", "gold", "trim", "core", "energy"):
-        tex[name] = f"{MOD}:item/boss/phase1/{name}"
+        tex[name] = f"{MOD}:block/sanctuary_altar/{name}"
     write_json(os.path.join(ASSETS, "models", "block", "sanctuary_altar.json"),
                {"textures": tex, "elements": altar_elements(), "display": {
                    "gui": {"rotation": [25, 45, 0], "translation": [0, -2.5, 0], "scale": [0.42, 0.42, 0.42]},
@@ -4405,6 +4423,19 @@ def gen_sanctuary():
                {"variants": {"": {"model": f"{MOD}:block/sanctuary_altar"}}})
     write_json(os.path.join(ASSETS, "items", "sanctuary_altar.json"),
                {"model": {"type": "minecraft:model", "model": f"{MOD}:block/sanctuary_altar"}})
+    # craftable à la table de craft : une cloche sur un bloc d'évolium, de l'or et du quartz
+    write_json(os.path.join(DATA, "recipe", "sanctuary_altar.json"), {
+        "type": "minecraft:crafting_shaped", "category": "building",
+        "pattern": [" B ", "GEG", "QQQ"],
+        "key": {"B": "minecraft:bell", "G": "minecraft:gold_ingot", "E": f"{MOD}:evolium_block",
+                "Q": "minecraft:quartz_block"},
+        "result": {"id": f"{MOD}:sanctuary_altar", "count": 1},
+    })
+    # se casse à la pioche et se récupère
+    write_json(os.path.join(DATA, "loot_table", "blocks", "sanctuary_altar.json"), {
+        "type": "minecraft:block", "random_sequence": f"{MOD}:blocks/sanctuary_altar",
+        "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:item", "name": f"{MOD}:sanctuary_altar"}],
+                   "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
 
 
 def recipe_unlocks():

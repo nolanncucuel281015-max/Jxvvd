@@ -326,6 +326,13 @@ Le temps repart à zéro quand tu quittes la dimension.
 **Les sanctuaires** : il faut **explorer** la dimension pour les trouver (un par région de 320 x 320 blocs).
 Ce sont des temples ronds en quartz, or et améthyste, entourés de 8 colonnes couronnées de cristaux lumineux.
 Au centre, un **clic droit sur l'Autel du Sanctuaire** réveille le boss.
+L'autel se **fabrique** aussi à la table de craft (et se récupère à la pioche) pour réveiller le boss où tu veux :
+
+```
+[      ] [ Cloche ] [      ]
+[  Or  ] [Bloc d'évolium] [  Or  ]
+[Quartz] [ Quartz ] [Quartz]
+```
 
 **Le boss : le Slime Cloche**. Une fois réveillé, il **évolue toutes les 5 minutes** (le temps restant est
 affiché dans sa barre) :

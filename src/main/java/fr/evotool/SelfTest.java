@@ -618,6 +618,11 @@ final class SelfTest {
 				failures.add("recette manquante : " + kind.id());
 			}
 		}
+		// l'autel du sanctuaire se fabrique aussi à la table de craft
+		checks++;
+		if (server.getRecipeManager().get(RegistryKey.of(RegistryKeys.RECIPE, EvoTool.id("sanctuary_altar"))).isEmpty()) {
+			failures.add("recette manquante : sanctuary_altar");
+		}
 		EvoTool.LOGGER.info("EVOTOOL {} recipes of the mod, all in the recipe book", recipes);
 
 		// Chaque objet, à chaque forme, puis amélioré.

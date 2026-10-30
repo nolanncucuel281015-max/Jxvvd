@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "random_sequence": "evotool:blocks/sanctuary_altar",
+  "pools": [
+    {
+      "rolls": 1,
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "evotool:sanctuary_altar"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

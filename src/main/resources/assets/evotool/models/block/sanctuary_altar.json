@@ -1,11 +1,11 @@
 {
   "textures": {
-    "particle": "evotool:item/boss/phase1/marble",
-    "marble": "evotool:item/boss/phase1/marble",
-    "gold": "evotool:item/boss/phase1/gold",
-    "trim": "evotool:item/boss/phase1/trim",
-    "core": "evotool:item/boss/phase1/core",
-    "energy": "evotool:item/boss/phase1/energy"
+    "particle": "evotool:block/sanctuary_altar/marble",
+    "marble": "evotool:block/sanctuary_altar/marble",
+    "gold": "evotool:block/sanctuary_altar/gold",
+    "trim": "evotool:block/sanctuary_altar/trim",
+    "core": "evotool:block/sanctuary_altar/core",
+    "energy": "evotool:block/sanctuary_altar/energy"
   },
   "elements": [
     {

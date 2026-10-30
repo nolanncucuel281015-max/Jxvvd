@@ -13,6 +13,7 @@
     "evotool:evolite_block",
     "evotool:evolving_stone",
     "evotool:evolving_crystal",
-    "evotool:evolving_ore"
+    "evotool:evolving_ore",
+    "evotool:sanctuary_altar"
   ]
 }

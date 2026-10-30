@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " B ",
+    "GEG",
+    "QQQ"
+  ],
+  "key": {
+    "B": "minecraft:bell",
+    "G": "minecraft:gold_ingot",
+    "E": "evotool:evolium_block",
+    "Q": "minecraft:quartz_block"
+  },
+  "result": {
+    "id": "evotool:sanctuary_altar",
+    "count": 1
+  }
+}
