@@ -40,6 +40,8 @@ public final class InfinityWings {
 	public static final float SPEED = 0.11F;
 	/** Tag posé sur le joueur quand ce sont les ailes qui lui donnent le vol (sauvegardé avec le joueur). */
 	private static final String TAG = "evotool_infinity_wings";
+	/** Tag des morceaux d'ailes : eux seuls ont le droit de chevaucher un joueur (voir EntityMixin). */
+	public static final String PART_TAG = "evotool_wing_part";
 	/** Ancien tag du nuage magique (bottes), remplacé par la plongée souterraine. */
 	private static final String OLD_CLOUD_TAG = "evotool_magic_cloud";
 
@@ -189,6 +191,7 @@ public final class InfinityWings {
 		stack.set(DataComponentTypes.ITEM_MODEL, EvoTool.id("wings/" + model));
 		DisplayEntity.ItemDisplayEntity entity = GiantItem.create(world, stack, ItemDisplayContext.NONE,
 				player.getEntityPos().add(0, player.getHeight(), 0), 0.0F, new Quaternionf(), 0.2F, 1);
+		entity.addCommandTag(PART_TAG);
 		entity.setBrightness(null);
 		entity.setTeleportDuration(0);
 		entity.setViewRange(1.0F);

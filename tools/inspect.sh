@@ -20,12 +20,18 @@ method() {
 	' | head -${3:-120}
 }
 
-# startRiding : que veulent dire les deux booléens, et refuse-t-il les joueurs comme montures ?
-method net.minecraft.entity.Entity startRiding 90 | grep -v -E '^\s+[0-9]+: (aload|iload|dup|pop)' 
-
-# Références remappées des mixins dans le jar final (celui que le joueur installe).
+# Cibles des mixins dans le jar final (noms intermédiaires, ceux du jeu installé par le joueur).
 for J in build/libs/*.jar; do
 	case "$J" in *sources*) continue;; esac
-	echo "=== refmap de $J"
-	unzip -p "$J" '*refmap*.json' 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); m=d.get('mappings',{}); [print(k, json.dumps(v, indent=1)) for k,v in m.items() if 'PlayerEntityMixin' in k]"
+	echo "=== $J"
+	unzip -l "$J" | grep -i -E 'refmap|mixins.json'
+	for R in $(unzip -l "$J" | awk '{print $4}' | grep -i refmap); do
+		echo "--- $R"
+		unzip -p "$J" "$R" | head -c 3000
+		echo
+	done
+	for c in fr.evotool.mixin.PlayerEntityMixin fr.evotool.mixin.EntityMixin; do
+		echo "--- $c"
+		javap -v -cp "$J" "$c" 2>/dev/null | grep -E 'Utf8 .*(class_|field_|method_|intermediary|net/minecraft)' | head -20
+	done
 done
