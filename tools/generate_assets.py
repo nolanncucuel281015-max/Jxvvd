@@ -2891,7 +2891,7 @@ def spike(add, base, direction_m, length, width, tex, tip_tex=None, segments=3):
              tip_tex if (tip_tex and i == segments - 1) else tex, direction_m)
 
 
-def feather(add, root, angle, length, width, thick, tex, yaw=0.0, vein=None):
+def feather(add, root, angle, length, width, thick, tex, yaw=0.0, vein=None, vein_width=0.18):
     """Plume : part de root, longue de length dans la direction angle (dans le plan x-y, 0 = +x),
     inclinée de yaw vers l'arrière ; veine lumineuse optionnelle."""
     m = orient(("y", yaw), ("z", angle))
@@ -2899,7 +2899,7 @@ def feather(add, root, angle, length, width, thick, tex, yaw=0.0, vein=None):
     center = (root[0] + d[0], root[1] + d[1], root[2] + d[2])
     obox(add, center, (length, width, thick), tex, m)
     if vein:
-        obox(add, center, (length * 0.92, width * 0.18, thick + 0.12), vein, m)
+        obox(add, center, (length * 0.92, width * vein_width, thick + 0.12), vein, m)
 
 
 def mirror_model(elements):
@@ -4394,6 +4394,157 @@ def altar_elements():
     return E
 
 
+# --------------------------------------------------------------------------- ailes de l'infini (plastron amélioré)
+
+# Plumes cosmiques : violet profond à la base, turquoise lumineux à la pointe, constellées d'étoiles ;
+# os doré parcouru d'énergie, gemmes étoilées au bout des grandes plumes. Voir InfinityWings.java.
+WING_PALETTE = {"deep": "160838", "violet": "7a2cf2", "tip": "72f4ff", "nebula": ("2c0c5e", "e35cff"),
+                "plume": ("b9a4ff", "fff6ff"), "bone": "ffd23a", "gem": "a64dff", "energy": "7ef2ff", "star": "e8fdff"}
+WING_GLOW = {"cosmos": 6, "nebula": 4, "plume": 3, "energy": 15, "star": 15, "core": 15}
+
+
+def cosmos_texture(deep, mid, tip, seed, stars=7):
+    """Plume cosmique : dégradé de la base (x = 0) à la pointe (x = 15), rachis clair, barbes, étoiles."""
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            t = x / 15.0
+            c = lerp(deep, mid, min(1.0, t / 0.6)) if t < 0.6 else lerp(mid, tip, (t - 0.6) / 0.4)
+            barb = (x + abs(y - 7.5) * 1.6) % 3
+            f = 1.0 - (0.15 if barb < 1 else 0) + r.uniform(-0.03, 0.03)
+            if abs(y - 7.5) < 0.8:
+                f = 1.3
+            if y in (0, 15):
+                f *= 0.72
+            img.putpixel((x, y), shade(c, f))
+    for _ in range(stars):
+        x, y = r.randrange(1, 15), r.randrange(1, 15)
+        img.putpixel((x, y), (255, 255, 255, 255))
+        if r.random() < 0.4 and x < 15:
+            img.putpixel((x + 1, y), shade(tip, 1.4))
+    return img
+
+
+def infinity_wing_elements():
+    """Aile gauche (vers +x), racine (épaule) en (8.6, 8, 8) : os doré en arc (épaule, coude, poignet, pointe),
+    rémiges cosmiques de plus en plus longues vers la pointe, couvertures nébuleuses et duvet clair contre l'os,
+    étoiles au bout des grandes plumes."""
+    E, add = builder()
+    arm = [(8.6, 8.0, 8.0), (13.0, 14.2, 7.7), (19.0, 17.6, 7.2), (26.5, 17.0, 6.6), (30.6, 15.2, 6.3)]
+    for a, b in zip(arm, arm[1:]):                                   # os de l'aile
+        ln = math.dist(a, b)
+        ang = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+        yaw = -math.degrees(math.atan2(b[2] - a[2], b[0] - a[0]))
+        feather(add, a, ang, ln + 0.6, 1.25, 1.25, "bone", yaw=yaw)
+        feather(add, (a[0], a[1] + 0.42, a[2]), ang, ln + 0.4, 0.38, 1.35, "energy", yaw=yaw)
+    for j in (1, 2, 3):                                              # articulations
+        obox(add, arm[j], (1.7, 1.7, 1.7), "core", orient(("x", 45), ("z", 45)))
+
+    def point(t):
+        seg = min(len(arm) - 2, int(t * (len(arm) - 1)))
+        f = t * (len(arm) - 1) - seg
+        a, b = arm[seg], arm[seg + 1]
+        return tuple(a[i] + (b[i] - a[i]) * f for i in range(3))
+
+    def fit(root, angle, length, limit=31.6, floor=-15.6):
+        """Raccourcit la plume pour qu'elle reste dans les limites du modèle."""
+        dx = math.cos(math.radians(angle))
+        dy = math.sin(math.radians(angle))
+        if root[0] + dx * length > limit:
+            length = (limit - root[0]) / dx
+        if root[1] + dy * length < floor:
+            length = (floor - root[1]) / dy
+        return length
+
+    # rémiges : des secondaires (qui pendent) aux primaires (vers l'extérieur), la pointe ornée d'une étoile
+    count = 15
+    for i in range(count):
+        t = 0.05 + 0.95 * i / (count - 1)
+        root = point(t)
+        angle = -96 + 78 * t ** 1.5
+        length = fit(root, angle, 11.0 + 9.0 * t if t < 0.82 else 20.0 - (t - 0.82) * 26)
+        base = (root[0], root[1] - 0.3, root[2] - 0.25)
+        feather(add, base, angle, length, 2.4, 0.4, "cosmos", yaw=-5 - 9 * t, vein="energy" if t > 0.45 else None,
+                vein_width=0.1)
+        if i % 3 == 2 and t > 0.3:
+            a = math.radians(angle)
+            tip = (min(31.0, base[0] + math.cos(a) * (length + 0.6)), base[1] + math.sin(a) * (length + 0.6), base[2] - 0.3)
+            obox(add, tip, (1.1, 1.1, 1.1), "star", orient(("x", 45), ("y", 45)))
+    # couvertures nébuleuses (plumes moyennes, devant les rémiges)
+    for i in range(11):
+        t = 0.04 + 0.86 * i / 10
+        root = point(t)
+        angle = -94 + 62 * t
+        feather(add, (root[0], root[1] + 0.15, root[2] + 0.5), angle, fit(root, angle, 6.8 + 3.0 * t), 2.2, 0.45,
+                "nebula", yaw=-4 - 6 * t)
+    # duvet clair contre l'os
+    for i in range(9):
+        t = 0.03 + 0.72 * i / 8
+        root = point(t)
+        feather(add, (root[0], root[1] + 0.5, root[2] + 0.95), -88 + 40 * t, 3.6, 1.9, 0.5, "plume", yaw=-3)
+    return E
+
+
+def infinity_emblem_elements():
+    """Symbole de l'infini (lemniscate) lumineux cerclé d'or, centré dans le modèle, dans le plan x-y."""
+    E, add = builder()
+    n = 30
+    a = 7.0
+
+    def curve(u):
+        d = 1 + math.sin(u) ** 2
+        return 8 + a * math.cos(u) / d, 8 + a * math.sin(u) * math.cos(u) / d
+
+    for k in range(n):
+        u0, u1 = 2 * math.pi * k / n, 2 * math.pi * (k + 1) / n
+        (x0, y0), (x1, y1) = curve(u0), curve(u1)
+        ln = math.hypot(x1 - x0, y1 - y0) + 0.35
+        ang = math.degrees(math.atan2(y1 - y0, x1 - x0))
+        c = ((x0 + x1) / 2, (y0 + y1) / 2)
+        obox(add, (c[0], c[1], 8.0), (ln, 1.5, 1.5), "energy", orient(("z", ang)))
+        obox(add, (c[0], c[1], 8.0), (ln * 0.98, 2.2, 0.9), "bone", orient(("z", ang)))
+    obox(add, (8, 8, 8), (1.8, 1.8, 1.8), "core", orient(("x", 45), ("y", 45)))
+    for side in (-1, 1):
+        obox(add, (8 + side * 4.6, 8, 8), (1.2, 1.2, 1.2), "star", orient(("x", 45), ("z", 45)))
+    return E
+
+
+def gen_wings():
+    pal = WING_PALETTE
+    shutil.rmtree(os.path.join(ASSETS, "textures", "item", "wings"), ignore_errors=True)
+    out = ("item", "wings")
+    save_png(cosmos_texture(hexc(pal["deep"]), hexc(pal["violet"]), hexc(pal["tip"]), 21), *out, "cosmos")
+    save_png(cosmos_texture(hexc(pal["nebula"][0]), hexc(pal["nebula"][1]), shade(hexc(pal["nebula"][1]), 1.3), 22, 4),
+             *out, "nebula")
+    save_png(feather_texture(hexc(pal["plume"][0]), hexc(pal["plume"][1]), 23), *out, "plume")
+    st = {"gem": gem_palette(pal["gem"]), "trim": hexc(pal["bone"])}
+    save_png(trim_texture(st, 24), *out, "bone")
+    save_png(gem_texture(st, 25), *out, "core")
+    save_png(gem_texture({"gem": gem_palette(pal["star"]), "trim": hexc(pal["bone"])}, 26), *out, "star")
+    save_animated(energy_frames({"gem": gem_palette(pal["energy"])}), 2, *out, "energy")
+    tex = {"particle": f"{MOD}:item/wings/cosmos"}
+    for name in ("cosmos", "nebula", "plume", "bone", "core", "star", "energy"):
+        tex[name] = f"{MOD}:item/wings/{name}"
+
+    def glow(elements):
+        for el in elements:
+            t = next(iter(el["faces"].values()))["texture"][1:]
+            if t in WING_GLOW:
+                el["light_emission"] = WING_GLOW[t]
+                if t == "energy":
+                    el["shade"] = False
+        return elements
+
+    wing = infinity_wing_elements()
+    models = {"infinity_wing": wing, "infinity_wing_right": mirror_model(wing), "infinity_emblem": infinity_emblem_elements()}
+    for name, elements in models.items():
+        write_json(os.path.join(ASSETS, "models", "item", "wings", f"{name}.json"),
+                   {"textures": tex, "elements": glow(json.loads(json.dumps(elements)))}, compact=True)
+        write_json(os.path.join(ASSETS, "items", "wings", f"{name}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:item/wings/{name}"}})
+
+
 def gen_sanctuary():
     """Sanctuaires de la dimension évolutive : feature générée en Java (SanctuaryFeature), autel en 3D."""
     wg = os.path.join(DATA, "worldgen")
@@ -4820,5 +4971,6 @@ if __name__ == "__main__":
     gen_weapons()
     gen_magic()
     gen_sanctuary()
+    gen_wings()
     recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

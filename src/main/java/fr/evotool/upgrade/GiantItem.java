@@ -52,6 +52,14 @@ public final class GiantItem {
 	 */
 	public static DisplayEntity.ItemDisplayEntity spawn(ServerWorld world, ItemStack stack, ItemDisplayContext context,
 			Vec3d pos, float yaw, Quaternionf rotation, float scale, int growTicks) {
+		DisplayEntity.ItemDisplayEntity giant = create(world, stack, context, pos, yaw, rotation, scale, growTicks);
+		poof(world, pos, scale);
+		return giant;
+	}
+
+	/** Comme {@link #spawn}, sans le « pfff » (quand plusieurs morceaux apparaissent ensemble). */
+	public static DisplayEntity.ItemDisplayEntity create(ServerWorld world, ItemStack stack, ItemDisplayContext context,
+			Vec3d pos, float yaw, Quaternionf rotation, float scale, int growTicks) {
 		DisplayEntity.ItemDisplayEntity giant = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
 		giant.setItemStack(stack);
 		giant.setItemDisplayContext(context);
@@ -69,7 +77,6 @@ public final class GiantItem {
 		giant.setInterpolationDuration(growTicks);
 		giant.setStartInterpolation(0);
 		giant.setTransformation(transformation(rotation, scale));
-		poof(world, pos, scale);
 		return giant;
 	}
 

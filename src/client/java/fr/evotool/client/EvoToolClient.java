@@ -14,11 +14,15 @@ import fr.evotool.weapon.ArcaneWeapons;
 import fr.evotool.weapon.MagicKind;
 import fr.evotool.weapon.WeaponKind;
 import fr.evotool.weapon.WeaponPowers;
+import fr.evotool.network.BurrowPayload;
+import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.render.BlockRenderLayer;
@@ -41,6 +45,9 @@ public class EvoToolClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.BELL_BOSS, EmptyEntityRenderer::new);
 		BlockRenderLayerMap.putBlock(ModBlocks.EVOLUTION_PORTAL, BlockRenderLayer.TRANSLUCENT);
 		BlockRenderLayerMap.putBlock(ModBlocks.EVOLVING_LEAVES, BlockRenderLayer.CUTOUT);
+		// Plongée souterraine des bottes : le serveur dit quand notre joueur traverse les blocs.
+		ClientPlayNetworking.registerGlobalReceiver(BurrowPayload.ID, (payload, context) -> Burrow.clientActive = payload.active());
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> Burrow.clientActive = false);
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (OPEN_MENU.wasPressed()) {
 				if (client.player == null) {

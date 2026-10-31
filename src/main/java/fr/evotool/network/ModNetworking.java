@@ -15,6 +15,7 @@ public final class ModNetworking {
 	}
 
 	public static void init() {
+		PayloadTypeRegistry.playS2C().register(BurrowPayload.ID, BurrowPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(EvoSettingsPayload.ID, EvoSettingsPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(EvoSettingsPayload.ID, (payload, context) -> {
 			ItemStack stack = context.player().getMainHandStack();

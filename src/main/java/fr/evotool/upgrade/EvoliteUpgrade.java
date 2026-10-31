@@ -35,12 +35,12 @@ public final class EvoliteUpgrade {
 		SOAR,
 		/** Casque : les monstres proches brillent à travers les murs. */
 		KNIGHT_SIGHT,
-		/** Plastron : bouclier magique permanent (4 cœurs dorés) qui se recharge hors combat. */
-		MAGIC_SHIELD,
+		/** Plastron : ailes de l'infini (vrai modèle 3D) ; double saut pour voler, plus vite qu'en créatif. */
+		INFINITY_WINGS,
 		/** Jambières : monte les blocs sans sauter et plus aucun dégât de chute. */
 		CELESTIAL_LEGS,
-		/** Bottes : double saut = s'envoler sur un nuage magique, comme en créatif. */
-		MAGIC_CLOUD,
+		/** Bottes : rester accroupi sur le sol pour plonger dedans et filer sous terre à travers la roche. */
+		BURROW,
 		/** Armes moddées et magiques : attaque spéciale 50 % plus forte et deux fois plus souvent (charges deux fois plus rapides). */
 		EMPOWERED;
 
@@ -64,9 +64,9 @@ public final class EvoliteUpgrade {
 			case BOW -> Upgrade.CELESTIAL_BOW;
 			case MACE -> Upgrade.SOAR;
 			case HELMET -> Upgrade.KNIGHT_SIGHT;
-			case CHESTPLATE -> Upgrade.MAGIC_SHIELD;
+			case CHESTPLATE -> Upgrade.INFINITY_WINGS;
 			case LEGGINGS -> Upgrade.CELESTIAL_LEGS;
-			case BOOTS -> Upgrade.MAGIC_CLOUD;
+			case BOOTS -> Upgrade.BURROW;
 			case SCYTHE, KATANA, WARHAMMER, GREATSWORD, DAGGER, HALBERD, STAFF, BLAST_BLADE,
 					ARCANE_WAND, THUNDER_GAUNTLET, CELESTIAL_ORB, VOID_GRIMOIRE, SOLAR_CHAKRAM, SPIRIT_LANTERN, EVOLIUM_BLASTER
 					-> Upgrade.EMPOWERED;
@@ -99,9 +99,6 @@ public final class EvoliteUpgrade {
 		AttributeModifiersComponent modifiers = stack.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS,
 				AttributeModifiersComponent.DEFAULT);
 		switch (upgradeFor(kind)) {
-			case MAGIC_SHIELD -> modifiers = modifiers.with(EntityAttributes.MAX_ABSORPTION,
-					new EntityAttributeModifier(EvoTool.id("evolite_shield"), MagicPowers.SHIELD_MAX, EntityAttributeModifier.Operation.ADD_VALUE),
-					AttributeModifierSlot.CHEST);
 			case CELESTIAL_LEGS -> modifiers = modifiers
 					.with(EntityAttributes.STEP_HEIGHT,
 							new EntityAttributeModifier(EvoTool.id("evolite_step"), 0.5, EntityAttributeModifier.Operation.ADD_VALUE),

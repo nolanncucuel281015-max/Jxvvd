@@ -3,9 +3,7 @@
 set +e
 ALL=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' ! -name '*sources*' 2>/dev/null)
 YARN=$(echo "$ALL" | tr ' ' '\n' | grep -i yarn | grep -v intermediary | grep -i minecraft)
-echo "jars: $YARN"
 
-# jar qui contient la classe
 jar_of() {
 	local path="${1//.//}.class"
 	for JAR in $YARN; do
@@ -13,25 +11,21 @@ jar_of() {
 	done
 }
 
-# bytecode d'une méthode : method <classe> <nom> [lignes]
 method() {
 	local JAR=$(jar_of "$1")
-	echo "=== $1.$2 ($JAR)"
+	echo "=== $1.$2"
 	javap -p -c -cp "$JAR" "$1" 2>/dev/null | awk -v n="$2" '
 		/^  [a-z].*\(.*\)/ { inside = index($0, " " n "(") > 0 }
 		inside { print }
 	' | head -${3:-120}
 }
 
-# signatures qui correspondent à un motif : sig <classe> <regex>
-sig() {
-	local JAR=$(jar_of "$1")
-	echo "=== $1 ~ $2"
-	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "$2" | head -40
-}
+# startRiding : que veulent dire les deux booléens, et refuse-t-il les joueurs comme montures ?
+method net.minecraft.entity.Entity startRiding 90 | grep -v -E '^\s+[0-9]+: (aload|iload|dup|pop)' 
 
-for c in 'net.minecraft.client.render.entity.DisplayEntityRenderer$ItemDisplayEntityRenderer' net.minecraft.client.render.entity.DisplayEntityRenderer; do
-	JAR=$(jar_of "$c")
-	echo "=== $c ($JAR)"
-	javap -p -c -cp "$JAR" "$c" 2>/dev/null | grep -n -E '^  [a-z].*\(|ldc|RotationAxis|rotation|multiply|Billboard|getYaw|getPitch|rotationYXZ|PI' | head -60
+# Références remappées des mixins dans le jar final (celui que le joueur installe).
+for J in build/libs/*.jar; do
+	case "$J" in *sources*) continue;; esac
+	echo "=== refmap de $J"
+	unzip -p "$J" '*refmap*.json' 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); m=d.get('mappings',{}); [print(k, json.dumps(v, indent=1)) for k,v in m.items() if 'PlayerEntityMixin' in k]"
 done

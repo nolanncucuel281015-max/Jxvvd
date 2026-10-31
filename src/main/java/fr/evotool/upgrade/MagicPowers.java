@@ -20,7 +20,6 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.Monster;
-import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
@@ -36,20 +35,12 @@ import net.minecraft.util.math.Vec3d;
 
 /** Les pouvoirs des objets améliorés à l'évolite. */
 public final class MagicPowers {
-	/** Bouclier magique du plastron : points d'absorption (8 = 4 cœurs dorés). */
-	public static final double SHIELD_MAX = 8.0;
-	/** Le bouclier se recharge si on n'a pas été touché depuis 5 secondes. */
-	private static final int SHIELD_DELAY_TICKS = 100;
-
 	private static final int SLASH_COOLDOWN = 20;
 	private static final double SLASH_RANGE = 8.0;
 	private static final double SLASH_WIDTH = 1.6;
 	private static final int SOAR_COOLDOWN = 60;
 	private static final int SOAR_FALL_IMMUNITY_TICKS = 200;
 	private static final double KNIGHT_SIGHT_RANGE = 24.0;
-
-	/** Tag posé sur le joueur quand c'est le nuage magique qui lui donne le vol (sauvegardé avec le joueur). */
-	private static final String CLOUD_TAG = "evotool_magic_cloud";
 
 	/** Explosion céleste de l'épée (accroupi + clic droit). */
 	private static final double EXPLOSION_RADIUS = 20.0;
@@ -62,7 +53,6 @@ public final class MagicPowers {
 
 	private static final List<ExplosionWave> WAVES = new ArrayList<>();
 
-	private static final Map<UUID, Integer> LAST_HURT = new HashMap<>();
 	private static final Map<UUID, Integer> SOAR_IMMUNITY_UNTIL = new HashMap<>();
 
 	private MagicPowers() {
@@ -70,12 +60,6 @@ public final class MagicPowers {
 
 	public static void init() {
 		UseItemCallback.EVENT.register(MagicPowers::onUseItem);
-
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
-			if (entity instanceof ServerPlayerEntity player) {
-				LAST_HURT.put(player.getUuid(), player.getEntityWorld().getServer().getTicks());
-			}
-		});
 
 		// Pas de dégâts de chute après un bond de la masse.
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
@@ -90,22 +74,16 @@ public final class MagicPowers {
 			int tick = server.getTicks();
 			tickExplosionWaves(tick);
 			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-				if (tick % 2 == 0) {
-					cloudParticles(player);
-				}
 				if (tick % 5 == 0) {
 					lightningCharge(player);
 				}
 				if (tick % 20 == 0) {
-					magicCloud(player);
 					knightSight(player);
-					magicShield(player, tick);
 				}
 			}
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			LAST_HURT.remove(handler.getPlayer().getUuid());
 			SOAR_IMMUNITY_UNTIL.remove(handler.getPlayer().getUuid());
 		});
 	}
@@ -236,37 +214,6 @@ public final class MagicPowers {
 		}
 	}
 
-	// ------------------------------------------------------------------ bottes : nuage magique
-
-	/**
-	 * Avec les bottes améliorées, le joueur a le droit de voler : le client vanilla gère alors
-	 * le double saut pour s'envoler, exactement comme en créatif.
-	 */
-	private static void magicCloud(ServerPlayerEntity player) {
-		if (player.isCreative() || player.isSpectator()) {
-			return;
-		}
-		boolean cloud = EvoliteUpgrade.has(worn(player, EquipmentSlot.FEET), Upgrade.MAGIC_CLOUD);
-		PlayerAbilities abilities = player.getAbilities();
-		if (cloud && !abilities.allowFlying) {
-			abilities.allowFlying = true;
-			player.addCommandTag(CLOUD_TAG);
-			player.sendAbilitiesUpdate();
-		} else if (!cloud && player.getCommandTags().contains(CLOUD_TAG)) {
-			abilities.allowFlying = false;
-			abilities.flying = false;
-			player.removeCommandTag(CLOUD_TAG);
-			player.sendAbilitiesUpdate();
-		}
-	}
-
-	private static void cloudParticles(ServerPlayerEntity player) {
-		if (player.getAbilities().flying && !player.isCreative() && player.getCommandTags().contains(CLOUD_TAG)) {
-			ServerWorld world = (ServerWorld) player.getEntityWorld();
-			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() - 0.2, player.getZ(), 4, 0.4, 0.05, 0.4, 0.0);
-		}
-	}
-
 	// ------------------------------------------------------------------ lance : charge fulgurante
 
 	private static void lightningCharge(ServerPlayerEntity player) {
@@ -287,21 +234,6 @@ public final class MagicPowers {
 		for (LivingEntity monster : world.getEntitiesByClass(LivingEntity.class,
 				player.getBoundingBox().expand(KNIGHT_SIGHT_RANGE), e -> e instanceof Monster && e.isAlive())) {
 			monster.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 40, 0, true, false, false));
-		}
-	}
-
-	// ------------------------------------------------------------------ plastron : bouclier magique
-
-	private static void magicShield(ServerPlayerEntity player, int tick) {
-		if (!EvoliteUpgrade.has(worn(player, EquipmentSlot.CHEST), Upgrade.MAGIC_SHIELD)) {
-			return;
-		}
-		int lastHurt = LAST_HURT.getOrDefault(player.getUuid(), Integer.MIN_VALUE / 2);
-		float current = player.getAbsorptionAmount();
-		if (tick - lastHurt >= SHIELD_DELAY_TICKS && current < SHIELD_MAX) {
-			player.setAbsorptionAmount((float) Math.min(SHIELD_MAX, current + 2.0F));
-			ServerWorld world = (ServerWorld) player.getEntityWorld();
-			world.spawnParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.0, player.getZ(), 10, 0.4, 0.6, 0.4, 0.5);
 		}
 	}
 }

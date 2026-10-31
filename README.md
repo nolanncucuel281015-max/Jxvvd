@@ -168,9 +168,9 @@ avec un pouvoir magique :
 | Arc | **Arc céleste** (au niveau 100) : clic droit, ton arc apparaît en géant et tire une flèche toutes les demi-secondes sur les monstres |
 | Masse | **Envol** : clic droit, bond dans les airs sans dégâts de chute (parfait pour l'attaque écrasante) |
 | Casque | **Vue du chevalier** : les monstres à 24 blocs brillent à travers les murs |
-| Plastron | **Bouclier magique** : 4 cœurs dorés permanents qui se rechargent hors combat |
+| Plastron | **Ailes de l'infini** : de vraies ailes cosmiques en 3D poussent dans ton dos (repliées au sol, déployées et battantes en vol, symbole ∞ lumineux entre les deux) ; **double saut** pour voler, plus vite qu'en créatif, sans dégâts de chute |
 | Jambières | **Jambes célestes** : monte les blocs sans sauter, plus de dégâts de chute |
-| Bottes | **Nuage magique** : **double saut** pour s'envoler sur un nuage, comme en créatif |
+| Bottes | **Plongée souterraine** : reste **accroupi** sur le sol et tu plonges dedans ; sous terre tu traverses la roche à toute vitesse (saut pour monter, accroupi pour descendre, vision nocturne, ni étouffement ni lave) et tu ressors en remontant. La bedrock reste infranchissable |
 
 ## Courbes d'XP
 

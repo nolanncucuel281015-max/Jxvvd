@@ -58,6 +58,9 @@ final class BossVisual {
 			Vector3f pivot, int slot, int slots) {
 	}
 
+	/** Le rendu des objets d'affichage tourne le modèle d'un demi-tour : sans compensation le boss aurait le visage dans le dos. */
+	private static final Quaternionf FLIP = new Quaternionf().rotationY((float) Math.PI);
+
 	private static final Vector3f BOTTOM = new Vector3f(0, -0.5F, 0);
 	private static final Vector3f TOP = new Vector3f(0, 0.5F, 0);
 	private static final Vector3f CENTER = new Vector3f();
@@ -271,7 +274,7 @@ final class BossVisual {
 		Vector3f pivot = new Vector3f(part.pivot()).mul(scale).rotate(rotation);
 		Vector3f translation = new Vector3f(offset).rotate(yaw).sub(pivot);
 		DisplayEntity.ItemDisplayEntity entity = part.entity();
-		entity.setTransformation(new AffineTransformation(translation, rotation, scale, new Quaternionf()));
+		entity.setTransformation(new AffineTransformation(translation, rotation, scale, FLIP));
 		entity.setInterpolationDuration(2);
 		entity.setStartInterpolation(0);
 	}

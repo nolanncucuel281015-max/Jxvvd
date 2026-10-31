@@ -19,7 +19,9 @@ import fr.evotool.item.ModItems;
 import fr.evotool.item.ModdedWeaponItem;
 import fr.evotool.mixin.ForgingScreenHandlerAccessor;
 import fr.evotool.upgrade.EvoliteUpgrade;
+import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.GiantItem;
+import fr.evotool.upgrade.InfinityWings;
 import fr.evotool.upgrade.PickaxeSlam;
 import fr.evotool.weapon.WeaponKind;
 import fr.evotool.weapon.WeaponPowers;
@@ -128,6 +130,7 @@ final class SelfTest {
 				bossTick = server.getTicks();
 			} else {
 				checks += checkWeapons(server, FAILURES);
+				checks += checkArmorPowers(server, FAILURES);
 				finish(server);
 			}
 		});
@@ -156,6 +159,7 @@ final class SelfTest {
 			try {
 				checks += checkCommand(server, FAILURES);
 				checks += checkWeapons(server, FAILURES);
+				checks += checkArmorPowers(server, FAILURES);
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
 				FAILURES.add("crash: " + t);
@@ -402,6 +406,96 @@ final class SelfTest {
 				world.setBlockState(ARENA.add(dx, -1, dz), net.minecraft.block.Blocks.STONE.getDefaultState());
 			}
 		}
+	}
+
+	/**
+	 * Armure améliorée : ailes de l'infini du plastron (3 modèles 3D qui chevauchent le joueur, vol rapide)
+	 * et plongée souterraine des bottes (accroupi au sol, on traverse le sol, on ressort en remontant).
+	 */
+	private static int checkArmorPowers(MinecraftServer server, List<String> failures) {
+		int checks = 0;
+		ServerWorld world = server.getOverworld();
+		FakePlayer player = FakePlayer.get(world);
+		double x = ARENA.getX() + 0.5;
+		double y = ARENA.getY();
+		double z = ARENA.getZ() + 6.5;
+		player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+		int tick = server.getTicks();
+
+		checks++;
+		if (EvoliteUpgrade.upgradeFor(EvoKind.CHESTPLATE) != EvoliteUpgrade.Upgrade.INFINITY_WINGS
+				|| EvoliteUpgrade.upgradeFor(EvoKind.BOOTS) != EvoliteUpgrade.Upgrade.BURROW) {
+			failures.add("le plastron et les bottes améliorés n'ont pas les ailes et la plongée");
+		}
+
+		ItemStack chest = new ItemStack(ModItems.itemFor(EvoKind.CHESTPLATE));
+		EvoliteUpgrade.apply(chest);
+		player.equipStack(EquipmentSlot.CHEST, chest);
+		InfinityWings.update(player, tick);
+		InfinityWings.update(player, tick + 1);
+		checks++;
+		int riding = world.getEntitiesByType(EntityType.ITEM_DISPLAY, player.getBoundingBox().expand(4),
+				e -> e.getRootVehicle() == player).size();
+		EvoTool.LOGGER.info("EVOTOOL wings: {} display parts riding the player", riding);
+		if (riding != 3) {
+			failures.add("ailes de l'infini : " + riding + " modèles sur le joueur au lieu de 3");
+		}
+		checks++;
+		InfinityWings.restoreAbilities(player);
+		if (!player.getAbilities().allowFlying || player.getAbilities().getFlySpeed() <= InfinityWings.DEFAULT_FLY_SPEED) {
+			failures.add("ailes de l'infini : pas de vol plus rapide qu'en créatif");
+		}
+		player.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+		InfinityWings.update(player, tick + 2);
+		InfinityWings.restoreAbilities(player);
+		checks++;
+		int left = world.getEntitiesByType(EntityType.ITEM_DISPLAY, player.getBoundingBox().expand(4),
+				e -> e.getCommandTags().contains(GiantItem.TAG) && e.getRootVehicle() == player).size();
+		if (left != 0 || player.getAbilities().allowFlying) {
+			failures.add("ailes de l'infini : toujours là une fois le plastron enlevé (" + left + " modèles, vol="
+					+ player.getAbilities().allowFlying + ")");
+		}
+
+		// bottes : accroupi sur le sol de l'arène, on plonge dedans
+		ItemStack boots = new ItemStack(ModItems.itemFor(EvoKind.BOOTS));
+		EvoliteUpgrade.apply(boots);
+		player.equipStack(EquipmentSlot.FEET, boots);
+		player.setSneaking(true);
+		player.setOnGround(true);
+		for (int i = 0; i < 10 && !Burrow.isBurrowing(player); i++) {
+			Burrow.tick(player, tick + i);
+		}
+		checks++;
+		if (!Burrow.isBurrowing(player) || !player.getAbilities().flying || player.getAbilities().getFlySpeed() != Burrow.SPEED) {
+			failures.add("bottes : la plongée souterraine ne démarre pas (sous terre=" + Burrow.isBurrowing(player)
+					+ ", vol=" + player.getAbilities().flying + ")");
+		}
+		player.setSneaking(false);
+		// dans le sol (la dalle de pierre de l'arène) : on y reste
+		player.refreshPositionAndAngles(x, y - 1.1, z, 0.0F, 0.0F);
+		Burrow.tick(player, tick + 20);
+		checks++;
+		if (!Burrow.isBurrowing(player)) {
+			failures.add("bottes : la plongée s'arrête dans le sol");
+		}
+		// on remonte à travers le sol : on ressort
+		player.refreshPositionAndAngles(x, y + 0.5, z, 0.0F, 0.0F);
+		Burrow.tick(player, tick + 21);
+		checks++;
+		if (Burrow.isBurrowing(player) || player.getAbilities().flying || player.getAbilities().allowFlying) {
+			failures.add("bottes : on ne ressort pas du sol en remontant (sous terre=" + Burrow.isBurrowing(player) + ")");
+		}
+		// bottes enlevées sous terre : le joueur est remonté à la surface au lieu d'étouffer
+		Burrow.start(player);
+		player.refreshPositionAndAngles(x, y - 1.1, z, 0.0F, 0.0F);
+		player.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY);
+		Burrow.tick(player, tick + 22);
+		checks++;
+		if (Burrow.isBurrowing(player) || player.getY() < y - 0.01) {
+			failures.add("bottes enlevées sous terre : joueur pas remonté (y=" + player.getY() + ")");
+		}
+		EvoTool.LOGGER.info("EVOTOOL burrow: dive, underground, surface and rescue checked (y={})", player.getY());
+		return checks;
 	}
 
 	/** Attaques spéciales des armes moddées, sur un zombie posé devant un faux joueur. */
