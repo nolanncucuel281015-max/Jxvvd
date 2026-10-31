@@ -18,6 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.s2c.play.EntityPassengersSetS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -54,7 +55,7 @@ public final class InfinityWings {
 
 	/** L'aile gauche chevauche le joueur, la droite chevauche la gauche, le symbole chevauche la droite. */
 	private record Wings(DisplayEntity.ItemDisplayEntity left, DisplayEntity.ItemDisplayEntity right,
-			DisplayEntity.ItemDisplayEntity emblem) {
+			DisplayEntity.ItemDisplayEntity emblem, int born) {
 		boolean broken(ServerPlayerEntity player) {
 			return left.isRemoved() || right.isRemoved() || emblem.isRemoved()
 					|| left.getVehicle() != player || right.getVehicle() != left || emblem.getVehicle() != right;
@@ -157,8 +158,14 @@ public final class InfinityWings {
 			if (wings != null) {
 				wings.discard();
 			}
-			wings = spawn(player);
+			wings = spawn(player, tick);
 			WINGS.put(id, wings);
+		}
+		// Le serveur n'envoie les changements de passagers qu'aux AUTRES joueurs : sans ce paquet, le porteur
+		// verrait ses ailes rester en l'air là où elles sont apparues. Renvoyé de temps en temps par sécurité.
+		int age = tick - wings.born();
+		if (age == 0 || age == 5 || age == 20 || age % 100 == 0) {
+			player.networkHandler.sendPacket(new EntityPassengersSetS2CPacket(player));
 		}
 		pose(player, wings, tick);
 	}
@@ -171,7 +178,7 @@ public final class InfinityWings {
 		}
 	}
 
-	private static Wings spawn(ServerPlayerEntity player) {
+	private static Wings spawn(ServerPlayerEntity player, int tick) {
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		DisplayEntity.ItemDisplayEntity left = part(world, player, "infinity_wing");
 		DisplayEntity.ItemDisplayEntity right = part(world, player, "infinity_wing_right");
@@ -183,7 +190,7 @@ public final class InfinityWings {
 		// les ailes s'ouvrent dans un éclat d'étoiles
 		world.spawnParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.3, player.getZ(), 30, 0.5, 0.5, 0.5, 0.08);
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1.5F, 0.8F);
-		return new Wings(left, right, emblem);
+		return new Wings(left, right, emblem, tick);
 	}
 
 	private static DisplayEntity.ItemDisplayEntity part(ServerWorld world, ServerPlayerEntity player, String model) {

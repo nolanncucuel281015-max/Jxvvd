@@ -11,27 +11,8 @@ jar_of() {
 	done
 }
 
-method() {
-	local JAR=$(jar_of "$1")
-	echo "=== $1.$2"
-	javap -p -c -cp "$JAR" "$1" 2>/dev/null | awk -v n="$2" '
-		/^  [a-z].*\(.*\)/ { inside = index($0, " " n "(") > 0 }
-		inside { print }
-	' | head -${3:-120}
-}
-
-# Cibles des mixins dans le jar final (noms intermédiaires, ceux du jeu installé par le joueur).
-for J in build/libs/*.jar; do
-	case "$J" in *sources*) continue;; esac
-	echo "=== $J"
-	unzip -l "$J" | grep -i -E 'refmap|mixins.json'
-	for R in $(unzip -l "$J" | awk '{print $4}' | grep -i refmap); do
-		echo "--- $R"
-		unzip -p "$J" "$R" | head -c 3000
-		echo
-	done
-	for c in fr.evotool.mixin.PlayerEntityMixin fr.evotool.mixin.EntityMixin; do
-		echo "--- $c"
-		javap -v -cp "$J" "$c" 2>/dev/null | grep -E 'Utf8 .*(class_|field_|method_|intermediary|net/minecraft)' | head -20
-	done
-done
+# À qui le serveur envoie-t-il les changements de passagers d'une entité (et donc d'un joueur) ?
+C=net.minecraft.server.network.EntityTrackerEntry
+JAR=$(jar_of $C)
+echo "=== $C"
+javap -p -c -cp "$JAR" $C 2>/dev/null | grep -n -E '^  [a-z].*\(|EntityPassengersSetS2CPacket|receiver|sendSyncPacket|accept' | head -40
