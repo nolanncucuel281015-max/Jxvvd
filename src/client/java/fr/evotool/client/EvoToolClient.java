@@ -48,6 +48,8 @@ public class EvoToolClient implements ClientModInitializer {
 		// Plongée souterraine des bottes : le serveur dit quand notre joueur traverse les blocs.
 		ClientPlayNetworking.registerGlobalReceiver(BurrowPayload.ID, (payload, context) -> Burrow.clientActive = payload.active());
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> Burrow.clientActive = false);
+		// Ailes de l'infini du plastron : dessinées sur le buste du joueur, comme une cape.
+		InfinityWingsFeature.register();
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (OPEN_MENU.wasPressed()) {
 				if (client.player == null) {

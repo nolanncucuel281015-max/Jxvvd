@@ -409,7 +409,7 @@ final class SelfTest {
 	}
 
 	/**
-	 * Armure améliorée : ailes de l'infini du plastron (3 modèles 3D qui chevauchent le joueur, vol rapide)
+	 * Armure améliorée : ailes de l'infini du plastron (modèles 3D présents, vol rapide)
 	 * et plongée souterraine des bottes (accroupi au sol, on traverse le sol, on ressort en remontant).
 	 */
 	private static int checkArmorPowers(MinecraftServer server, List<String> failures) {
@@ -430,30 +430,29 @@ final class SelfTest {
 
 		ItemStack chest = new ItemStack(ModItems.itemFor(EvoKind.CHESTPLATE));
 		EvoliteUpgrade.apply(chest);
-		player.equipStack(EquipmentSlot.CHEST, chest);
-		InfinityWings.update(player, tick);
-		InfinityWings.update(player, tick + 1);
 		checks++;
-		int riding = world.getEntitiesByType(EntityType.ITEM_DISPLAY, player.getBoundingBox().expand(4),
-				e -> e.getRootVehicle() == player).size();
-		EvoTool.LOGGER.info("EVOTOOL wings: {} display parts riding the player", riding);
-		if (riding != 3) {
-			failures.add("ailes de l'infini : " + riding + " modèles sur le joueur au lieu de 3");
+		if (!InfinityWings.isWingChestplate(chest)) {
+			failures.add("ailes de l'infini : le plastron amélioré n'est pas reconnu");
 		}
+		// les modèles 3D des ailes, dessinés par le client sur le buste du joueur
+		for (String model : new String[] {"infinity_wing", "infinity_wing_right", "infinity_emblem"}) {
+			checks++;
+			if (SelfTest.class.getResource("/assets/evotool/items/wings/" + model + ".json") == null
+					|| SelfTest.class.getResource("/assets/evotool/models/item/wings/" + model + ".json") == null) {
+				failures.add("ailes de l'infini : modèle manquant " + model);
+			}
+		}
+		player.equipStack(EquipmentSlot.CHEST, chest);
 		checks++;
 		InfinityWings.restoreAbilities(player);
 		if (!player.getAbilities().allowFlying || player.getAbilities().getFlySpeed() <= InfinityWings.DEFAULT_FLY_SPEED) {
 			failures.add("ailes de l'infini : pas de vol plus rapide qu'en créatif");
 		}
 		player.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
-		InfinityWings.update(player, tick + 2);
 		InfinityWings.restoreAbilities(player);
 		checks++;
-		int left = world.getEntitiesByType(EntityType.ITEM_DISPLAY, player.getBoundingBox().expand(4),
-				e -> e.getCommandTags().contains(GiantItem.TAG) && e.getRootVehicle() == player).size();
-		if (left != 0 || player.getAbilities().allowFlying) {
-			failures.add("ailes de l'infini : toujours là une fois le plastron enlevé (" + left + " modèles, vol="
-					+ player.getAbilities().allowFlying + ")");
+		if (player.getAbilities().allowFlying) {
+			failures.add("ailes de l'infini : on vole encore une fois le plastron enlevé");
 		}
 
 		// bottes : accroupi sur le sol de l'arène, on plonge dedans
