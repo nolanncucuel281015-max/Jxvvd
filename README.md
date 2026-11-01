@@ -297,6 +297,31 @@ A = éclat d'améthyste, B = bâton de blaze (baguette) ou poudre de blaze (chak
 I = lingot de fer, T = poudre de pierre lumineuse, P = perle de l'Ender, O = obsidienne, B = livre (grimoire),
 S = sable des âmes, L = lanterne des âmes (lanterne), R = bloc de redstone, G = lingot d'or, E = évolium.
 
+## Générateur de bouclier
+
+Un bloc qui tient un **dôme d'énergie** (nid d'abeilles lumineux qui tourne doucement) autour de lui.
+Dans le dôme, les **monstres sont rejetés dehors**, ceux qui s'approchent sont **repoussés** (les creepers
+n'y explosent pas) et les **projectiles des monstres** (flèches, boules de feu…) **se désintègrent** en le
+touchant. Les joueurs passent librement.
+
+**Clic droit** sur le générateur ouvre son menu :
+- **une case à évolium** : elle avale tout ce qu'on y met, **jusqu'à 1 milliard d'évolium** (un bloc d'évolium
+  vaut 9) ; le menu affiche le stock et l'autonomie ;
+- le **rayon** du bouclier, de **3 à 64 blocs**, avec les boutons -10 / -1 / +1 / +10 (le dôme grandit ou
+  rapetisse en direct) ;
+- un bouton **Allumé / Éteint**.
+
+Il brûle **1 évolium toutes les 10 minutes** quand il est allumé. Cassé à la pioche, il **garde son évolium et
+son rayon** et les retrouve une fois reposé.
+
+Recette (table de craft) :
+
+```
+[Améthyste] [ Évolium ] [Améthyste]
+[ Évolium ] [ Bouclier ] [ Évolium ]
+[Obsidienne] [Bloc d'évolium] [Obsidienne]
+```
+
 ## Modèle 3D — 21 formes
 
 Chaque outil a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux il change de forme** :

@@ -37,6 +37,20 @@ public final class ModComponents {
 			ComponentType.<Long>builder().codec(Codec.LONG).packetCodec(PacketCodecs.VAR_LONG).build()
 	);
 
+	/** Évolium stocké dans un générateur de bouclier ramassé (il le garde quand on le casse puis le repose). */
+	public static final ComponentType<Long> SHIELD_FUEL = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("shield_fuel"),
+			ComponentType.<Long>builder().codec(Codec.LONG).packetCodec(PacketCodecs.VAR_LONG).build()
+	);
+
+	/** Rayon réglé sur un générateur de bouclier ramassé. */
+	public static final ComponentType<Integer> SHIELD_RADIUS = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("shield_radius"),
+			ComponentType.<Integer>builder().codec(Codec.INT).packetCodec(PacketCodecs.VAR_INT).build()
+	);
+
 	private ModComponents() {
 	}
 

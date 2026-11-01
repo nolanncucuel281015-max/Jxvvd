@@ -236,5 +236,21 @@
   "message.evotool.nothing_to_evolve": "Rien n'est prêt à évoluer : il faut toute l'XP de la prochaine forme.",
   "message.evotool.evolving": "✦ %s évolue…",
   "message.evotool.evolved": "✦ %s a évolué : niveau %s ! ✦",
-  "message.evotool.evolution_cancelled": "Évolution annulée : l'objet n'est plus sur toi."
+  "message.evotool.evolution_cancelled": "Évolution annulée : l'objet n'est plus sur toi.",
+  "block.evotool.shield_generator": "Générateur de bouclier",
+  "gui.evotool.shield.fuel": "Évolium : %s",
+  "gui.evotool.shield.autonomy": "Autonomie : %s",
+  "gui.evotool.shield.radius": "Rayon : %s blocs",
+  "gui.evotool.shield.on": "Allumé",
+  "gui.evotool.shield.off": "Éteint",
+  "gui.evotool.shield.status_on": "Bouclier actif",
+  "gui.evotool.shield.status_off": "Bouclier éteint",
+  "gui.evotool.shield.status_empty": "Plus d'évolium !",
+  "gui.evotool.shield.time.years": "%s ans",
+  "gui.evotool.shield.time.days": "%s j %s h",
+  "gui.evotool.shield.time.hours": "%s h %s min",
+  "gui.evotool.shield.time.minutes": "%s min",
+  "tooltip.evotool.shield.fuel": "Évolium stocké : %s",
+  "tooltip.evotool.shield.radius": "Rayon : %s blocs",
+  "tooltip.evotool.shield.hint": "Clic droit : menu. Sa case avale jusqu'à 1 milliard d'évolium ; il en brûle 1 toutes les 10 minutes."
 }

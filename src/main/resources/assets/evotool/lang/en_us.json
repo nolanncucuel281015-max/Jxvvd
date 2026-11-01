@@ -236,5 +236,21 @@
   "message.evotool.nothing_to_evolve": "Nothing is ready to evolve: it needs all the XP of its next form.",
   "message.evotool.evolving": "✦ %s is evolving…",
   "message.evotool.evolved": "✦ %s evolved: level %s! ✦",
-  "message.evotool.evolution_cancelled": "Evolution cancelled: the item is no longer on you."
+  "message.evotool.evolution_cancelled": "Evolution cancelled: the item is no longer on you.",
+  "block.evotool.shield_generator": "Shield Generator",
+  "gui.evotool.shield.fuel": "Evolium: %s",
+  "gui.evotool.shield.autonomy": "Lasts: %s",
+  "gui.evotool.shield.radius": "Radius: %s blocks",
+  "gui.evotool.shield.on": "On",
+  "gui.evotool.shield.off": "Off",
+  "gui.evotool.shield.status_on": "Shield active",
+  "gui.evotool.shield.status_off": "Shield off",
+  "gui.evotool.shield.status_empty": "Out of evolium!",
+  "gui.evotool.shield.time.years": "%s years",
+  "gui.evotool.shield.time.days": "%s d %s h",
+  "gui.evotool.shield.time.hours": "%s h %s min",
+  "gui.evotool.shield.time.minutes": "%s min",
+  "tooltip.evotool.shield.fuel": "Stored evolium: %s",
+  "tooltip.evotool.shield.radius": "Radius: %s blocks",
+  "tooltip.evotool.shield.hint": "Right click: menu. Its slot swallows up to 1 billion evolium; it burns 1 every 10 minutes."
 }

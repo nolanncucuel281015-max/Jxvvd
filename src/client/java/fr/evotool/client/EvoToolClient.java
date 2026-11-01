@@ -14,7 +14,10 @@ import fr.evotool.weapon.ArcaneWeapons;
 import fr.evotool.weapon.MagicKind;
 import fr.evotool.weapon.WeaponKind;
 import fr.evotool.weapon.WeaponPowers;
+import fr.evotool.component.ModComponents;
 import fr.evotool.network.BurrowPayload;
+import fr.evotool.shield.ShieldGeneratorBlockEntity;
+import fr.evotool.shield.ShieldGeneratorScreenHandler;
 import fr.evotool.network.EvolvePayload;
 import fr.evotool.network.EvolvedPayload;
 import fr.evotool.upgrade.Burrow;
@@ -27,6 +30,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.render.BlockRenderLayer;
 import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.option.KeyBinding;
@@ -56,6 +60,8 @@ public class EvoToolClient implements ClientModInitializer {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> Burrow.clientActive = false);
 		// Ailes de l'infini du plastron : dessinées sur le buste du joueur, comme une cape.
 		InfinityWingsFeature.register();
+		// Générateur de bouclier : son menu.
+		HandledScreens.register(ShieldGeneratorScreenHandler.TYPE, ShieldGeneratorScreen::new);
 		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.
 		ClientPlayNetworking.registerGlobalReceiver(EvolvedPayload.ID,
 				(payload, context) -> context.client().gameRenderer.showFloatingItem(payload.stack()));
@@ -78,6 +84,15 @@ public class EvoToolClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+			if (stack.isOf(ModBlocks.SHIELD_GENERATOR.asItem())) {
+				lines.add(Text.translatable("tooltip.evotool.shield.fuel",
+						java.text.NumberFormat.getIntegerInstance(java.util.Locale.FRANCE)
+								.format(stack.getOrDefault(ModComponents.SHIELD_FUEL, 0L))).formatted(Formatting.AQUA));
+				lines.add(Text.translatable("tooltip.evotool.shield.radius",
+						stack.getOrDefault(ModComponents.SHIELD_RADIUS, ShieldGeneratorBlockEntity.DEFAULT_RADIUS)).formatted(Formatting.AQUA));
+				lines.add(Text.translatable("tooltip.evotool.shield.hint").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
+				return;
+			}
 			EvoKind kind = EvoProgression.kindOf(stack);
 			if (kind == null) {
 				return;

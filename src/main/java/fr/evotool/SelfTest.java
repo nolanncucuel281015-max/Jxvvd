@@ -507,6 +507,66 @@ final class SelfTest {
 			failures.add("équilibrage : Fortune " + fortuneLevel + " au lieu de IV sur une vieille pioche");
 		}
 
+		// générateur de bouclier : il avale l'évolium, brûle 1 évolium, fait un dôme et rejette les monstres
+		BlockPos shieldPos = ARENA.add(0, 0, 10);
+		world.setBlockState(shieldPos, fr.evotool.block.ModBlocks.SHIELD_GENERATOR.getDefaultState());
+		checks++;
+		if (!(world.getBlockEntity(shieldPos) instanceof fr.evotool.shield.ShieldGeneratorBlockEntity shield)) {
+			failures.add("générateur de bouclier : pas d'entité de bloc");
+		} else {
+			shield.input().setStack(0, new ItemStack(ModItems.EVOLIUM, 64));
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_MINUS_ONE);
+			ZombieEntity intruder = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+			if (intruder != null) {
+				intruder.refreshPositionAndAngles(shieldPos.getX() + 1.5, shieldPos.getY(), shieldPos.getZ() + 0.5, 0.0F, 0.0F);
+				intruder.setAiDisabled(true);
+				world.spawnEntity(intruder);
+			}
+			for (int i = 0; i < 4; i++) {
+				shield.serverTick(world);
+			}
+			int domes = world.getEntitiesByType(EntityType.ITEM_DISPLAY, new net.minecraft.util.math.Box(shieldPos).expand(16),
+					e -> e.getCommandTags().contains("evotool_shield_dome_" + shieldPos.asLong())).size();
+			double away = intruder == null ? 99 : intruder.getEntityPos().distanceTo(net.minecraft.util.math.Vec3d.ofCenter(shieldPos));
+			EvoTool.LOGGER.info("EVOTOOL shield: fuel={} radius={} active={} domes={} zombie at {} blocks", shield.fuel(),
+					shield.radius(), shield.isActive(), domes, String.format(java.util.Locale.ROOT, "%.1f", away));
+			checks++;
+			if (shield.fuel() != 63 || shield.radius() != 6 || !shield.isActive()) {
+				failures.add("générateur de bouclier : évolium " + shield.fuel() + " au lieu de 63, rayon " + shield.radius()
+						+ ", actif=" + shield.isActive());
+			}
+			checks++;
+			if (domes != 1) {
+				failures.add("générateur de bouclier : " + domes + " dômes au lieu de 1");
+			}
+			checks++;
+			if (away <= shield.radius()) {
+				failures.add("générateur de bouclier : le zombie est resté dans le dôme (" + away + " blocs)");
+			}
+			// éteint : le dôme disparaît
+			shield.press(fr.evotool.shield.ShieldGeneratorScreenHandler.BUTTON_TOGGLE);
+			shield.serverTick(world);
+			checks++;
+			if (shield.isActive()) {
+				failures.add("générateur de bouclier : toujours actif une fois éteint");
+			}
+			// cassé : il se lâche avec son évolium
+			checks++;
+			java.util.List<ItemStack> drops = shield.drops();
+			if (drops.isEmpty() || drops.get(0).getOrDefault(ModComponents.SHIELD_FUEL, 0L) < 63) {
+				failures.add("générateur de bouclier : l'évolium n'est pas gardé quand on le casse");
+			}
+			if (intruder != null) {
+				intruder.discard();
+			}
+		}
+		world.setBlockState(shieldPos, net.minecraft.block.Blocks.AIR.getDefaultState());
+
 		// bottes : accroupi sur le sol de l'arène, on plonge dedans
 		ItemStack boots = new ItemStack(ModItems.itemFor(EvoKind.BOOTS));
 		EvoliteUpgrade.apply(boots);

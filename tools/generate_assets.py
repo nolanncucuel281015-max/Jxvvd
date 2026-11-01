@@ -2471,7 +2471,7 @@ def gen_dimension_data():
     ids = lambda names: [f"{MOD}:{n}" for n in names]
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
                {"replace": False, "values": [f"{MOD}:{o}" for o in ORES] + [f"{MOD}:{g}_block" for g in GEMS]
-                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar"])})
+                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar", "shield_generator"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "shovel.json"),
                {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "axe.json"),
@@ -4589,6 +4589,120 @@ def gen_sanctuary():
                    "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
 
 
+# --------------------------------------------------------------------------- générateur de bouclier
+
+def shield_field_frames(frames=8):
+    """Champ de force : nid d'abeilles translucide, une vague de lumière le parcourt (texture animée)."""
+    img = Image.new("RGBA", (16, 16 * frames))
+    base, edge = hexc("4fd8ff"), hexc("d9a6ff")
+    s3 = math.sqrt(3)
+    centers = [(cx + (4 if (j % 2) else 0), j * 4 * s3 / 1.0) for j in range(-2, 7) for cx in range(-8, 32, 8)]
+    for f in range(frames):
+        for y in range(16):
+            for x in range(16):
+                best = 1e9
+                for cx, cy in centers:
+                    dx, dy = x + 0.5 - cx, y + 0.5 - cy * 0.62
+                    d = max(abs(dx) * s3 / 2 + abs(dy) / 2, abs(dy))
+                    best = min(best, d)
+                wave = 0.5 + 0.5 * math.sin(2 * math.pi * ((x + y) / 16.0 - f / frames))
+                if best > 3.2:
+                    c = lerp(edge, hexc("ffffff"), 0.35 * wave)
+                    a = 150 + int(80 * wave)
+                else:
+                    c = lerp(base, edge, 0.25 * wave)
+                    a = 46 + int(34 * wave)
+                img.putpixel((x, y + 16 * f), c[:3] + (a,))
+    return img
+
+
+def shield_dome_elements():
+    """Dôme du bouclier : une sphère de rayon 15 (centrée dans le modèle), d'une seule épaisseur de champ de force,
+    avec un anneau d'énergie à l'équateur. Mise à l'échelle du rayon voulu par ShieldGenerator."""
+    E, add = builder()
+    revolve(add, sphere_profile(15.0, 8.0, steps=12), "field", n=24, t=0.35)
+    ring_flat(add, 8, 8, 8, 15.2, 0.6, 0.5, "rim", n=32)
+    return E
+
+
+def shield_generator_elements():
+    """Générateur : socle en métal sombre cerclé d'or, 4 pylônes surmontés de gemmes, cristal d'évolium au centre
+    et anneau émetteur au-dessus."""
+    E, add = builder()
+    obox(add, (8, 1.5, 8), (16, 3, 16), "metal")
+    obox(add, (8, 3.25, 8), (14.6, 0.5, 14.6), "trim")
+    obox(add, (8, 4.0, 8), (9, 1.2, 9), "metal")
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            px, pz = 8 + sx * 5.5, 8 + sz * 5.5
+            obox(add, (px, 7.5, pz), (2.4, 9, 2.4), "metal")
+            obox(add, (px - sx * 1.25, 7.5, pz - sz * 1.25), (0.3, 7, 0.3), "energy")
+            obox(add, (px, 12.4, pz), (2.8, 0.6, 2.8), "trim")
+            obox(add, (px, 13.6, pz), (1.6, 1.6, 1.6), "core", orient(("x", 45), ("y", 45)))
+    obox(add, (8, 5.6, 8), (4.5, 2.0, 4.5), "trim")
+    obox(add, (8, 9.6, 8), (3.2, 6.4, 3.2), "core", orient(("y", 45)))
+    obox(add, (8, 9.6, 8), (2.2, 7.6, 2.2), "core", orient(("y", 0)))
+    ring_flat(add, 8, 13.0, 8, 4.6, 0.7, 0.7, "trim", n=16)
+    ring_flat(add, 8, 13.0, 8, 4.0, 0.3, 0.9, "energy", n=16)
+    return E
+
+
+def gen_shield():
+    """Générateur de bouclier : bloc (textures dans textures/block/), dôme d'énergie (modèle d'objet affiché)."""
+    out = ("block", "shield_generator")
+    st = {"gem": gem_palette("a64dff"), "trim": hexc("ffd23a")}
+    save_png(plate_texture(hexc("2c2640"), 31), *out, "metal")
+    save_png(trim_texture(st, 32), *out, "trim")
+    save_png(gem_texture(st, 33), *out, "core")
+    save_animated(energy_frames({"gem": gem_palette("6ff2ff")}), 2, *out, "energy")
+    tex = {"particle": f"{MOD}:block/shield_generator/metal"}
+    for name in ("metal", "trim", "core", "energy"):
+        tex[name] = f"{MOD}:block/shield_generator/{name}"
+    elements = shield_generator_elements()
+    for el in elements:
+        t = next(iter(el["faces"].values()))["texture"][1:]
+        if t in ("core", "energy"):
+            el["light_emission"] = 12 if t == "core" else 15
+    write_json(os.path.join(ASSETS, "models", "block", "shield_generator.json"),
+               {"textures": tex, "elements": elements, "display": {
+                   "gui": {"rotation": [25, 45, 0], "translation": [0, 0, 0], "scale": [0.6, 0.6, 0.6]},
+                   "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.25, 0.25, 0.25]},
+                   "fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.5, 0.5, 0.5]},
+                   "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.375, 0.375, 0.375]},
+                   "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 0, 0], "scale": [0.4, 0.4, 0.4]},
+                   "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 0, 0], "scale": [0.4, 0.4, 0.4]}}})
+    write_json(os.path.join(ASSETS, "blockstates", "shield_generator.json"),
+               {"variants": {"": {"model": f"{MOD}:block/shield_generator"}}})
+    write_json(os.path.join(ASSETS, "items", "shield_generator.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:block/shield_generator"}})
+
+    # le dôme : modèle d'objet (affiché en géant), textures translucides dans textures/item/shield/
+    shutil.rmtree(os.path.join(ASSETS, "textures", "item", "shield"), ignore_errors=True)
+    save_animated(shield_field_frames(), 3, "item", "shield", "field")
+    save_animated(energy_frames({"gem": gem_palette("6ff2ff")}), 2, "item", "shield", "rim")
+    dome = shield_dome_elements()
+    for el in dome:
+        el["light_emission"] = 10
+        el["shade"] = False
+    write_json(os.path.join(ASSETS, "models", "item", "shield", "dome.json"),
+               {"textures": {"particle": f"{MOD}:item/shield/field", "field": f"{MOD}:item/shield/field",
+                             "rim": f"{MOD}:item/shield/rim"}, "elements": dome}, compact=True)
+    write_json(os.path.join(ASSETS, "items", "shield", "dome.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/shield/dome"}})
+
+    # craft : un bouclier entouré d'évolium et d'améthyste, sur un bloc d'évolium et de l'obsidienne
+    write_json(os.path.join(DATA, "recipe", "shield_generator.json"), {
+        "type": "minecraft:crafting_shaped", "category": "redstone",
+        "pattern": ["AEA", "ESE", "OBO"],
+        "key": {"A": "minecraft:amethyst_shard", "E": f"{MOD}:evolium", "S": "minecraft:shield",
+                "O": "minecraft:obsidian", "B": f"{MOD}:evolium_block"},
+        "result": {"id": f"{MOD}:shield_generator", "count": 1},
+    })
+    # le bloc se lâche lui-même en Java (avec son évolium et son rayon) : pas de butin ici
+    write_json(os.path.join(DATA, "loot_table", "blocks", "shield_generator.json"),
+               {"type": "minecraft:block", "random_sequence": f"{MOD}:blocks/shield_generator", "pools": []})
+
+
 def recipe_unlocks():
     """Débloque chaque recette du mod dans le livre de recettes dès qu'on ramasse un de ses ingrédients
     (comme les recettes vanilla) : elles apparaissent alors dans la table de craft."""
@@ -4972,5 +5086,6 @@ if __name__ == "__main__":
     gen_magic()
     gen_sanctuary()
     gen_wings()
+    gen_shield()
     recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

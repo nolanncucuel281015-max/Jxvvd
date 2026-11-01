@@ -36,3 +36,8 @@ sigs net.minecraft.client.network.ClientPlayerInteractionManager 'clickButton'
 sigs net.minecraft.entity.mob.CreeperEntity 'setFuseSpeed|isIgnited|getFuseSpeed'
 sigs net.minecraft.entity.decoration.DisplayEntity 'DisplayWidth|DisplayHeight|ViewRange'
 sigs net.minecraft.inventory.Inventory 'canPlayerUse'
+
+# Accès élargis par Fabric (constructeurs de BlockEntityType / ScreenHandlerType, HandledScreens.register, DisplayEntity)
+for J in $(echo "$ALL" | tr ' ' '\n' | grep -i fabric | grep -v sources); do
+	unzip -p "$J" '*.accesswidener' '*.classtweaker' 2>/dev/null | grep -E 'BlockEntityType|ScreenHandlerType|HandledScreens|DisplayEntity' | sed "s|^|$(basename $J): |"
+done | sort -u | head -40

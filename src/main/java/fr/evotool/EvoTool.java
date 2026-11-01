@@ -14,6 +14,7 @@ import fr.evotool.mining.AxeLaser;
 import fr.evotool.mining.EvoMiningHandler;
 import fr.evotool.mining.FarmingHandler;
 import fr.evotool.network.ModNetworking;
+import fr.evotool.shield.ShieldGeneratorScreenHandler;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.CelestialBow;
 import fr.evotool.upgrade.GiantItem;
@@ -42,6 +43,7 @@ public class EvoTool implements ModInitializer {
 		// L'ordre compte : les composants doivent exister avant les items qui les utilisent.
 		ModComponents.init();
 		ModBlocks.init();
+		ShieldGeneratorScreenHandler.init();
 		ModItems.init();
 		ModItemGroup.init();
 		ModWorldGen.init();

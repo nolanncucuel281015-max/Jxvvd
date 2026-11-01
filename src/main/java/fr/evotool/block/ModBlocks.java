@@ -6,11 +6,15 @@ import fr.evotool.dimension.EvolvingBlock;
 import fr.evotool.dimension.EvolvingPillarBlock;
 import fr.evotool.dimension.SanctuaryAltarBlock;
 import fr.evotool.dimension.SanctuaryFeature;
+import fr.evotool.shield.ShieldGeneratorBlock;
+import fr.evotool.shield.ShieldGeneratorBlockEntity;
+import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ExperienceDroppingBlock;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -94,6 +98,18 @@ public final class ModBlocks {
 			AbstractBlock.Settings.copy(Blocks.QUARTZ_BLOCK).strength(5.0F, 1200.0F).requiresTool().luminance(state -> 13)
 					.nonOpaque().pistonBehavior(PistonBehavior.BLOCK),
 			Rarity.EPIC);
+
+	/**
+	 * Générateur de bouclier : un dôme d'énergie au rayon réglable qui repousse les monstres et détruit leurs
+	 * projectiles. Il brûle 1 évolium toutes les 10 minutes ; sa case en avale jusqu'à 1 milliard.
+	 */
+	public static final Block SHIELD_GENERATOR = register("shield_generator", ShieldGeneratorBlock::new,
+			AbstractBlock.Settings.copy(Blocks.OBSIDIAN).strength(8.0F, 1200.0F).requiresTool().luminance(state -> 10)
+					.nonOpaque().pistonBehavior(PistonBehavior.BLOCK),
+			Rarity.EPIC);
+	public static final BlockEntityType<ShieldGeneratorBlockEntity> SHIELD_GENERATOR_ENTITY = Registry.register(
+			Registries.BLOCK_ENTITY_TYPE, EvoTool.id("shield_generator"),
+			new BlockEntityType<>(ShieldGeneratorBlockEntity::new, Set.of(SHIELD_GENERATOR)));
 
 	/** Génération des sanctuaires (voir worldgen/configured_feature/sanctuary.json). */
 	public static final Feature<DefaultFeatureConfig> SANCTUARY_FEATURE = Registry.register(Registries.FEATURE,
