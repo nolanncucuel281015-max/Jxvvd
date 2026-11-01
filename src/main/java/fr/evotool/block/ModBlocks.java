@@ -8,8 +8,8 @@ import fr.evotool.dimension.SanctuaryAltarBlock;
 import fr.evotool.dimension.SanctuaryFeature;
 import fr.evotool.shield.ShieldGeneratorBlock;
 import fr.evotool.shield.ShieldGeneratorBlockEntity;
-import java.util.Set;
 import java.util.function.Function;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -109,7 +109,7 @@ public final class ModBlocks {
 			Rarity.EPIC);
 	public static final BlockEntityType<ShieldGeneratorBlockEntity> SHIELD_GENERATOR_ENTITY = Registry.register(
 			Registries.BLOCK_ENTITY_TYPE, EvoTool.id("shield_generator"),
-			new BlockEntityType<>(ShieldGeneratorBlockEntity::new, Set.of(SHIELD_GENERATOR)));
+			FabricBlockEntityTypeBuilder.create(ShieldGeneratorBlockEntity::new, SHIELD_GENERATOR).build());
 
 	/** Génération des sanctuaires (voir worldgen/configured_feature/sanctuary.json). */
 	public static final Feature<DefaultFeatureConfig> SANCTUARY_FEATURE = Registry.register(Registries.FEATURE,
