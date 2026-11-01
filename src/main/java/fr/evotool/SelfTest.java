@@ -810,7 +810,7 @@ final class SelfTest {
 			recipes++;
 			checks++;
 			boolean unlocked = false;
-			for (String category : new String[] {"equipment", "building", "misc"}) {
+			for (String category : new String[] {"equipment", "building", "misc", "redstone"}) {
 				unlocked |= server.getAdvancementLoader().get(EvoTool.id("recipes/" + category + "/" + id.getPath())) != null;
 			}
 			if (!unlocked) {
