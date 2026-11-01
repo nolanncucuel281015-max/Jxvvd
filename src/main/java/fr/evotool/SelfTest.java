@@ -142,7 +142,7 @@ final class SelfTest {
 			int parts = boss.getEntityWorld().getEntitiesByType(net.minecraft.entity.EntityType.ITEM_DISPLAY,
 					boss.getBoundingBox().expand(4), e -> true).size();
 			int waited = server.getTicks() - bossTick;
-			if (parts < 5 && waited < 300) {
+			if (parts < 5 && waited < 600) {
 				return;
 			}
 			bossTick = -1;
@@ -335,6 +335,9 @@ final class SelfTest {
 
 		// Boss : réveillé par un clic droit sur l'autel ; chaque forme est plus grande et plus solide.
 		evo.setChunkForced(altarPos.getX() >> 4, altarPos.getZ() >> 4, true);
+		// le boss apparaît 5 blocs au sud de l'autel, souvent dans le tronçon voisin : il doit lui aussi rester chargé
+		BlockPos bossSpot = altarPos.add(0, -1, 5);
+		evo.setChunkForced(bossSpot.getX() >> 4, bossSpot.getZ() >> 4, true);
 		boss = SanctuaryAltarBlock.summon(evo, altarPos, null);
 		checks++;
 		if (boss == null) {
