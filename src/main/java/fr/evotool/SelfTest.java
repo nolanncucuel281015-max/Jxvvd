@@ -476,7 +476,7 @@ final class SelfTest {
 		}
 		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
 
-		// équilibrage : une pioche d'une ancienne version (Fortune VI) redescend à Fortune III
+		// équilibrage : une pioche d'une ancienne version (Fortune VI) redescend à Fortune IV
 		checks++;
 		ItemStack old = new ItemStack(ModItems.itemFor(EvoKind.PICKAXE));
 		old.set(ModComponents.EVO_DATA, new EvoData(100, 0, 0, -1, 0L));
@@ -485,8 +485,8 @@ final class SelfTest {
 		net.minecraft.enchantment.EnchantmentHelper.apply(old, builder -> builder.set(fortune, 6));
 		EvoProgression.refresh(old, server.getRegistryManager());
 		int fortuneLevel = net.minecraft.enchantment.EnchantmentHelper.getLevel(fortune, old);
-		if (fortuneLevel != 3) {
-			failures.add("équilibrage : Fortune " + fortuneLevel + " au lieu de III sur une vieille pioche");
+		if (fortuneLevel != 4) {
+			failures.add("équilibrage : Fortune " + fortuneLevel + " au lieu de IV sur une vieille pioche");
 		}
 
 		// bottes : accroupi sur le sol de l'arène, on plonge dedans

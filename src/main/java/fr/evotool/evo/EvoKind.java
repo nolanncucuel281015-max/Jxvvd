@@ -6,36 +6,37 @@ import net.minecraft.entity.EquipmentSlot;
 /**
  * Les outils et pièces d'armure évolutifs, et leurs profils d'évolution.
  * Tous changent de forme tous les 5 niveaux (21 formes) : il faut alors les faire évoluer avec la touche R.
- * Équilibrage : enchantements au plus au niveau normal de Minecraft, pas de minage instantané ni d'exécution.
+ * Équilibrage : outils un peu au-dessus de Minecraft (Fortune IV), armes plus sages (la force vient de l'armure),
+ * pas de minage instantané ni d'exécution.
  */
 public enum EvoKind {
-	/** Mine : auto-smelt, Fortune I à III, zones 3x3, 3x3x3 puis 5x5. */
+	/** Mine : auto-smelt, Fortune I à IV, zones 3x3, 3x3x3, 5x5 puis 5x5x5. */
 	PICKAXE(new EvoProfile()
 			.blockXp().withAreaMining()
-			.mode(EvoMode.AREA_3X3, 25).mode(EvoMode.CUBE_3X3X3, 50).mode(EvoMode.AREA_5X5, 75)
-			.power(Power.AUTOSMELT, 15)
-			.enchant(Enchantments.FORTUNE, "fortune", 30, 55, 80)),
+			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 40).mode(EvoMode.AREA_5X5, 60).mode(EvoMode.CUBE_5X5X5, 90)
+			.power(Power.AUTOSMELT, 10)
+			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
 	/** Comme la pioche, mais pour la terre, le sable, le gravier… (sable → verre avec l'auto-smelt). */
 	SHOVEL(new EvoProfile()
 			.blockXp().withAreaMining()
-			.mode(EvoMode.AREA_3X3, 25).mode(EvoMode.CUBE_3X3X3, 50).mode(EvoMode.AREA_5X5, 75)
-			.power(Power.AUTOSMELT, 15)
-			.enchant(Enchantments.FORTUNE, "fortune", 30, 55, 80)),
+			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 40).mode(EvoMode.AREA_5X5, 60).mode(EvoMode.CUBE_5X5X5, 90)
+			.power(Power.AUTOSMELT, 10)
+			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
 	/** Bûcheronne et se bat : abattage d'arbres, replantation, Tranchant I à III. */
 	AXE(new EvoProfile()
 			.blockXp().killXp()
-			.power(Power.TREE_FELLING, 10).power(Power.FELL_LEAVES, 25).power(Power.AUTO_REPLANT, 35)
+			.power(Power.TREE_FELLING, 10).power(Power.FELL_LEAVES, 20).power(Power.AUTO_REPLANT, 30)
 			.power(Power.LIFESTEAL, 50).power(Power.SHOCKWAVE, 75)
 			.enchant(Enchantments.SHARPNESS, "sharpness", 25, 50, 75)),
 
-	/** Labour et récolte en zone 3x3 puis 5x5, replantation, Fortune I à III pour les récoltes. */
+	/** Labour et récolte en zone 3x3, 5x5 puis 7x7, replantation, Fortune I à IV pour les récoltes. */
 	HOE(new EvoProfile()
 			.blockXp().counter(EvoProfile.Counter.FARMING)
-			.mode(EvoMode.AREA_3X3, 25).mode(EvoMode.AREA_5X5, 60)
+			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.AREA_5X5, 40).mode(EvoMode.AREA_7X7, 70)
 			.power(Power.AUTO_REPLANT, 10)
-			.enchant(Enchantments.FORTUNE, "fortune", 30, 55, 80)),
+			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
 	/** Évolue en tuant des monstres : Tranchant, Butin, Affilage, Aura de feu, onde de choc, foudre. */
 	SWORD(new EvoProfile()

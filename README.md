@@ -20,20 +20,21 @@ totem), et les nouveaux pouvoirs se débloquent. Les pouvoirs ne se débloquent 
 
 ## Équilibrage
 
-Les objets restent forts mais ne sont plus « cheat » : les enchantements ne dépassent jamais le maximum normal de
-Minecraft (Fortune III, Tranchant III…), plus de minage instantané, de zone 5x5x5, de pousse instantanée ni
-d'exécution en un coup, et l'armure donne au plus Résistance II. Les objets d'une ancienne version sont remis
-aux nouvelles règles à la connexion (Fortune VI → III…).
+Les objets sont forts sans être « cheat » : les outils vont un peu au-delà de Minecraft (Fortune IV, zone 5x5x5
+au niveau 90), c'est **l'armure qui rend fort** (Résistance jusqu'à IV, Force II, +6 cœurs) et les armes restent
+plus sages (pas d'exécution en un coup, attaques spéciales moins puissantes). Plus de minage instantané ni de
+pousse instantanée. Les objets d'une ancienne version sont remis aux nouvelles règles à la connexion
+(Fortune VI → IV…).
 
 ## Pioche et pelle — en cassant des blocs
 
 | Niveau | Déblocage |
 |-------:|-----------|
-| 15  | Auto-smelt (minerais → lingots, sable → verre…) |
-| 30 / 55 / 80 | Fortune I à III |
-| 25 / 50 / 75 | Zone **3x3**, **3x3x3**, **5x5** |
+| 10  | Auto-smelt (minerais → lingots, sable → verre…) |
+| 20 / 40 / 60 / 80 | Fortune I à IV |
+| 20 / 40 / 60 / 90 | Zone **3x3**, **3x3x3**, **5x5**, **5x5x5** |
 
-La vitesse de minage augmente un peu à chaque niveau (+12 au niveau 100, un peu plus qu'Efficacité III). En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
+La vitesse de minage augmente à chaque niveau (+20 au niveau 100, presque Efficacité V). En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
 
 **Slash de la pioche géante** (Pioche Évolutive **niveau 100 + améliorée à l'évolite**) : clic droit. Ta pioche
 apparaît en géant au-dessus de toi (« pfff »), se lève puis **s'abat vers l'avant** (POW !) : une onde tranchante
@@ -48,8 +49,8 @@ Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 |-------:|-----------|
 | 10  | **Abattage** : tout l'arbre tombe d'un coup |
 | 25 / 50 / 75 | Tranchant I à III |
-| 25  | L'abattage emporte aussi les feuilles |
-| 35  | **Replantation** automatique d'une pousse |
+| 20  | L'abattage emporte aussi les feuilles |
+| 30  | **Replantation** automatique d'une pousse |
 | 50  | Vol de vie |
 | 75  | Onde de choc |
 
@@ -57,7 +58,7 @@ Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 viser un tronc l'écorce toujours, comme une hache normale). Un rayon laser fait le tour de toi en 2 secondes et
 coupe **tous les arbres à 50 blocs** (troncs et feuilles). Tout le bois revient à tes pieds, ou **directement dans
 ton inventaire** si la hache est améliorée à l'évolite (télékinésie). Les maisons en bûches ne sont pas touchées
-(seuls les troncs avec des feuilles naturelles autour comptent). Avec la replantation (niveau 35), chaque arbre
+(seuls les troncs avec des feuilles naturelles autour comptent). Avec la replantation (niveau 30), chaque arbre
 coupé est replanté. Recharge : 10 secondes.
 
 ## Houe — en labourant et en récoltant
@@ -65,8 +66,8 @@ coupé est replanté. Recharge : 10 secondes.
 | Niveau | Déblocage |
 |-------:|-----------|
 | 10  | **Replantation** automatique des cultures récoltées |
-| 30 / 55 / 80 | Fortune I à III (plus de récoltes) |
-| 25 / 60 | Labour **et** récolte en zone 3x3 puis 5x5 |
+| 20 / 40 / 60 / 80 | Fortune I à IV (plus de récoltes) |
+| 20 / 40 / 70 | Labour **et** récolte en zone 3x3, 5x5 puis 7x7 |
 
 ## Arc — en tuant des monstres avec ses flèches
 
@@ -131,11 +132,13 @@ donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'o
 
 | Niveau d'ensemble | Bonus |
 |------------------:|-------|
-| 40 / 85 | Résistance I et II |
-| 50  | Vitesse I |
-| 70  | Régénération I |
-| 80  | **+2 cœurs** |
-| 100 | **+4 cœurs** au total |
+| 20 / 45 / 70 / 95 | Résistance I à **IV** |
+| 35 / 75 | **Force** I et II (c'est l'armure qui rend fort) |
+| 25 / 65 | Vitesse I et II |
+| 55  | Célérité I (minage plus rapide) |
+| 40 / 85 | Régénération I et II |
+| 80  | **+4 cœurs** |
+| 100 | **+6 cœurs** au total |
 
 Chaque pièce doit être **évoluée avec R** à chaque nouvelle forme (sans rien en main, R fait évoluer toutes
 les pièces portées qui sont prêtes).
@@ -249,20 +252,21 @@ un **passif** à chaque coup et une **attaque spéciale au clic droit**. Toutes 
 **Elles sont évolutives**, comme l'épée : elles gagnent de l'XP en tuant des monstres (niveau 0 à 100,
 21 formes : runes, cristaux flottants, ailes d'énergie, anneau puis halo doré à la forme 20), débloquent
 Tranchant I à III, Butin I et II, Aura de feu, vol de vie, onde de choc et foudre, et leur **attaque spéciale grandit**
-avec le niveau (dégâts x2 et recharge 2 fois plus courte au niveau 100). Améliorées à l'évolite (enclume),
-elles deviennent **sublimées** : attaque spéciale 50 % plus forte et deux fois plus souvent. `/upgrade faux 100`,
+avec le niveau (dégâts x0,75 au niveau 0 jusqu'à x1,5 au niveau 100, recharge 40 % plus courte au niveau 100).
+Améliorées à l'évolite (enclume), elles deviennent **sublimées** : attaque spéciale 30 % plus forte et recharge
+30 % plus courte. `/upgrade faux 100`,
 `/upgrade dague 50`… marchent aussi.
 
 | Arme | Dégâts / vitesse | Passif | Clic droit (recharge) | Recette (lignes de la grille) |
 |------|-----------------|--------|-----------------------|-------------------------------|
-| **Faux d'Évolium** | 9 / 1,0, allonge +1 | vol de vie 15 % | **Moisson** : tourbillon de 4,5 blocs, attire et soigne (6 s) | `EEE` / `.E\|` / `..\|` |
-| **Katana de Rubis** | 7 / 2,0 | saignement | **Iaijutsu** : ruée de 8 blocs qui tranche tout sur le passage (5 s) | `..R` / `.R.` / `E..` |
-| **Marteau de Guerre Saphir** | 12 / 0,7 | soulève et ralentit | **Séisme** : onde de choc de 6 blocs, projette en l'air (8 s) | `SBS` / `.\|.` / `.\|.` |
-| **Espadon d'Évolite** | 14 / 0,8, allonge +1 | fendoir : 40 % aux ennemis autour | **Lame céleste** : vague d'énergie sur 16 blocs (7 s) | `.V.` / `.V.` / `E\|E` |
-| **Dague d'Ombre** | 5 / 2,8 | coup dans le dos : dégâts x2 | **Pas de l'ombre** : téléportation dans le dos de la cible visée jusqu'à **32 blocs**, puis **invisible 20 secondes** (4 s) | `E` / `P` / `\|` |
-| **Hallebarde Royale** | 10 / 0,9, allonge +2 | transperce l'ennemi suivant (70 %) | **Fauchage royal** : balayage en demi-cercle de 5,5 blocs (5 s) | `EEG` / `E\|.` / `.\|.` |
-| **Sceptre de Cristal** | 4 / 1,6 | cristallise (ralentit) | **Éclat de cristal** : projectile magique à 32 blocs (0,8 s) | `.C.` / `G\|G` / `.\|.` |
-| **Lame Détonante** | 9 / 1,2 | **chaque coup d'épée explose** devant toi (même dans le vide), sans casser le sol | **Détonation** : une ligne d'explosions sur 14 blocs (7 s) | `TET` / `.E.` / `.\|.` |
+| **Faux d'Évolium** | 8 / 1,0, allonge +1 | vol de vie 15 % | **Moisson** : tourbillon de 4,5 blocs, attire et soigne (6 s) | `EEE` / `.E\|` / `..\|` |
+| **Katana de Rubis** | 6 / 2,0 | saignement | **Iaijutsu** : ruée de 8 blocs qui tranche tout sur le passage (5 s) | `..R` / `.R.` / `E..` |
+| **Marteau de Guerre Saphir** | 10,5 / 0,7 | soulève et ralentit | **Séisme** : onde de choc de 6 blocs, projette en l'air (8 s) | `SBS` / `.\|.` / `.\|.` |
+| **Espadon d'Évolite** | 12 / 0,8, allonge +1 | fendoir : 40 % aux ennemis autour | **Lame céleste** : vague d'énergie sur 16 blocs (7 s) | `.V.` / `.V.` / `E\|E` |
+| **Dague d'Ombre** | 4,5 / 2,8 | coup dans le dos : dégâts x2 | **Pas de l'ombre** : téléportation dans le dos de la cible visée jusqu'à **32 blocs**, puis **invisible 20 secondes** (4 s) | `E` / `P` / `\|` |
+| **Hallebarde Royale** | 8,5 / 0,9, allonge +2 | transperce l'ennemi suivant (70 %) | **Fauchage royal** : balayage en demi-cercle de 5,5 blocs (5 s) | `EEG` / `E\|.` / `.\|.` |
+| **Sceptre de Cristal** | 3,5 / 1,6 | cristallise (ralentit) | **Éclat de cristal** : projectile magique à 32 blocs (0,8 s) | `.C.` / `G\|G` / `.\|.` |
+| **Lame Détonante** | 8 / 1,2 | **chaque coup d'épée explose** devant toi (même dans le vide), sans casser le sol | **Détonation** : une ligne d'explosions sur 14 blocs (7 s) | `TET` / `.E.` / `.\|.` |
 
 E = évolium, R = rubis, S = saphir, B = bloc de saphir, V = lingot d'évolite, P = perle de l'Ender,
 G = lingot d'or, C = cristal évolutif (dimension évolutive), T = TNT, | = bâton, . = case vide.
@@ -274,7 +278,8 @@ ne casse de bloc.
 Sept armes de mage, elles aussi évolutives. Chaque sort coûte **une charge** ; les charges **reviennent toutes
 seules** avec le temps (barre colorée sous l'objet, même dans l'inventaire). Au corps à corps, chaque coup a
 20 % de chances de rendre une charge. **Accroupi + clic droit** lance la variante puissante.
-Tous les 25 niveaux : + 1 charge ; au niveau 100 la recharge est 2 fois plus rapide.
+Tous les 50 niveaux : + 1 charge ; au niveau 100 la recharge est 40 % plus rapide. Leurs sorts suivent les
+mêmes règles que les attaques spéciales des armes (x0,75 au niveau 0, x1,5 au niveau 100).
 
 | Arme | Charges | Clic droit | Accroupi + clic droit | Recette |
 |------|--------:|-----------|-----------------------|---------|

@@ -112,21 +112,21 @@ public final class WeaponPowers {
 		hurt(world, target, player.getDamageSources().playerAttack(player), amount);
 	}
 
-	/** Dégâts d'une attaque spéciale : x2 au niveau 100, x1,5 de plus avec l'amélioration à l'évolite. */
+	/** Dégâts d'une attaque spéciale : x0,75 au niveau 0, x1,5 au niveau 100, x1,3 de plus avec l'amélioration à l'évolite. */
 	private static void strike(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float amount) {
 		hurt(world, player, target, amount * power);
 	}
 
 	public static float powerOf(ItemStack stack) {
-		float p = 1.0F + EvoProgression.get(stack).level() / 100.0F;
-		return EvoliteUpgrade.has(stack, EvoliteUpgrade.Upgrade.EMPOWERED) ? p * 1.5F : p;
+		float p = 0.75F * (1.0F + EvoProgression.get(stack).level() / 100.0F);
+		return EvoliteUpgrade.has(stack, EvoliteUpgrade.Upgrade.EMPOWERED) ? p * 1.3F : p;
 	}
 
-	/** Temps de recharge de l'attaque spéciale : jusqu'à 2 fois plus court au niveau 100, encore 2 fois plus amélioré. */
+	/** Temps de recharge de l'attaque spéciale : 40 % plus court au niveau 100, encore 30 % de moins amélioré. */
 	public static int cooldown(WeaponKind kind, ItemStack stack) {
-		double c = kind.cooldown() * (1.0 - EvoProgression.get(stack).level() / 200.0);
+		double c = kind.cooldown() * (1.0 - EvoProgression.get(stack).level() / 250.0);
 		if (EvoliteUpgrade.has(stack, EvoliteUpgrade.Upgrade.EMPOWERED)) {
-			c *= 0.5;
+			c *= 0.7;
 		}
 		return Math.max(6, (int) Math.round(c));
 	}

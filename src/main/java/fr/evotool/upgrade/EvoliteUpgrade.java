@@ -41,7 +41,7 @@ public final class EvoliteUpgrade {
 		CELESTIAL_LEGS,
 		/** Bottes : rester accroupi sur le sol pour plonger dedans et filer sous terre à travers la roche. */
 		BURROW,
-		/** Armes moddées et magiques : attaque spéciale 50 % plus forte et deux fois plus souvent (charges deux fois plus rapides). */
+		/** Armes moddées et magiques : attaque spéciale 30 % plus forte et recharge 30 % plus courte (charges plus rapides). */
 		EMPOWERED;
 
 		public String translationKey() {

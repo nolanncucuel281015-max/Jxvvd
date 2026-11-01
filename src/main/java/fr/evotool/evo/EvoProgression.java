@@ -89,9 +89,9 @@ public final class EvoProgression {
 		return profile.modeUnlocked(mode, data.level()) ? mode : EvoMode.SINGLE;
 	}
 
-	/** Bonus d'efficacité de minage : +12 au niveau 100 (un peu plus qu'Efficacité III). */
+	/** Bonus d'efficacité de minage : +20 au niveau 100 (presque Efficacité V). */
 	public static double miningBonus(EvoProfile profile, int level) {
-		return level * 0.12;
+		return level * 0.2;
 	}
 
 	/** Bonus de dégâts : +4 au niveau 100. */

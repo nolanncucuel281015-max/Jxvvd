@@ -134,16 +134,16 @@ public final class ArcaneWeapons {
 
 	// ------------------------------------------------------------------ charges
 
-	/** Charges maximum : + 1 tous les 25 niveaux d'évolution. */
+	/** Charges maximum : + 1 tous les 50 niveaux d'évolution. */
 	public static int maxCharges(ItemStack stack, MagicKind kind) {
-		return kind.maxCharges() + EvoProgression.get(stack).level() / 25;
+		return kind.maxCharges() + EvoProgression.get(stack).level() / 50;
 	}
 
-	/** Ticks pour regagner une charge : jusqu'à 2 fois plus rapide au niveau 100, encore 2 fois plus amélioré. */
+	/** Ticks pour regagner une charge : 40 % plus rapide au niveau 100, encore 30 % de mieux amélioré. */
 	public static int rechargeTicks(ItemStack stack, MagicKind kind) {
-		double t = kind.rechargeTicks() * (1.0 - EvoProgression.get(stack).level() / 200.0);
+		double t = kind.rechargeTicks() * (1.0 - EvoProgression.get(stack).level() / 250.0);
 		if (EvoliteUpgrade.has(stack, EvoliteUpgrade.Upgrade.EMPOWERED)) {
-			t *= 0.5;
+			t *= 0.7;
 		}
 		return Math.max(5, (int) Math.round(t));
 	}

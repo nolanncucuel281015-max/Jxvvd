@@ -22,10 +22,12 @@ import net.minecraft.text.Text;
  * <p>Le niveau d'ensemble = somme des niveaux des 4 pièces portées / 4 (une pièce manquante compte 0),
  * il faut donc porter l'armure complète pour tout avoir. Les effets sont permanents tant qu'on la porte :
  * <ul>
- *   <li>Résistance I et II : niveaux 40 / 85</li>
- *   <li>Vitesse I : niveau 50</li>
- *   <li>Régénération I : niveau 70</li>
- *   <li>Cœurs en plus : +2 au niveau 80, +4 au niveau 100</li>
+ *   <li>Résistance I à IV : niveaux 20 / 45 / 70 / 95</li>
+ *   <li>Force I et II : niveaux 35 / 75 (c'est l'armure qui rend fort, pas les armes)</li>
+ *   <li>Vitesse I et II : niveaux 25 / 65</li>
+ *   <li>Célérité I : niveau 55</li>
+ *   <li>Régénération I et II : niveaux 40 / 85</li>
+ *   <li>Cœurs en plus : +4 au niveau 80, +6 au niveau 100</li>
  * </ul>
  */
 public final class ArmorSet {
@@ -34,9 +36,11 @@ public final class ArmorSet {
 	private static final Map<RegistryEntry<StatusEffect>, int[]> EFFECTS = new LinkedHashMap<>();
 
 	static {
-		EFFECTS.put(StatusEffects.RESISTANCE, new int[] {40, 85});
-		EFFECTS.put(StatusEffects.SPEED, new int[] {50});
-		EFFECTS.put(StatusEffects.REGENERATION, new int[] {70});
+		EFFECTS.put(StatusEffects.RESISTANCE, new int[] {20, 45, 70, 95});
+		EFFECTS.put(StatusEffects.STRENGTH, new int[] {35, 75});
+		EFFECTS.put(StatusEffects.SPEED, new int[] {25, 65});
+		EFFECTS.put(StatusEffects.HASTE, new int[] {55});
+		EFFECTS.put(StatusEffects.REGENERATION, new int[] {40, 85});
 	}
 
 	public static final int HEARTS_LEVEL_1 = 80;
@@ -81,9 +85,9 @@ public final class ArmorSet {
 	/** Points de vie en plus (2 points = 1 cœur). */
 	public static double bonusHealth(int setLevel) {
 		if (setLevel >= HEARTS_LEVEL_2) {
-			return 8.0;
+			return 12.0;
 		}
-		return setLevel >= HEARTS_LEVEL_1 ? 4.0 : 0.0;
+		return setLevel >= HEARTS_LEVEL_1 ? 8.0 : 0.0;
 	}
 
 	/** Lignes « bonus actifs » pour le menu, plus le prochain bonus. */

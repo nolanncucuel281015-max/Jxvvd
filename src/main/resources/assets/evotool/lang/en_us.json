@@ -214,7 +214,7 @@
   "tooltip.evotool.magic.sneak": "Sneak + right click: %s",
   "message.evotool.no_charges": "Out of charges: they come back on their own over time",
   "upgrade.evotool.empowered": "Empowered Weapon",
-  "upgrade.evotool.empowered.desc": "Special attack 50% stronger and twice as often",
+  "upgrade.evotool.empowered.desc": "Special attack 30% stronger with a 30% shorter cooldown (faster charges)",
   "message.evotool.altar_busy": "The Bell Slime is already awake nearby!",
   "boss.evotool.phase_timer": "%s - Phase %s/3 - evolves in %s",
   "command.evotool.dimension.spawned": "%s appears! (evolves every %s minutes)",

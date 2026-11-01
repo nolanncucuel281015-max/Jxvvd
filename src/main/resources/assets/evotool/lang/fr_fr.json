@@ -214,7 +214,7 @@
   "tooltip.evotool.magic.sneak": "Accroupi + clic droit : %s",
   "message.evotool.no_charges": "Plus de charges : elles reviennent toutes seules avec le temps",
   "upgrade.evotool.empowered": "Arme sublimée",
-  "upgrade.evotool.empowered.desc": "Attaque spéciale 50 % plus forte et deux fois plus souvent",
+  "upgrade.evotool.empowered.desc": "Attaque spéciale 30 % plus forte et recharge 30 % plus courte (charges plus rapides)",
   "message.evotool.altar_busy": "Le Slime Cloche est déjà réveillé tout près !",
   "boss.evotool.phase_timer": "%s - Phase %s/3 - évolue dans %s",
   "command.evotool.dimension.spawned": "%s apparaît ! (évolution toutes les %s minutes)",
