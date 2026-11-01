@@ -314,12 +314,12 @@ touchant. Les joueurs passent librement.
 Il brûle **1 évolium toutes les 10 minutes** quand il est allumé. Cassé à la pioche, il **garde son évolium et
 son rayon** et les retrouve une fois reposé.
 
-Recette (table de craft) :
+Recette (table de craft), visible dans le livre de recettes dès le début :
 
 ```
-[Améthyste] [ Évolium ] [Améthyste]
-[ Évolium ] [ Bouclier ] [ Évolium ]
-[Obsidienne] [Bloc d'évolium] [Obsidienne]
+[    Diamant     ] [    Diamant     ] [    Diamant     ]
+[ Bloc d'évolium ] [    Bouclier    ] [ Bloc d'évolium ]
+[ Bloc d'évolium ] [ Bloc d'évolium ] [ Bloc d'évolium ]
 ```
 
 ## Modèle 3D — 21 formes

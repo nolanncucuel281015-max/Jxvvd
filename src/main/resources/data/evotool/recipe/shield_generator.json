@@ -2,15 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "pattern": [
-    "AEA",
-    "ESE",
-    "OBO"
+    "DDD",
+    "BSB",
+    "BBB"
   ],
   "key": {
-    "A": "minecraft:amethyst_shard",
-    "E": "evotool:evolium",
+    "D": "minecraft:diamond",
     "S": "minecraft:shield",
-    "O": "minecraft:obsidian",
     "B": "evotool:evolium_block"
   },
   "result": {

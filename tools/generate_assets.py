@@ -4690,12 +4690,11 @@ def gen_shield():
     write_json(os.path.join(ASSETS, "items", "shield", "dome.json"),
                {"model": {"type": "minecraft:model", "model": f"{MOD}:item/shield/dome"}})
 
-    # craft : un bouclier entouré d'évolium et d'améthyste, sur un bloc d'évolium et de l'obsidienne
+    # craft : trois diamants en haut, un bouclier entre deux blocs d'évolium, trois blocs d'évolium en bas
     write_json(os.path.join(DATA, "recipe", "shield_generator.json"), {
         "type": "minecraft:crafting_shaped", "category": "redstone",
-        "pattern": ["AEA", "ESE", "OBO"],
-        "key": {"A": "minecraft:amethyst_shard", "E": f"{MOD}:evolium", "S": "minecraft:shield",
-                "O": "minecraft:obsidian", "B": f"{MOD}:evolium_block"},
+        "pattern": ["DDD", "BSB", "BBB"],
+        "key": {"D": "minecraft:diamond", "S": "minecraft:shield", "B": f"{MOD}:evolium_block"},
         "result": {"id": f"{MOD}:shield_generator", "count": 1},
     })
     # le bloc se lâche lui-même en Java (avec son évolium et son rayon) : pas de butin ici
@@ -4703,9 +4702,14 @@ def gen_shield():
                {"type": "minecraft:block", "random_sequence": f"{MOD}:blocks/shield_generator", "pools": []})
 
 
+# Recettes visibles dans le livre de recettes dès la connexion, sans avoir à ramasser un ingrédient.
+ALWAYS_VISIBLE_RECIPES = {"shield_generator"}
+
+
 def recipe_unlocks():
     """Débloque chaque recette du mod dans le livre de recettes dès qu'on ramasse un de ses ingrédients
-    (comme les recettes vanilla) : elles apparaissent alors dans la table de craft."""
+    (comme les recettes vanilla) : elles apparaissent alors dans la table de craft. Celles de
+    ALWAYS_VISIBLE_RECIPES sont débloquées tout de suite."""
     rec = os.path.join(DATA, "recipe")
     for file in sorted(os.listdir(rec)):
         name = file[:-5]
@@ -4721,6 +4725,8 @@ def recipe_unlocks():
         for item in items:
             criteria["has_" + item.split(":")[1]] = {
                 "trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": item}]}}
+        if name in ALWAYS_VISIBLE_RECIPES:
+            criteria["from_the_start"] = {"trigger": "minecraft:tick"}
         category = recipe.get("category", "misc")
         if recipe["type"] in ("minecraft:smelting", "minecraft:blasting"):
             category = "misc"
