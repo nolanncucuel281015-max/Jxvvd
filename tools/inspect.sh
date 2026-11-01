@@ -14,12 +14,25 @@ jar_of() {
 sigs() {
 	local JAR=$(jar_of "$1")
 	echo "=== $1 ~ ${2:-.}"
-	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "${2:-.}" | head -40
+	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "${2:-.}" | head -${3:-40}
 }
 
-# animation de l'objet qui jaillit à l'écran (comme le totem d'immortalité)
-sigs net.minecraft.client.render.GameRenderer 'loat|Overlay|overlay'
-sigs net.minecraft.client.gui.hud.InGameOverlayRenderer 'loat|public'
-sigs net.minecraft.client.network.ClientPlayNetworkHandler 'Totem|totem|EntityStatus'
-sigs net.minecraft.client.option.KeyBinding 'public'
-sigs net.minecraft.client.MinecraftClient 'gameRenderer|getOverlay'
+sigs net.minecraft.block.entity.BlockEntityType 'BlockEntityType\(|interface|Factory|create'
+sigs 'net.minecraft.block.entity.BlockEntityType$BlockEntityFactory' '.'
+sigs net.minecraft.block.entity.BlockEntity 'writeData|readData|markRemoved|markDirty|addComponents|readComponents|toInitialChunkDataNbt|toUpdatePacket|onBlockReplaced|getWorld|getPos|protected|public BlockEntity'
+sigs net.minecraft.storage.WriteView 'put|public'
+sigs net.minecraft.storage.ReadView 'get|public'
+sigs net.minecraft.block.BlockWithEntity 'validateTicker|getCodec|getTicker|createBlockEntity|onSyncedBlockEvent'
+sigs net.minecraft.block.Block 'onBreak|onPlaced|onStateReplaced|createCodec'
+sigs net.minecraft.block.AbstractBlock 'onStateReplaced|getRenderType|onUse\('
+sigs net.minecraft.screen.ScreenHandlerType 'ScreenHandlerType\(|Factory|public'
+sigs 'net.minecraft.screen.ScreenHandlerType$Factory' '.'
+sigs net.minecraft.screen.ScreenHandler 'addPlayerSlots|onButtonClick|quickMove|insertItem|addProperties|canUse|ScreenHandler\('
+sigs net.minecraft.screen.ArrayPropertyDelegate 'public'
+sigs net.minecraft.client.gui.screen.ingame.HandledScreens 'register|Provider'
+sigs net.minecraft.client.gui.screen.ingame.HandledScreen 'drawBackground|drawForeground|render\(|drawMouseoverTooltip|protected int|HandledScreen\(|titleX|backgroundWidth'
+sigs net.minecraft.client.gui.DrawContext 'public void (fill|drawText|drawItem|drawStackOverlay|drawBorder|drawCenteredTextWithShadow|drawStrokedRectangle)'
+sigs net.minecraft.client.network.ClientPlayerInteractionManager 'clickButton'
+sigs net.minecraft.entity.mob.CreeperEntity 'setFuseSpeed|isIgnited|getFuseSpeed'
+sigs net.minecraft.entity.decoration.DisplayEntity 'DisplayWidth|DisplayHeight|ViewRange'
+sigs net.minecraft.inventory.Inventory 'canPlayerUse'
