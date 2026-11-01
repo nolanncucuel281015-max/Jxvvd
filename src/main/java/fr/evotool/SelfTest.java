@@ -769,7 +769,8 @@ final class SelfTest {
 					failures.add(kind + " niv. " + level + " : pas de composant équipable");
 				}
 				// XP : les niveaux montent seuls jusqu'à la forme suivante, puis l'objet attend la touche R.
-				EvoProgression.gainXp(stack, 1_000_000, 1, server.getOverworld());
+				// (10 millions : assez pour remplir les niveaux 95 à 99 des outils de minage.)
+				EvoProgression.gainXp(stack, 10_000_000, 1, server.getOverworld());
 				if (level < EvoProgression.MAX_LEVEL) {
 					checks++;
 					int waiting = EvoProgression.get(stack).level();
