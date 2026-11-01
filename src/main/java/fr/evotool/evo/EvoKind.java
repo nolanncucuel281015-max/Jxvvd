@@ -24,12 +24,12 @@ public enum EvoKind {
 			.power(Power.AUTOSMELT, 10)
 			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
-	/** Bûcheronne et se bat : abattage d'arbres, replantation, Tranchant I à III. */
+	/** Bûcheronne et se bat : abattage d'arbres, replantation, Tranchant I à V. */
 	AXE(new EvoProfile()
 			.blockXp().killXp()
 			.power(Power.TREE_FELLING, 10).power(Power.FELL_LEAVES, 20).power(Power.AUTO_REPLANT, 30)
-			.power(Power.LIFESTEAL, 50).power(Power.SHOCKWAVE, 75)
-			.enchant(Enchantments.SHARPNESS, "sharpness", 25, 50, 75)),
+			.power(Power.LIFESTEAL, 40).power(Power.SHOCKWAVE, 60)
+			.enchant(Enchantments.SHARPNESS, "sharpness", 20, 35, 50, 65, 80)),
 
 	/** Labour et récolte en zone 3x3, 5x5 puis 7x7, replantation, Fortune I à IV pour les récoltes. */
 	HOE(new EvoProfile()
@@ -41,9 +41,9 @@ public enum EvoKind {
 	/** Évolue en tuant des monstres : Tranchant, Butin, Affilage, Aura de feu, onde de choc, foudre. */
 	SWORD(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
-			.power(Power.LIFESTEAL, 20).power(Power.SHOCKWAVE, 40).power(Power.LIGHTNING, 65)
-			.power(Power.WIDE_SHOCKWAVE, 85)
-			.enchant(Enchantments.SHARPNESS, "sharpness", 25, 50, 75)
+			.power(Power.LIFESTEAL, 15).power(Power.SHOCKWAVE, 30).power(Power.LIGHTNING, 50)
+			.power(Power.WIDE_SHOCKWAVE, 75)
+			.enchant(Enchantments.SHARPNESS, "sharpness", 20, 35, 50, 65, 80)
 			.enchant(Enchantments.LOOTING, "looting", 30, 60, 90)
 			.enchant(Enchantments.SWEEPING_EDGE, "sweeping_edge", 35, 60, 85)
 			.enchant(Enchantments.FIRE_ASPECT, "fire_aspect", 55, 90)),
@@ -51,9 +51,9 @@ public enum EvoKind {
 	/** Lance (1.21.11) : évolue en tuant des monstres. Tranchant, Élan, Butin, onde de choc, foudre. */
 	SPEAR(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
-			.power(Power.LIFESTEAL, 20).power(Power.SHOCKWAVE, 40).power(Power.LIGHTNING, 65)
-			.power(Power.WIDE_SHOCKWAVE, 85)
-			.enchant(Enchantments.SHARPNESS, "sharpness", 25, 50, 75)
+			.power(Power.LIFESTEAL, 15).power(Power.SHOCKWAVE, 30).power(Power.LIGHTNING, 50)
+			.power(Power.WIDE_SHOCKWAVE, 75)
+			.enchant(Enchantments.SHARPNESS, "sharpness", 20, 35, 50, 65, 80)
 			// Élan évolutif : comme Élan, mais sans faim (voir data/evotool/enchantment/evolving_lunge.json).
 			.enchant(ModEnchantments.EVOLVING_LUNGE, "enchantment.evotool.evolving_lunge", 20, 45, 70)
 			.enchant(Enchantments.LOOTING, "looting", 30, 60, 90)),
@@ -61,18 +61,18 @@ public enum EvoKind {
 	/** Arc : évolue en tuant des monstres avec ses flèches. Puissance, Frappe, Flamme, Infinité, foudre. */
 	BOW(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
-			.power(Power.LIFESTEAL, 20).power(Power.LIGHTNING, 65)
-			.enchant(Enchantments.POWER, "power", 25, 50, 75)
-			.enchant(Enchantments.PUNCH, "punch", 40)
-			.enchant(Enchantments.FLAME, "flame", 55)
-			.enchant(Enchantments.INFINITY, "infinity", 90)),
+			.power(Power.LIFESTEAL, 15).power(Power.LIGHTNING, 50)
+			.enchant(Enchantments.POWER, "power", 20, 35, 50, 65, 80)
+			.enchant(Enchantments.PUNCH, "punch", 30, 60)
+			.enchant(Enchantments.FLAME, "flame", 40)
+			.enchant(Enchantments.INFINITY, "infinity", 70)),
 
 	/** Évolue en tuant des monstres : Densité, Brèche, Charge de vent, onde de choc, foudre. */
 	MACE(new EvoProfile()
 			.curve(XpCurve.COMBAT).counter(EvoProfile.Counter.KILLS).killXp()
-			.power(Power.LIFESTEAL, 20).power(Power.SHOCKWAVE, 40).power(Power.LIGHTNING, 65)
-			.power(Power.WIDE_SHOCKWAVE, 85)
-			.enchant(Enchantments.DENSITY, "density", 20, 40, 60, 80)
+			.power(Power.LIFESTEAL, 15).power(Power.SHOCKWAVE, 30).power(Power.LIGHTNING, 50)
+			.power(Power.WIDE_SHOCKWAVE, 75)
+			.enchant(Enchantments.DENSITY, "density", 20, 35, 50, 65, 80)
 			.enchant(Enchantments.BREACH, "breach", 30, 60, 90)
 			.enchant(Enchantments.WIND_BURST, "wind_burst", 50, 85)),
 

@@ -94,9 +94,9 @@ public final class EvoProgression {
 		return level * 0.2;
 	}
 
-	/** Bonus de dégâts : +4 au niveau 100. */
+	/** Bonus de dégâts : +8 au niveau 100. */
 	public static double damageBonus(int level) {
-		return level * 0.04;
+		return level * 0.08;
 	}
 
 	public static int xpForBlock(BlockState state) {

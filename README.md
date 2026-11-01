@@ -21,8 +21,9 @@ totem), et les nouveaux pouvoirs se débloquent. Les pouvoirs ne se débloquent 
 ## Équilibrage
 
 Les objets sont forts sans être « cheat » : les outils vont un peu au-delà de Minecraft (Fortune IV, zone 5x5x5
-au niveau 90), c'est **l'armure qui rend fort** (Résistance jusqu'à IV, Force II, +6 cœurs) et les armes restent
-plus sages (pas d'exécution en un coup, attaques spéciales moins puissantes). Plus de minage instantané ni de
+au niveau 90, Tranchant et Puissance V, +8 dégâts au niveau 100), c'est **l'armure qui rend fort** (Résistance
+jusqu'à IV, Force II, +6 cœurs) et les armes moddées et magiques restent plus sages (pas d'exécution en un coup,
+attaques spéciales moins puissantes). Plus de minage instantané ni de
 pousse instantanée. Les objets d'une ancienne version sont remis aux nouvelles règles à la connexion
 (Fortune VI → IV…).
 
@@ -48,11 +49,11 @@ Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 | Niveau | Déblocage |
 |-------:|-----------|
 | 10  | **Abattage** : tout l'arbre tombe d'un coup |
-| 25 / 50 / 75 | Tranchant I à III |
+| 20 / 35 / 50 / 65 / 80 | Tranchant I à V |
 | 20  | L'abattage emporte aussi les feuilles |
 | 30  | **Replantation** automatique d'une pousse |
-| 50  | Vol de vie |
-| 75  | Onde de choc |
+| 40  | Vol de vie |
+| 60  | Onde de choc |
 
 **Laser bûcheron** : clic droit avec la Hache Évolutive (dans le vide ou sur un bloc qui ne s'écorce pas ;
 viser un tronc l'écorce toujours, comme une hache normale). Un rayon laser fait le tour de toi en 2 secondes et
@@ -79,12 +80,12 @@ anneau runique (90) et couronne de pointes de lumière (100).
 
 | Niveau | Bonus |
 |-------:|-------|
-| 20 | Vol de vie (5 % des dégâts) |
-| 25 / 50 / 75 | Puissance I à III |
-| 40 | Frappe I |
-| 55 | Flamme |
-| 65 | Foudre (12 % de chance par flèche) |
-| 90 | Infinité |
+| 15 | Vol de vie (8 % des dégâts) |
+| 20 / 35 / 50 / 65 / 80 | Puissance I à V |
+| 30 / 60 | Frappe I et II |
+| 40 | Flamme |
+| 50 | Foudre (15 % de chance par flèche) |
+| 70 | Infinité |
 
 **Arc céleste** (niveau 100 + amélioré à l'évolite) : clic droit, **ton arc apparaît en géant** devant toi
 (« pfff », 6 blocs de haut, bandé) et suit ton regard. Il tire **une flèche toutes les demi-secondes** (20 flèches),
@@ -93,14 +94,14 @@ droit sur les monstres à 48 blocs, puis disparaît. Recharge : 12 secondes en t
 ## Épée, lance et masse — en tuant des monstres
 
 XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
-Les animaux ne rapportent rien. Chaque niveau donne +0,04 dégât (+4 au niveau 100).
+Les animaux ne rapportent rien. Chaque niveau donne +0,08 dégât (+8 au niveau 100).
 
 **Épée — explosion céleste** : accroupi + clic droit, une explosion part de toi et s'étend sur
-**12 blocs** (onde de choc animée). Elle blesse et repousse les monstres (plus fort près de toi, et plus fort
-avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 20 secondes.
+**15 blocs** (onde de choc animée). Elle blesse et repousse les monstres (plus fort près de toi, et plus fort
+avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 15 secondes.
 
 **Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre),
-avec Tranchant I à III (25/50/75), **Élan évolutif** I à III (20/45/70) et Butin I à III (30/60/90).
+avec Tranchant I à V (20/35/50/65/80), **Élan évolutif** I à III (20/45/70) et Butin I à III (30/60/90).
 Elle garde la charge de la lance en netherite, mais ses estocs n'ont **pas besoin d'être chargés** : on peut
 enchaîner les Élans pour s'élancer encore et encore. **Tant que tu tiens la Lance Évolutive, tu ne perds
 pas de faim** (coups, Élan, charge…). L'Élan vanilla (qui coûte 4 points de faim par niveau à chaque estoc) est
@@ -108,16 +109,15 @@ automatiquement remplacé par l'Élan évolutif sur la lance.
 
 | Niveau | Épée | Masse |
 |-------:|------|-------|
-| 20  | Vol de vie (5 % des dégâts) | Vol de vie |
-| 25 / 50 / 75 | Tranchant I à III | — |
-| 20 / 40 / 60 / 80 | — | Densité I à IV |
+| 15  | Vol de vie (8 % des dégâts) | Vol de vie |
+| 20 / 35 / 50 / 65 / 80 | Tranchant I à V | Densité I à V |
 | 30 / 60 / 90 | Butin I à III | Brèche I à III |
+| 30  | **Onde de choc** (monstres à 3 blocs : 40 % des dégâts) | Onde de choc |
 | 35 / 60 / 85 | Affilage I à III | — |
-| 40  | **Onde de choc** (monstres à 2,5 blocs : 30 % des dégâts) | Onde de choc |
+| 50  | **Foudre** (15 % de chance) | Foudre |
 | 50 / 85 | — | Charge de vent I et II |
 | 55 / 90 | Aura de feu I et II | — |
-| 65  | **Foudre** (12 % de chance) | Foudre |
-| 85  | Onde de choc élargie (4 blocs) | Onde de choc élargie |
+| 75  | Onde de choc élargie (4,5 blocs) | Onde de choc élargie |
 
 La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
 

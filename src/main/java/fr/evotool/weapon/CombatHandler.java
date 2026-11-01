@@ -23,9 +23,9 @@ import net.minecraft.util.math.Vec3d;
 
 /** Pouvoirs de combat (épée, lance, hache, masse, arc) et gain d'XP quand l'arme tue un monstre. */
 public final class CombatHandler {
-	private static final float LIFESTEAL_RATIO = 0.05F;
-	private static final float SHOCKWAVE_RATIO = 0.3F;
-	private static final float LIGHTNING_CHANCE = 0.12F;
+	private static final float LIFESTEAL_RATIO = 0.08F;
+	private static final float SHOCKWAVE_RATIO = 0.4F;
+	private static final float LIGHTNING_CHANCE = 0.15F;
 
 	/** Évite que les dégâts de l'onde de choc / foudre / exécution relancent les pouvoirs en boucle. */
 	private static boolean applyingBonusDamage = false;
@@ -59,7 +59,7 @@ public final class CombatHandler {
 			applyingBonusDamage = true;
 			try {
 				if (EvoProgression.isActive(profile, data, Power.SHOCKWAVE)) {
-					double radius = EvoProgression.isActive(profile, data, Power.WIDE_SHOCKWAVE) ? 4.0 : 2.5;
+					double radius = EvoProgression.isActive(profile, data, Power.WIDE_SHOCKWAVE) ? 4.5 : 3.0;
 					shockwave(world, player, entity, damageTaken * SHOCKWAVE_RATIO, radius);
 				}
 				if (EvoProgression.isActive(profile, data, Power.LIGHTNING) && entity.isAlive()
@@ -149,7 +149,7 @@ public final class CombatHandler {
 			bolt.setCosmetic(true);
 			world.spawnEntity(bolt);
 		}
-		target.damage(world, world.getDamageSources().lightningBolt(), 3.0F + level * 0.04F);
-		target.setOnFireFor(3.0F);
+		target.damage(world, world.getDamageSources().lightningBolt(), 4.0F + level * 0.06F);
+		target.setOnFireFor(4.0F);
 	}
 }

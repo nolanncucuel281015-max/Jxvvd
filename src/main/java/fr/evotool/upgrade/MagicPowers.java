@@ -43,11 +43,11 @@ public final class MagicPowers {
 	private static final double KNIGHT_SIGHT_RANGE = 24.0;
 
 	/** Explosion céleste de l'épée (accroupi + clic droit). */
-	private static final double EXPLOSION_RADIUS = 12.0;
+	private static final double EXPLOSION_RADIUS = 15.0;
 	private static final double EXPLOSION_WAVE_SPEED = 2.0;
-	private static final int EXPLOSION_COOLDOWN = 400;
+	private static final int EXPLOSION_COOLDOWN = 300;
 
-	/** Une onde d'explosion qui s'étend de 2 blocs par tick jusqu'à 12 blocs. */
+	/** Une onde d'explosion qui s'étend de 2 blocs par tick jusqu'à 15 blocs. */
 	private record ExplosionWave(ServerWorld world, ServerPlayerEntity player, Vec3d center, int startTick, float damage) {
 	}
 
@@ -97,7 +97,7 @@ public final class MagicPowers {
 
 	private static ActionResult onUseItem(PlayerEntity player, net.minecraft.world.World world, Hand hand) {
 		ItemStack stack = player.getStackInHand(hand);
-		// Accroupi + clic droit avec l'épée évolutive : explosion céleste de 12 blocs.
+		// Accroupi + clic droit avec l'épée évolutive : explosion céleste de 15 blocs.
 		if (player.isSneaking() && EvoProgression.kindOf(stack) == EvoKind.SWORD) {
 			if (player.getItemCooldownManager().isCoolingDown(stack)) {
 				return ActionResult.FAIL;
@@ -176,7 +176,7 @@ public final class MagicPowers {
 		world.spawnParticles(ParticleTypes.SONIC_BOOM, center.x, center.y + 1, center.z, 1, 0, 0, 0, 0);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 4.0F, 0.6F);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.PLAYERS, 2.0F, 0.8F);
-		float damage = 10.0F + level * 0.15F;
+		float damage = 14.0F + level * 0.2F;
 		WAVES.add(new ExplosionWave(world, player, center, world.getServer().getTicks(), damage));
 	}
 
