@@ -7,28 +7,31 @@ import net.minecraft.entity.EquipmentSlot;
  * Les outils et pièces d'armure évolutifs, et leurs profils d'évolution.
  * Tous changent de forme tous les 5 niveaux (21 formes) : il faut alors les faire évoluer avec la touche R.
  * Équilibrage : outils un peu au-dessus de Minecraft (Fortune IV), armes plus sages (la force vient de l'armure),
- * pas de minage instantané ni d'exécution.
+ * pas d'exécution. Le minage instantané au niveau 100 (pioche, pelle, hache) ne change jamais : c'est une règle du joueur.
  */
 public enum EvoKind {
-	/** Mine : auto-smelt, Fortune I à IV, zones 3x3, 3x3x3, 5x5 puis 5x5x5. */
+	/**
+	 * Mine : auto-smelt, Fortune I à IV, zones 3x3, 3x3x3, 5x5 puis 5x5x5, minage instantané au niveau 100.
+	 * Règle du joueur : le minage instantané (pierre, ardoise, obsidienne… en un coup) ne doit JAMAIS changer.
+	 */
 	PICKAXE(new EvoProfile()
 			.blockXp().withAreaMining()
 			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 40).mode(EvoMode.AREA_5X5, 60).mode(EvoMode.CUBE_5X5X5, 90)
-			.power(Power.AUTOSMELT, 10)
+			.power(Power.AUTOSMELT, 10).power(Power.INSTAMINE, 100)
 			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
 	/** Comme la pioche, mais pour la terre, le sable, le gravier… (sable → verre avec l'auto-smelt). */
 	SHOVEL(new EvoProfile()
 			.blockXp().withAreaMining()
 			.mode(EvoMode.AREA_3X3, 20).mode(EvoMode.CUBE_3X3X3, 40).mode(EvoMode.AREA_5X5, 60).mode(EvoMode.CUBE_5X5X5, 90)
-			.power(Power.AUTOSMELT, 10)
+			.power(Power.AUTOSMELT, 10).power(Power.INSTAMINE, 100)
 			.enchant(Enchantments.FORTUNE, "fortune", 20, 40, 60, 80)),
 
-	/** Bûcheronne et se bat : abattage d'arbres, replantation, Tranchant I à V. */
+	/** Bûcheronne et se bat : abattage d'arbres, replantation, Tranchant I à V, minage instantané au niveau 100. */
 	AXE(new EvoProfile()
 			.blockXp().killXp()
 			.power(Power.TREE_FELLING, 10).power(Power.FELL_LEAVES, 20).power(Power.AUTO_REPLANT, 30)
-			.power(Power.LIFESTEAL, 40).power(Power.SHOCKWAVE, 60)
+			.power(Power.LIFESTEAL, 40).power(Power.SHOCKWAVE, 60).power(Power.INSTAMINE, 100)
 			.enchant(Enchantments.SHARPNESS, "sharpness", 20, 35, 50, 65, 80)),
 
 	/** Labour et récolte en zone 3x3, 5x5 puis 7x7, replantation, Fortune I à IV pour les récoltes. */

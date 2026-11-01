@@ -23,8 +23,8 @@ totem), et les nouveaux pouvoirs se débloquent. Les pouvoirs ne se débloquent 
 Les objets sont forts sans être « cheat » : les outils vont un peu au-delà de Minecraft (Fortune IV, zone 5x5x5
 au niveau 90, Tranchant et Puissance V, +8 dégâts au niveau 100), c'est **l'armure qui rend fort** (Résistance
 jusqu'à IV, Force II, +6 cœurs) et les armes moddées et magiques restent plus sages (pas d'exécution en un coup,
-attaques spéciales moins puissantes). Plus de minage instantané ni de
-pousse instantanée. Les objets d'une ancienne version sont remis aux nouvelles règles à la connexion
+attaques spéciales moins puissantes). Plus de pousse instantanée. Le **minage instantané** au niveau 100
+(pioche, pelle, hache) ne change jamais. Les objets d'une ancienne version sont remis aux nouvelles règles à la connexion
 (Fortune VI → IV…).
 
 ## Pioche et pelle — en cassant des blocs
@@ -34,6 +34,7 @@ pousse instantanée. Les objets d'une ancienne version sont remis aux nouvelles 
 | 10  | Auto-smelt (minerais → lingots, sable → verre…) |
 | 20 / 40 / 60 / 80 | Fortune I à IV |
 | 20 / 40 / 60 / 90 | Zone **3x3**, **3x3x3**, **5x5**, **5x5x5** |
+| 100 | **Minage instantané** de tout (pierre, ardoise, minerais, obsidienne… en un coup) |
 
 La vitesse de minage augmente à chaque niveau (+20 au niveau 100, presque Efficacité V). En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
 
@@ -54,6 +55,7 @@ Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 | 30  | **Replantation** automatique d'une pousse |
 | 40  | Vol de vie |
 | 60  | Onde de choc |
+| 100 | **Minage instantané** |
 
 **Laser bûcheron** : clic droit avec la Hache Évolutive (dans le vide ou sur un bloc qui ne s'écorce pas ;
 viser un tronc l'écorce toujours, comme une hache normale). Un rayon laser fait le tour de toi en 2 secondes et

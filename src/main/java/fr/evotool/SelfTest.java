@@ -479,6 +479,21 @@ final class SelfTest {
 		}
 		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
 
+		// règle du joueur : au niveau 100, pioche, pelle et hache cassent tout en un coup (pierre, ardoise, obsidienne…)
+		for (EvoKind kind : new EvoKind[] {EvoKind.PICKAXE, EvoKind.SHOVEL, EvoKind.AXE}) {
+			checks++;
+			ItemStack tool = new ItemStack(ModItems.itemFor(kind));
+			tool.set(ModComponents.EVO_DATA, new EvoData(100, 0, 0, -1, 0L));
+			EvoProgression.refresh(tool, server.getRegistryManager());
+			double efficiency = tool.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT)
+					.modifiers().stream().filter(m -> m.attribute().equals(EntityAttributes.MINING_EFFICIENCY))
+					.mapToDouble(m -> m.modifier().value()).sum();
+			if (efficiency < EvoProgression.INSTAMINE_BONUS) {
+				failures.add(kind + " niv. 100 : plus de minage instantané (efficacité " + efficiency
+						+ ") — il ne doit jamais changer");
+			}
+		}
+
 		// équilibrage : une pioche d'une ancienne version (Fortune VI) redescend à Fortune IV
 		checks++;
 		ItemStack old = new ItemStack(ModItems.itemFor(EvoKind.PICKAXE));

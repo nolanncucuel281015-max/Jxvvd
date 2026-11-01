@@ -89,10 +89,16 @@ public final class EvoProgression {
 		return profile.modeUnlocked(mode, data.level()) ? mode : EvoMode.SINGLE;
 	}
 
-	/** Bonus d'efficacité de minage : +20 au niveau 100 (presque Efficacité V). */
+	/**
+	 * Bonus d'efficacité de minage : +0,2 par niveau, et minage instantané au niveau 100 (assez pour casser
+	 * l'obsidienne d'un coup). Le minage instantané ne doit jamais être retiré ni affaibli : règle du joueur.
+	 */
 	public static double miningBonus(EvoProfile profile, int level) {
-		return level * 0.2;
+		return profile.hasPower(Power.INSTAMINE, level) ? INSTAMINE_BONUS : level * 0.2;
 	}
+
+	/** Efficacité donnée par le minage instantané : de quoi casser l'obsidienne (dureté 50) en un coup. */
+	public static final double INSTAMINE_BONUS = 5000.0;
 
 	/** Bonus de dégâts : +8 au niveau 100. */
 	public static double damageBonus(int level) {
