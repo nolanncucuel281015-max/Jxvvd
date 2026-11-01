@@ -63,6 +63,21 @@ public final class EvoProgression {
 		return Text.translatable("stage.evotool." + stage(level));
 	}
 
+	/** Le niveau suivant commence une nouvelle forme : il faudra faire évoluer l'objet avec la touche R. */
+	public static boolean isFormGate(int level) {
+		return level < MAX_LEVEL && (level + 1) % LEVELS_PER_STAGE == 0;
+	}
+
+	/** L'objet a toute l'XP de sa prochaine forme : il attend qu'on appuie sur R pour évoluer. */
+	public static boolean isReadyToEvolve(ItemStack stack) {
+		EvoKind kind = kindOf(stack);
+		if (kind == null) {
+			return false;
+		}
+		EvoData data = get(stack);
+		return isFormGate(data.level()) && data.xp() >= kind.profile().curve().xpToNext(data.level());
+	}
+
 	/** Pouvoir débloqué et, s'il peut être coupé, activé dans le menu. */
 	public static boolean isActive(EvoProfile profile, EvoData data, Power power) {
 		return profile.hasPower(power, data.level()) && (!power.toggleable() || (data.flags() & power.bit()) != 0);
@@ -74,13 +89,14 @@ public final class EvoProgression {
 		return profile.modeUnlocked(mode, data.level()) ? mode : EvoMode.SINGLE;
 	}
 
-	/** Bonus d'efficacité de minage. Avec le minage instantané, il suffit à casser l'obsidienne d'un coup. */
+	/** Bonus d'efficacité de minage : +12 au niveau 100 (un peu plus qu'Efficacité III). */
 	public static double miningBonus(EvoProfile profile, int level) {
-		return profile.hasPower(Power.INSTAMINE, level) ? 5000.0 : level * 0.25;
+		return level * 0.12;
 	}
 
+	/** Bonus de dégâts : +4 au niveau 100. */
 	public static double damageBonus(int level) {
-		return level * 0.1;
+		return level * 0.04;
 	}
 
 	public static int xpForBlock(BlockState state) {
@@ -121,6 +137,7 @@ public final class EvoProgression {
 		}
 		EvoProfile profile = kind.profile();
 		int startLevel = get(stack).level();
+		boolean wasReady = isReadyToEvolve(stack);
 		int level = gainXp(stack, amount, countIncrement, world);
 		for (int reached = startLevel + 1; reached <= level; reached++) {
 			announceUnlocks(profile, player, reached);
@@ -134,7 +151,13 @@ public final class EvoProgression {
 					.formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), false);
 		}
 
-		if (level >= MAX_LEVEL) {
+		if (isReadyToEvolve(stack)) {
+			if (!wasReady) {
+				announceReady(player, world, name);
+			}
+			player.sendMessage(Text.translatable("message.evotool.actionbar_ready", name, evolveKey())
+					.formatted(Formatting.LIGHT_PURPLE), true);
+		} else if (level >= MAX_LEVEL) {
 			player.sendMessage(Text.translatable("message.evotool.actionbar_max", name).formatted(Formatting.GOLD), true);
 		} else {
 			player.sendMessage(Text.translatable("message.evotool.actionbar", name, level, get(stack).xp(),
@@ -142,8 +165,40 @@ public final class EvoProgression {
 		}
 	}
 
+	/** Nom de la touche d'évolution, tel que le joueur l'a réglée (R par défaut). */
+	public static Text evolveKey() {
+		return Text.keybind("key.evotool.evolve").formatted(Formatting.YELLOW, Formatting.BOLD);
+	}
+
+	/** Prévient le joueur que cet objet peut évoluer. */
+	public static void announceReady(PlayerEntity player, World world, Text name) {
+		player.sendMessage(Text.translatable("message.evotool.ready", name, evolveKey())
+				.formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), false);
+		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1.5F, 1.4F);
+	}
+
+	/**
+	 * Évolution (touche R) : l'objet prêt passe au niveau de sa nouvelle forme, avec ses déblocages.
+	 *
+	 * @return faux si l'objet n'était pas prêt
+	 */
+	public static boolean evolve(ItemStack stack, PlayerEntity player, World world) {
+		if (!isReadyToEvolve(stack)) {
+			return false;
+		}
+		EvoData data = get(stack);
+		int level = data.level() + 1;
+		stack.set(ModComponents.EVO_DATA, data.withProgress(level, 0, data.count()));
+		refresh(stack, world.getRegistryManager());
+		if (player != null) {
+			announceUnlocks(kindOf(stack).profile(), player, level);
+		}
+		return true;
+	}
+
 	/**
 	 * Ajoute de l'XP sans rien annoncer (l'armure annonce une seule fois pour tout l'ensemble).
+	 * Avant chaque nouvelle forme, l'objet s'arrête : il faut le faire évoluer avec la touche R.
 	 *
 	 * @return le nouveau niveau
 	 */
@@ -157,6 +212,10 @@ public final class EvoProgression {
 		int level = data.level();
 		int xp = data.xp() + amount;
 		while (level < MAX_LEVEL && xp >= curve.xpToNext(level)) {
+			if (isFormGate(level)) {
+				xp = curve.xpToNext(level);   // prêt à évoluer : on attend la touche R
+				break;
+			}
 			xp -= curve.xpToNext(level);
 			level++;
 		}
@@ -171,7 +230,7 @@ public final class EvoProgression {
 		return level;
 	}
 
-	private static void announceUnlocks(EvoProfile profile, PlayerEntity player, int level) {
+	public static void announceUnlocks(EvoProfile profile, PlayerEntity player, int level) {
 		if (level % LEVELS_PER_STAGE == 0) {
 			player.sendMessage(Text.translatable("message.evotool.new_form", stageName(level), stage(level), MAX_STAGE)
 					.formatted(Formatting.AQUA, Formatting.BOLD), false);
@@ -246,14 +305,15 @@ public final class EvoProgression {
 		}
 		for (EvoProfile.EnchantStep step : profile.enchants()) {
 			int wanted = step.levelAt(level);
-			if (wanted <= 0 && !exact) {
-				continue;
-			}
 			RegistryEntry<Enchantment> entry = enchantments.getOrThrow(step.enchantment());
 			int current = EnchantmentHelper.getLevel(entry, stack);
-			if (exact ? current != wanted : current < wanted) {
+			// Jamais plus que ce que donne l'évolution ou que le maximum normal (une enclume ne fait pas mieux) :
+			// les objets d'une ancienne version (Fortune VI…) redescendent.
+			int cap = Math.max(step.levels().length, entry.value().getMaxLevel());
+			int target = exact ? wanted : Math.min(Math.max(current, wanted), cap);
+			if (target != current) {
 				// Un niveau 0 retire l'enchantement.
-				EnchantmentHelper.apply(stack, builder -> builder.set(entry, wanted));
+				EnchantmentHelper.apply(stack, builder -> builder.set(entry, target));
 			}
 		}
 

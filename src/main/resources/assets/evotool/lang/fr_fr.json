@@ -56,7 +56,7 @@
   "tooltip.evotool.count.kills": "Monstres tués : %s",
   "tooltip.evotool.count.farming": "Cultures et labours : %s",
   "tooltip.evotool.hint": "Touche Y : menu • Accroupi : 1 seul bloc",
-  "message.evotool.level_up": "✦ %s évolue : niveau %s ! ✦",
+  "message.evotool.level_up": "✦ %s monte au niveau %s !",
   "message.evotool.new_form": "✧ Nouvelle forme : %s (%s/%s) ✧",
   "message.evotool.unlocked": "Débloqué : %s",
   "message.evotool.unlock.mode": "Mode %s (touche Y)",
@@ -228,5 +228,13 @@
   "command.evotool.dimension.tp_sanctuary_missing": "Te voici à l'emplacement du sanctuaire.",
   "command.evotool.dimension.phase": "Ta dimension passe en phase %s/%s.",
   "command.evotool.dimension.no_boss": "Aucun boss à proximité.",
-  "command.evotool.dimension.max_form": "Le boss est déjà à sa forme finale."
+  "command.evotool.dimension.max_form": "Le boss est déjà à sa forme finale.",
+  "key.evotool.evolve": "Faire évoluer l'objet",
+  "tooltip.evotool.ready": "✦ Prêt à évoluer ! Appuie sur %s",
+  "message.evotool.ready": "✦ %s est prêt à évoluer ! Appuie sur %s pour lancer l'évolution.",
+  "message.evotool.actionbar_ready": "%s — prêt à évoluer ! Appuie sur %s",
+  "message.evotool.nothing_to_evolve": "Rien n'est prêt à évoluer : il faut toute l'XP de la prochaine forme.",
+  "message.evotool.evolving": "✦ %s évolue…",
+  "message.evotool.evolved": "✦ %s a évolué : niveau %s ! ✦",
+  "message.evotool.evolution_cancelled": "Évolution annulée : l'objet n'est plus sur toi."
 }

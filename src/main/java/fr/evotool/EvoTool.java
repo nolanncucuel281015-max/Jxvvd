@@ -7,6 +7,7 @@ import fr.evotool.command.DimensionCommand;
 import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
 import fr.evotool.dimension.EvoDimension;
+import fr.evotool.evo.Evolution;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
 import fr.evotool.mining.AxeLaser;
@@ -54,6 +55,7 @@ public class EvoTool implements ModInitializer {
 		WeaponPowers.init();
 		ArcaneWeapons.init();
 		ArmorHandler.init();
+		Evolution.init();
 		MagicPowers.init();
 		InfinityWings.init();
 		Burrow.init();

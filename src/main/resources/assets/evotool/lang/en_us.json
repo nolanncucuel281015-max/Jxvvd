@@ -56,7 +56,7 @@
   "tooltip.evotool.count.kills": "Monsters killed: %s",
   "tooltip.evotool.count.farming": "Crops and tilling: %s",
   "tooltip.evotool.hint": "Y: menu • Sneak: single block",
-  "message.evotool.level_up": "✦ %s evolves: level %s! ✦",
+  "message.evotool.level_up": "✦ %s reached level %s!",
   "message.evotool.new_form": "✧ New form: %s (%s/%s) ✧",
   "message.evotool.unlocked": "Unlocked: %s",
   "message.evotool.unlock.mode": "%s mode (Y key)",
@@ -228,5 +228,13 @@
   "command.evotool.dimension.tp_sanctuary_missing": "Here is where the sanctuary stands.",
   "command.evotool.dimension.phase": "Your dimension moves to phase %s/%s.",
   "command.evotool.dimension.no_boss": "No boss nearby.",
-  "command.evotool.dimension.max_form": "The boss is already in its final form."
+  "command.evotool.dimension.max_form": "The boss is already in its final form.",
+  "key.evotool.evolve": "Evolve item",
+  "tooltip.evotool.ready": "✦ Ready to evolve! Press %s",
+  "message.evotool.ready": "✦ %s is ready to evolve! Press %s to start the evolution.",
+  "message.evotool.actionbar_ready": "%s — ready to evolve! Press %s",
+  "message.evotool.nothing_to_evolve": "Nothing is ready to evolve: it needs all the XP of its next form.",
+  "message.evotool.evolving": "✦ %s is evolving…",
+  "message.evotool.evolved": "✦ %s evolved: level %s! ✦",
+  "message.evotool.evolution_cancelled": "Evolution cancelled: the item is no longer on you."
 }

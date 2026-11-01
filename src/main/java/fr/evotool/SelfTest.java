@@ -455,6 +455,40 @@ final class SelfTest {
 			failures.add("ailes de l'infini : on vole encore une fois le plastron enlevé");
 		}
 
+		// évolution à la touche R : animation devant le joueur, l'objet passe à sa nouvelle forme
+		ItemStack pickaxe = new ItemStack(ModItems.itemFor(EvoKind.PICKAXE));
+		EvoProgression.gainXp(pickaxe, 1_000_000, 0, world);
+		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, pickaxe);
+		checks++;
+		boolean started = fr.evotool.evo.Evolution.start(player);
+		boolean running = fr.evotool.evo.Evolution.isRunning(player);
+		boolean evolved = fr.evotool.evo.Evolution.completeNow(player);
+		EvoTool.LOGGER.info("EVOTOOL evolution: started={} running={} evolved={} level={}", started, running, evolved,
+				EvoProgression.get(pickaxe).level());
+		if (!started || !running || !evolved || EvoProgression.get(pickaxe).level() != 5) {
+			failures.add("touche R : l'évolution animée ne fait pas évoluer la pioche (lancée=" + started + ", évoluée=" + evolved
+					+ ", niveau " + EvoProgression.get(pickaxe).level() + ")");
+		}
+		checks++;
+		if (fr.evotool.evo.Evolution.start(player)) {
+			failures.add("touche R : une évolution démarre alors que rien n'est prêt");
+			fr.evotool.evo.Evolution.completeNow(player);
+		}
+		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
+
+		// équilibrage : une pioche d'une ancienne version (Fortune VI) redescend à Fortune III
+		checks++;
+		ItemStack old = new ItemStack(ModItems.itemFor(EvoKind.PICKAXE));
+		old.set(ModComponents.EVO_DATA, new EvoData(100, 0, 0, -1, 0L));
+		var fortune = server.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT)
+				.getOrThrow(net.minecraft.enchantment.Enchantments.FORTUNE);
+		net.minecraft.enchantment.EnchantmentHelper.apply(old, builder -> builder.set(fortune, 6));
+		EvoProgression.refresh(old, server.getRegistryManager());
+		int fortuneLevel = net.minecraft.enchantment.EnchantmentHelper.getLevel(fortune, old);
+		if (fortuneLevel != 3) {
+			failures.add("équilibrage : Fortune " + fortuneLevel + " au lieu de III sur une vieille pioche");
+		}
+
 		// bottes : accroupi sur le sol de l'arène, on plonge dedans
 		ItemStack boots = new ItemStack(ModItems.itemFor(EvoKind.BOOTS));
 		EvoliteUpgrade.apply(boots);
@@ -734,8 +768,21 @@ final class SelfTest {
 				if (slot != null && slot != EquipmentSlot.HEAD && stack.get(DataComponentTypes.EQUIPPABLE) == null) {
 					failures.add(kind + " niv. " + level + " : pas de composant équipable");
 				}
-				// XP : une montée de niveau ne doit pas planter.
+				// XP : les niveaux montent seuls jusqu'à la forme suivante, puis l'objet attend la touche R.
 				EvoProgression.gainXp(stack, 1_000_000, 1, server.getOverworld());
+				if (level < EvoProgression.MAX_LEVEL) {
+					checks++;
+					int waiting = EvoProgression.get(stack).level();
+					if (waiting != level + 4 || !EvoProgression.isReadyToEvolve(stack)) {
+						failures.add(kind + " niv. " + level + " : devrait attendre au niveau " + (level + 4)
+								+ " prêt à évoluer (niveau " + waiting + ", prêt=" + EvoProgression.isReadyToEvolve(stack) + ")");
+					}
+					checks++;
+					if (!EvoProgression.evolve(stack, null, server.getOverworld()) || EvoProgression.get(stack).level() != level + 5
+							|| EvoProgression.isReadyToEvolve(stack)) {
+						failures.add(kind + " niv. " + level + " : l'évolution (touche R) ne passe pas à la forme suivante");
+					}
+				}
 			}
 			checks++;
 			ItemStack upgraded = new ItemStack(ModItems.itemFor(kind));

@@ -73,7 +73,11 @@ public final class ArmorHandler {
 				continue;
 			}
 			int oldLevel = EvoProgression.get(stack).level();
+			boolean wasReady = EvoProgression.isReadyToEvolve(stack);
 			anyLevelUp |= EvoProgression.gainXp(stack, xp, damage, world) != oldLevel;
+			if (!wasReady && EvoProgression.isReadyToEvolve(stack)) {
+				EvoProgression.announceReady(player, world, stack.getName());
+			}
 			if (slowest.isEmpty() || EvoProgression.get(stack).level() < EvoProgression.get(slowest).level()) {
 				slowest = stack;
 			}
@@ -92,6 +96,11 @@ public final class ArmorHandler {
 
 		int pieceLevel = EvoProgression.get(slowest).level();
 		int needed = EvoProgression.kindOf(slowest).profile().curve().xpToNext(pieceLevel);
+		if (EvoProgression.isReadyToEvolve(slowest)) {
+			player.sendMessage(Text.translatable("message.evotool.actionbar_ready", slowest.getName(), EvoProgression.evolveKey())
+					.formatted(Formatting.LIGHT_PURPLE), true);
+			return;
+		}
 		player.sendMessage(needed == 0
 				? Text.translatable("message.evotool.armor_actionbar_max").formatted(Formatting.GOLD)
 				: Text.translatable("message.evotool.armor_actionbar", after, slowest.getName(), pieceLevel,
@@ -115,14 +124,17 @@ public final class ArmorHandler {
 		Map<RegistryEntry<StatusEffect>, Integer> desired = ArmorSet.effects(setLevel);
 		Map<RegistryEntry<StatusEffect>, Integer> applied = APPLIED.computeIfAbsent(player.getUuid(), uuid -> new HashMap<>());
 
-		Set<RegistryEntry<StatusEffect>> all = new HashSet<>(applied.keySet());
+		Set<RegistryEntry<StatusEffect>> all = new HashSet<>(ArmorSet.managedEffects());
+		all.addAll(applied.keySet());
 		all.addAll(desired.keySet());
 		for (RegistryEntry<StatusEffect> effect : all) {
 			Integer want = desired.get(effect);
 			Integer had = applied.get(effect);
 			StatusEffectInstance current = player.getStatusEffect(effect);
-			// On ne retire que l'effet infini qu'on a posé nous-mêmes (pas une potion bue entre-temps).
-			if (had != null && !had.equals(want) && current != null && current.isInfinite() && current.getAmplifier() == had) {
+			// On ne retire que l'effet infini et discret qu'on a posé nous-mêmes (pas une potion bue entre-temps) ;
+			// y compris celui d'une ancienne version plus forte (Résistance V…), retrouvé après un redémarrage.
+			boolean ours = current != null && current.isInfinite() && current.isAmbient();
+			if (ours && (want == null || current.getAmplifier() != want) && (had == null || current.getAmplifier() == had)) {
 				player.removeStatusEffect(effect);
 				current = null;
 			}

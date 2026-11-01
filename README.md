@@ -3,21 +3,37 @@
 Six outils et une armure complète en évolium qui **évoluent** quand tu t'en sers, jusqu'au niveau 100 :
 pioche, pelle, hache, houe, épée, masse (mace), casque, plastron, jambières et bottes. Tous :
 
-- changent de **forme tous les 5 niveaux** (21 formes, modèles 3D, voir plus bas) ;
+- changent de **forme tous les 5 niveaux** (21 formes, modèles 3D, voir plus bas) : arrivé au bout d'une forme,
+  l'objet s'arrête, **prêt à évoluer**, et il faut appuyer sur **R** (configurable) pour le faire évoluer ;
 - sont incassables et résistent à la lave ;
 - ont un menu avec la **touche Y** (configurable) : niveau, XP, mode de zone, pouvoirs à activer / couper, bonus actifs ;
 - **accroupi** = un seul bloc (pas de zone, pas d'abattage).
+
+## Évolution à la touche R
+
+Les niveaux montent tout seuls avec l'XP, **sauf avant chaque nouvelle forme** (niveaux 5, 10, 15… 100) :
+l'objet attend alors, avec « ✦ Prêt à évoluer ! Appuie sur R » dans le chat, la barre d'action et sa description.
+Appuie sur **R** en le tenant en main (ou sans rien en main pour l'armure portée) : l'objet apparaît en géant
+devant toi, monte en tournant de plus en plus vite dans un tourbillon d'étoiles et de runes, au son de carillons
+de plus en plus aigus, puis **éclate en lumière sous sa nouvelle forme** (elle jaillit aussi à l'écran, comme un
+totem), et les nouveaux pouvoirs se débloquent. Les pouvoirs ne se débloquent qu'aux évolutions.
+
+## Équilibrage
+
+Les objets restent forts mais ne sont plus « cheat » : les enchantements ne dépassent jamais le maximum normal de
+Minecraft (Fortune III, Tranchant III…), plus de minage instantané, de zone 5x5x5, de pousse instantanée ni
+d'exécution en un coup, et l'armure donne au plus Résistance II. Les objets d'une ancienne version sont remis
+aux nouvelles règles à la connexion (Fortune VI → III…).
 
 ## Pioche et pelle — en cassant des blocs
 
 | Niveau | Déblocage |
 |-------:|-----------|
-| 10  | Auto-smelt (minerais → lingots, sable → verre…) |
-| 15 / 20 / 25 / 30 / 35 / 40 | Fortune I à VI |
-| 20 / 30 / 40 / 50 | Zone **3x3**, **3x3x3**, **5x5**, **5x5x5** |
-| 100 | **Minage instantané** de tout (ardoise, minerais, obsidienne…) |
+| 15  | Auto-smelt (minerais → lingots, sable → verre…) |
+| 30 / 55 / 80 | Fortune I à III |
+| 25 / 50 / 75 | Zone **3x3**, **3x3x3**, **5x5** |
 
-La vitesse de minage augmente un peu à chaque niveau. En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
+La vitesse de minage augmente un peu à chaque niveau (+12 au niveau 100, un peu plus qu'Efficacité III). En zone, la pioche ne casse que ce qui se mine à la pioche, la pelle que ce qui se mine à la pelle.
 
 **Slash de la pioche géante** (Pioche Évolutive **niveau 100 + améliorée à l'évolite**) : clic droit. Ta pioche
 apparaît en géant au-dessus de toi (« pfff »), se lève puis **s'abat vers l'avant** (POW !) : une onde tranchante
@@ -31,18 +47,17 @@ Les coffres, spawners et liquides ne sont pas touchés. Recharge : 15 secondes.
 | Niveau | Déblocage |
 |-------:|-----------|
 | 10  | **Abattage** : tout l'arbre tombe d'un coup |
-| 15 / 25 / 35 / 45 / 55 | Tranchant I à V |
-| 20  | L'abattage emporte aussi les feuilles |
-| 30  | **Replantation** automatique d'une pousse |
-| 40  | Vol de vie |
-| 60  | Onde de choc |
-| 100 | Minage instantané + exécution |
+| 25 / 50 / 75 | Tranchant I à III |
+| 25  | L'abattage emporte aussi les feuilles |
+| 35  | **Replantation** automatique d'une pousse |
+| 50  | Vol de vie |
+| 75  | Onde de choc |
 
 **Laser bûcheron** : clic droit avec la Hache Évolutive (dans le vide ou sur un bloc qui ne s'écorce pas ;
 viser un tronc l'écorce toujours, comme une hache normale). Un rayon laser fait le tour de toi en 2 secondes et
 coupe **tous les arbres à 50 blocs** (troncs et feuilles). Tout le bois revient à tes pieds, ou **directement dans
 ton inventaire** si la hache est améliorée à l'évolite (télékinésie). Les maisons en bûches ne sont pas touchées
-(seuls les troncs avec des feuilles naturelles autour comptent). Avec la replantation (niveau 30), chaque arbre
+(seuls les troncs avec des feuilles naturelles autour comptent). Avec la replantation (niveau 35), chaque arbre
 coupé est replanté. Recharge : 10 secondes.
 
 ## Houe — en labourant et en récoltant
@@ -50,9 +65,8 @@ coupé est replanté. Recharge : 10 secondes.
 | Niveau | Déblocage |
 |-------:|-----------|
 | 10  | **Replantation** automatique des cultures récoltées |
-| 15 / 20 / 25 / 30 / 35 / 40 | Fortune I à VI (plus de récoltes) |
-| 20 / 40 / 60 / 80 | Labour **et** récolte en zone 3x3, 5x5, 7x7, 9x9 |
-| 100 | **Pousse instantanée** : les cultures replantées sont déjà mûres |
+| 30 / 55 / 80 | Fortune I à III (plus de récoltes) |
+| 25 / 60 | Labour **et** récolte en zone 3x3 puis 5x5 |
 
 ## Arc — en tuant des monstres avec ses flèches
 
@@ -64,12 +78,12 @@ anneau runique (90) et couronne de pointes de lumière (100).
 
 | Niveau | Bonus |
 |-------:|-------|
-| 10 | Vol de vie |
-| 15 / 25 / 35 / 45 / 55 | Puissance I à V |
-| 20 / 40 | Frappe I et II |
-| 30 | Flamme |
-| 50 | Infinité + foudre (20 % de chance par flèche) |
-| 100 | Exécution |
+| 20 | Vol de vie (5 % des dégâts) |
+| 25 / 50 / 75 | Puissance I à III |
+| 40 | Frappe I |
+| 55 | Flamme |
+| 65 | Foudre (12 % de chance par flèche) |
+| 90 | Infinité |
 
 **Arc céleste** (niveau 100 + amélioré à l'évolite) : clic droit, **ton arc apparaît en géant** devant toi
 (« pfff », 6 blocs de haut, bandé) et suit ton regard. Il tire **une flèche toutes les demi-secondes** (20 flèches),
@@ -78,14 +92,14 @@ droit sur les monstres à 48 blocs, puis disparaît. Recharge : 12 secondes en t
 ## Épée, lance et masse — en tuant des monstres
 
 XP par monstre tué = la moitié de ses PV max (zombie = 10 XP, enderman = 20 XP, boss = x5).
-Les animaux ne rapportent rien. Chaque niveau donne +0,1 dégât (+10 au niveau 100).
+Les animaux ne rapportent rien. Chaque niveau donne +0,04 dégât (+4 au niveau 100).
 
-**Épée — explosion céleste** : accroupi + clic droit, une énorme explosion part de toi et s'étend sur
-**20 blocs** (onde de choc animée). Elle blesse et repousse les monstres (plus fort près de toi, et plus fort
-avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 10 secondes.
+**Épée — explosion céleste** : accroupi + clic droit, une explosion part de toi et s'étend sur
+**12 blocs** (onde de choc animée). Elle blesse et repousse les monstres (plus fort près de toi, et plus fort
+avec le niveau), sans casser de blocs ni toucher les joueurs et les animaux. Recharge : 20 secondes.
 
-**Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre, exécution),
-avec Tranchant I à V (15/25/35/45/55), **Élan évolutif** I à III (20/40/60) et Butin I à III (30/50/70).
+**Lance** (nouvelle arme de la 1.21.11) : mêmes pouvoirs que l'épée (vol de vie, onde de choc, foudre),
+avec Tranchant I à III (25/50/75), **Élan évolutif** I à III (20/45/70) et Butin I à III (30/60/90).
 Elle garde la charge de la lance en netherite, mais ses estocs n'ont **pas besoin d'être chargés** : on peut
 enchaîner les Élans pour s'élancer encore et encore. **Tant que tu tiens la Lance Évolutive, tu ne perds
 pas de faim** (coups, Élan, charge…). L'Élan vanilla (qui coûte 4 points de faim par niveau à chaque estoc) est
@@ -93,16 +107,16 @@ automatiquement remplacé par l'Élan évolutif sur la lance.
 
 | Niveau | Épée | Masse |
 |-------:|------|-------|
-| 10  | Vol de vie (10 % des dégâts) | Vol de vie |
-| 15 → 55 | Tranchant I à V (15/25/35/45/55) | Densité I à V (15/25/35/45/55) |
-| 20 → 60 | Butin I à V (20/30/40/50/60) | Brèche I à IV (20/30/40/50) |
-| 30  | **Onde de choc** (monstres à 3 blocs : moitié des dégâts) | Onde de choc |
-| 35 / 55 / 70 | Affilage I à III | — |
-| 50  | **Foudre** (20 % de chance) | Foudre |
-| 60 / 70 / 80 | — | Charge de vent I à III |
-| 65 / 85 | Aura de feu I et II | — |
-| 75  | Onde de choc élargie (5 blocs) | Onde de choc élargie |
-| 100 | **Exécution** : tue en un coup tout monstre qui n'est pas un boss | Exécution |
+| 20  | Vol de vie (5 % des dégâts) | Vol de vie |
+| 25 / 50 / 75 | Tranchant I à III | — |
+| 20 / 40 / 60 / 80 | — | Densité I à IV |
+| 30 / 60 / 90 | Butin I à III | Brèche I à III |
+| 35 / 60 / 85 | Affilage I à III | — |
+| 40  | **Onde de choc** (monstres à 2,5 blocs : 30 % des dégâts) | Onde de choc |
+| 50 / 85 | — | Charge de vent I et II |
+| 55 / 90 | Aura de feu I et II | — |
+| 65  | **Foudre** (12 % de chance) | Foudre |
+| 85  | Onde de choc élargie (4 blocs) | Onde de choc élargie |
 
 La masse garde l'attaque écrasante de la mace vanilla (plus tu tombes de haut, plus ça fait mal).
 
@@ -117,13 +131,14 @@ donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'o
 
 | Niveau d'ensemble | Bonus |
 |------------------:|-------|
-| 10 / 30 / 50 / 75 / 100 | Résistance I à **V** |
-| 15 / 45 / 70 | Vitesse I à **III** |
-| 20 / 55 / 90 | Régénération I à **III** |
-| 80  | **+4 cœurs** |
-| 100 | **+10 cœurs** au total |
+| 40 / 85 | Résistance I et II |
+| 50  | Vitesse I |
+| 70  | Régénération I |
+| 80  | **+2 cœurs** |
+| 100 | **+4 cœurs** au total |
 
-Résistance V = plus aucun dégât (sauf /kill et le vide).
+Chaque pièce doit être **évoluée avec R** à chaque nouvelle forme (sans rien en main, R fait évoluer toutes
+les pièces portées qui sont prêtes).
 
 **Look de chevalier qui change tous les 5 niveaux** (21 formes) : nouvelles couleurs **et** un nouveau détail
 à chaque forme, qui s'ajoute aux précédents.
@@ -233,7 +248,7 @@ un **passif** à chaque coup et une **attaque spéciale au clic droit**. Toutes 
 
 **Elles sont évolutives**, comme l'épée : elles gagnent de l'XP en tuant des monstres (niveau 0 à 100,
 21 formes : runes, cristaux flottants, ailes d'énergie, anneau puis halo doré à la forme 20), débloquent
-Tranchant, Butin, Aura de feu, vol de vie, onde de choc, foudre et exécution, et leur **attaque spéciale grandit**
+Tranchant I à III, Butin I et II, Aura de feu, vol de vie, onde de choc et foudre, et leur **attaque spéciale grandit**
 avec le niveau (dégâts x2 et recharge 2 fois plus courte au niveau 100). Améliorées à l'évolite (enclume),
 elles deviennent **sublimées** : attaque spéciale 50 % plus forte et deux fois plus souvent. `/upgrade faux 100`,
 `/upgrade dague 50`… marchent aussi.

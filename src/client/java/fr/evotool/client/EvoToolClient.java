@@ -15,6 +15,8 @@ import fr.evotool.weapon.MagicKind;
 import fr.evotool.weapon.WeaponKind;
 import fr.evotool.weapon.WeaponPowers;
 import fr.evotool.network.BurrowPayload;
+import fr.evotool.network.EvolvePayload;
+import fr.evotool.network.EvolvedPayload;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
@@ -39,6 +41,10 @@ public class EvoToolClient implements ClientModInitializer {
 	public static final KeyBinding OPEN_MENU = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.evotool.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, CATEGORY));
 
+	/** Fait évoluer l'objet prêt (en main, ou l'armure portée) : le serveur joue l'animation. */
+	public static final KeyBinding EVOLVE = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.evotool.evolve", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
+
 	@Override
 	public void onInitializeClient() {
 		// Le boss est dessiné par ses objets d'affichage animés (côté serveur) : l'entité elle-même est invisible.
@@ -50,7 +56,15 @@ public class EvoToolClient implements ClientModInitializer {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> Burrow.clientActive = false);
 		// Ailes de l'infini du plastron : dessinées sur le buste du joueur, comme une cape.
 		InfinityWingsFeature.register();
+		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.
+		ClientPlayNetworking.registerGlobalReceiver(EvolvedPayload.ID,
+				(payload, context) -> context.client().gameRenderer.showFloatingItem(payload.stack()));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			while (EVOLVE.wasPressed()) {
+				if (client.player != null) {
+					ClientPlayNetworking.send(EvolvePayload.INSTANCE);
+				}
+			}
 			while (OPEN_MENU.wasPressed()) {
 				if (client.player == null) {
 					continue;
@@ -95,7 +109,10 @@ public class EvoToolClient implements ClientModInitializer {
 					.formatted(Formatting.LIGHT_PURPLE));
 			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),
 					EvoProgression.stage(level), EvoProgression.MAX_STAGE).formatted(Formatting.YELLOW));
-			if (level < EvoProgression.MAX_LEVEL) {
+			if (EvoProgression.isReadyToEvolve(stack)) {
+				lines.add(index++, Text.translatable("tooltip.evotool.ready", EvoProgression.evolveKey())
+						.formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD));
+			} else if (level < EvoProgression.MAX_LEVEL) {
 				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), profile.curve().xpToNext(level))
 						.formatted(Formatting.GRAY));
 			}

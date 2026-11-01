@@ -6,6 +6,7 @@ import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoMode;
 import fr.evotool.evo.EvoProfile;
 import fr.evotool.evo.EvoProgression;
+import fr.evotool.evo.Evolution;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.item.ItemStack;
@@ -16,7 +17,10 @@ public final class ModNetworking {
 
 	public static void init() {
 		PayloadTypeRegistry.playS2C().register(BurrowPayload.ID, BurrowPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(EvolvedPayload.ID, EvolvedPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(EvoSettingsPayload.ID, EvoSettingsPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(EvolvePayload.ID, EvolvePayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(EvolvePayload.ID, (payload, context) -> Evolution.start(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(EvoSettingsPayload.ID, (payload, context) -> {
 			ItemStack stack = context.player().getMainHandStack();
 			EvoKind kind = EvoProgression.kindOf(stack);
