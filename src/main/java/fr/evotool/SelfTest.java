@@ -131,6 +131,7 @@ final class SelfTest {
 			} else {
 				checks += checkWeapons(server, FAILURES);
 				checks += checkArmorPowers(server, FAILURES);
+				checks += checkElements(server, FAILURES);
 				finish(server);
 			}
 		});
@@ -160,6 +161,7 @@ final class SelfTest {
 				checks += checkCommand(server, FAILURES);
 				checks += checkWeapons(server, FAILURES);
 				checks += checkArmorPowers(server, FAILURES);
+				checks += checkElements(server, FAILURES);
 			} catch (Throwable t) {
 				EvoTool.LOGGER.error("EVOTOOL SELFTEST CRASH", t);
 				FAILURES.add("crash: " + t);
@@ -803,6 +805,147 @@ final class SelfTest {
 	}
 
 	/** Attaques spéciales des armes moddées, sur un zombie posé devant un faux joueur. */
+	/** Combineur élémentaire : la fusion (3 secondes), puis les pouvoirs des éléments sur les armes et l'armure. */
+	private static int checkElements(MinecraftServer server, List<String> failures) {
+		int checks = 0;
+		ServerWorld world = server.getOverworld();
+		FakePlayer player = FakePlayer.get(world);
+		double x = ARENA.getX() + 0.5;
+		double y = ARENA.getY();
+		double z = ARENA.getZ() + 6.5;
+		player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+		for (EquipmentSlot slot : fr.evotool.element.Elements.ARMOR) {
+			player.equipStack(slot, ItemStack.EMPTY);
+		}
+		InfinityWings.restoreAbilities(player);
+
+		// le combineur : une épée en diamant + de la glace compacte
+		BlockPos pos = ARENA.add(3, 0, 2);
+		world.setBlockState(pos, fr.evotool.block.ModBlocks.ELEMENTAL_COMBINER.getDefaultState());
+		checks++;
+		if (!(world.getBlockEntity(pos) instanceof fr.evotool.combiner.ElementalCombinerBlockEntity combiner)) {
+			failures.add("combineur : pas d'entité de bloc");
+			return checks;
+		}
+		net.minecraft.block.BlockState state = world.getBlockState(pos);
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.DIAMOND_SWORD));
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.PACKED_ICE, 3));
+		boolean started = combiner.start();
+		for (int i = 0; i < 5; i++) {
+			fr.evotool.combiner.ElementalCombinerBlockEntity.tick(world, pos, state, combiner);
+		}
+		int shown = world.getEntitiesByType(net.minecraft.entity.EntityType.ITEM_DISPLAY,
+				new net.minecraft.util.math.Box(pos).expand(3), e -> true).size();
+		boolean working = combiner.isWorking();
+		for (int i = 0; i < fr.evotool.combiner.ElementalCombinerBlockEntity.DURATION; i++) {
+			fr.evotool.combiner.ElementalCombinerBlockEntity.tick(world, pos, state, combiner);
+		}
+		ItemStack result = combiner.items().getStack(2);
+		EvoTool.LOGGER.info("EVOTOOL combiner: started={} working={} displays={} result={} element={} ice left={}", started, working,
+				shown, result, fr.evotool.element.Elements.get(result), combiner.items().getStack(1).getCount());
+		checks++;
+		if (!started || !working || shown < 2 || combiner.isWorking() || !result.isOf(net.minecraft.item.Items.DIAMOND_SWORD)
+				|| fr.evotool.element.Elements.get(result) != fr.evotool.element.Element.ICE
+				|| !combiner.items().getStack(0).isEmpty() || combiner.items().getStack(1).getCount() != 2) {
+			failures.add("combineur : l'épée + la glace ne donnent pas une épée de glace en 3 secondes");
+		}
+		// seau d'eau : le seau vide reste dans la case
+		combiner.items().setStack(2, ItemStack.EMPTY);
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.IRON_BOOTS));
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.WATER_BUCKET));
+		combiner.start();
+		for (int i = 0; i < fr.evotool.combiner.ElementalCombinerBlockEntity.DURATION + 2; i++) {
+			fr.evotool.combiner.ElementalCombinerBlockEntity.tick(world, pos, state, combiner);
+		}
+		checks++;
+		if (fr.evotool.element.Elements.get(combiner.items().getStack(2)) != fr.evotool.element.Element.WATER
+				|| !combiner.items().getStack(1).isOf(net.minecraft.item.Items.BUCKET)) {
+			failures.add("combineur : bottes + seau d'eau ne donnent pas des bottes d'eau (et le seau vide)");
+		}
+		// pas d'élément pour un bloc de terre
+		combiner.items().setStack(2, ItemStack.EMPTY);
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.DIRT));
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.GUNPOWDER));
+		checks++;
+		if (combiner.start()) {
+			failures.add("combineur : il accepte de combiner un bloc de terre");
+		}
+		combiner.items().clear();
+		world.setBlockState(pos, net.minecraft.block.Blocks.AIR.getDefaultState());
+
+		// armes : la glace gèle, le feu enflamme, le vent projette
+		fr.evotool.element.Element[] tested = {fr.evotool.element.Element.ICE, fr.evotool.element.Element.FIRE,
+				fr.evotool.element.Element.WIND};
+		for (fr.evotool.element.Element element : tested) {
+			net.minecraft.entity.passive.PigEntity pig = EntityType.PIG.create(world, SpawnReason.COMMAND);
+			if (pig == null) {
+				continue;
+			}
+			pig.refreshPositionAndAngles(x, y, z + 2.0, 180.0F, 0.0F);
+			pig.setAiDisabled(true);
+			world.spawnEntity(pig);
+			player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND,
+					fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_SWORD), element));
+			pig.damage(world, player.getDamageSources().playerAttack(player), 1.0F);
+			boolean ok = switch (element) {
+				case ICE -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS);
+				case FIRE -> pig.isOnFire();
+				default -> pig.getVelocity().y > 0.5;
+			};
+			checks++;
+			if (!ok) {
+				failures.add("éléments : l'épée de " + element.id() + " ne fait pas son effet");
+			}
+			pig.discard();
+		}
+		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
+
+		// armure : plastron de feu = vol de feu et résistance au feu
+		player.equipStack(EquipmentSlot.CHEST,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_CHESTPLATE), fr.evotool.element.Element.FIRE));
+		fr.evotool.element.ElementalPowers.tick(player, 0);
+		checks++;
+		if (!player.getAbilities().allowFlying || !player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE)) {
+			failures.add("éléments : le plastron de feu ne donne pas le vol de feu");
+		}
+		player.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+		fr.evotool.element.ElementalPowers.tick(player, 1);
+		checks++;
+		if (player.getAbilities().allowFlying && !player.isCreative()) {
+			failures.add("éléments : le vol de feu reste sans le plastron");
+		}
+		// bottes de vent : plus de dégâts de chute
+		player.equipStack(EquipmentSlot.FEET,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_BOOTS), fr.evotool.element.Element.WIND));
+		float health = player.getHealth();
+		boolean hurt = player.damage(world, world.getDamageSources().fall(), 6.0F);
+		checks++;
+		if (hurt || player.getHealth() < health) {
+			failures.add("éléments : les bottes de vent n'empêchent pas les dégâts de chute");
+		}
+		// bottes d'eau : on marche sur l'eau
+		player.equipStack(EquipmentSlot.FEET,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_BOOTS), fr.evotool.element.Element.WATER));
+		checks++;
+		if (!player.canWalkOnFluid(net.minecraft.fluid.Fluids.WATER.getDefaultState())) {
+			failures.add("éléments : les bottes d'eau ne marchent pas sur l'eau");
+		}
+		// jambières électriques : vitesse
+		player.equipStack(EquipmentSlot.LEGS,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_LEGGINGS), fr.evotool.element.Element.LIGHTNING));
+		fr.evotool.element.ElementalPowers.tick(player, 20);
+		checks++;
+		if (!player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SPEED)) {
+			failures.add("éléments : les jambières électriques ne donnent pas la vitesse");
+		}
+		for (EquipmentSlot slot : fr.evotool.element.Elements.ARMOR) {
+			player.equipStack(slot, ItemStack.EMPTY);
+		}
+		player.clearStatusEffects();
+		InfinityWings.restoreAbilities(player);
+		return checks;
+	}
+
 	private static int checkWeapons(MinecraftServer server, List<String> failures) {
 		int checks = 0;
 		ServerWorld world = server.getOverworld();

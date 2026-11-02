@@ -9,6 +9,8 @@ import fr.evotool.dimension.SanctuaryFeature;
 import fr.evotool.shield.ShieldGeneratorBlock;
 import fr.evotool.shield.ShieldGeneratorBlockEntity;
 import java.util.function.Function;
+import fr.evotool.combiner.ElementalCombinerBlock;
+import fr.evotool.combiner.ElementalCombinerBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -116,6 +118,18 @@ public final class ModBlocks {
 	public static final BlockEntityType<ShieldGeneratorBlockEntity> SHIELD_GENERATOR_ENTITY = Registry.register(
 			Registries.BLOCK_ENTITY_TYPE, EvoTool.id("shield_generator"),
 			FabricBlockEntityTypeBuilder.create(ShieldGeneratorBlockEntity::new, SHIELD_GENERATOR).build());
+
+	/**
+	 * Combineur élémentaire : il fusionne une armure, une arme ou un outil avec un élément (glace, feu, électricité,
+	 * eau, vent) qui lui donne des pouvoirs.
+	 */
+	public static final Block ELEMENTAL_COMBINER = register("elemental_combiner", ElementalCombinerBlock::new,
+			AbstractBlock.Settings.copy(Blocks.OBSIDIAN).strength(6.0F, 1200.0F).requiresTool().luminance(state -> 12)
+					.nonOpaque().pistonBehavior(PistonBehavior.BLOCK),
+			Rarity.EPIC);
+	public static final BlockEntityType<ElementalCombinerBlockEntity> ELEMENTAL_COMBINER_ENTITY = Registry.register(
+			Registries.BLOCK_ENTITY_TYPE, EvoTool.id("elemental_combiner"),
+			FabricBlockEntityTypeBuilder.create(ElementalCombinerBlockEntity::new, ELEMENTAL_COMBINER).build());
 
 	/** Génération des sanctuaires (voir worldgen/configured_feature/sanctuary.json). */
 	public static final Feature<DefaultFeatureConfig> SANCTUARY_FEATURE = Registry.register(Registries.FEATURE,

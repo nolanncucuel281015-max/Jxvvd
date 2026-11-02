@@ -6,6 +6,7 @@
 	"mixins": [
 		"AnvilScreenHandlerMixin",
 		"ForgingScreenHandlerAccessor",
+		"LivingEntityMixin",
 		"PlayerEntityMixin",
 		"ServerPlayNetworkHandlerMixin"
 	],

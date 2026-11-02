@@ -46,6 +46,7 @@ public class EvoTool implements ModInitializer {
 		ModComponents.init();
 		ModBlocks.init();
 		ShieldGeneratorScreenHandler.init();
+		fr.evotool.combiner.ElementalCombinerScreenHandler.init();
 		ModItems.init();
 		ModItemGroup.init();
 		ModWorldGen.init();
@@ -64,6 +65,7 @@ public class EvoTool implements ModInitializer {
 		InfinityWings.init();
 		Burrow.init();
 		Tentacles.init();
+		fr.evotool.element.ElementalPowers.init();
 		GiantItem.init();
 		CelestialBow.init();
 		PickaxeSlam.init();

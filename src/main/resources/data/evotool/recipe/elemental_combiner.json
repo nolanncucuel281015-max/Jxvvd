@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DAD",
+    "EBE",
+    "OOO"
+  ],
+  "key": {
+    "D": "minecraft:diamond",
+    "A": "minecraft:amethyst_shard",
+    "E": "evotool:evolium",
+    "B": "minecraft:blaze_rod",
+    "O": "minecraft:crying_obsidian"
+  },
+  "result": {
+    "id": "evotool:elemental_combiner",
+    "count": 1
+  }
+}

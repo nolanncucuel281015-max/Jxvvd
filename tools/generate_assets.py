@@ -2505,7 +2505,7 @@ def gen_dimension_data():
     ids = lambda names: [f"{MOD}:{n}" for n in names]
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
                {"replace": False, "values": [f"{MOD}:{o}" for o in ORES] + [f"{MOD}:{g}_block" for g in GEMS]
-                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar", "shield_generator", "abyssite_ore"])})
+                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar", "shield_generator", "abyssite_ore", "elemental_combiner"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "shovel.json"),
                {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "axe.json"),
@@ -4840,8 +4840,90 @@ def gen_shield():
                {"type": "minecraft:block", "random_sequence": f"{MOD}:blocks/shield_generator", "pools": []})
 
 
+# Combineur élémentaire : les quatre cristaux des éléments autour de l'autel, et l'anneau du vent au-dessus.
+COMBINER_GEMS = {"ice": "8ff4ff", "fire": "ff7a1a", "spark": "ffe94a", "water": "2f7bff", "wind": "e8f6ff"}
+
+
+def combiner_elements():
+    """Combineur élémentaire : socle d'obsidienne cerclé d'or et gravé de runes, quatre obélisques coiffés d'un
+    cristal (glace, feu, électricité, eau), autel central à la plaque lumineuse, orbe et anneau du vent qui
+    flottent au-dessus."""
+    E, add = builder()
+    obox(add, (8, 1.0, 8), (16, 2, 16), "base")
+    obox(add, (8, 2.25, 8), (15.2, 0.5, 15.2), "trim")
+    obox(add, (8, 3.0, 8), (12.5, 1.0, 12.5), "base")
+    # runes lumineuses sur les quatre côtés du socle
+    for ang in (0, 90, 180, 270):
+        a = math.radians(ang)
+        obox(add, (8 + 5.4 * math.sin(a), 3.55, 8 + 5.4 * math.cos(a)), (6.5, 0.12, 0.7), "rune", orient(("y", ang)))
+    # les quatre obélisques et leurs cristaux
+    for (sx, sz), gem in (((-1, -1), "ice"), ((1, -1), "fire"), ((1, 1), "spark"), ((-1, 1), "water")):
+        px, pz = 8 + sx * 5.7, 8 + sz * 5.7
+        obox(add, (px, 5.5, pz), (2.4, 5.0, 2.4), "base")
+        obox(add, (px, 8.25, pz), (3.0, 0.5, 3.0), "trim")
+        obox(add, (px, 10.4, pz), (1.7, 3.2, 1.7), gem, orient(("y", 45)))
+        obox(add, (px, 10.4, pz), (1.1, 4.4, 1.1), gem)
+        obox(add, (px - sx * 1.3, 5.5, pz - sz * 1.3), (0.3, 4.0, 0.3), "rune")
+    # l'autel
+    obox(add, (8, 4.5, 8), (6.4, 2.0, 6.4), "trim")
+    obox(add, (8, 6.25, 8), (4.2, 1.5, 4.2), "base")
+    obox(add, (8, 7.25, 8), (6.8, 0.5, 6.8), "trim")
+    obox(add, (8, 7.55, 8), (5.2, 0.12, 5.2), "rune")
+    # l'orbe et l'anneau du vent, qui flottent
+    obox(add, (8, 12.5, 8), (1.6, 1.6, 1.6), "wind", orient(("x", 45), ("y", 45)))
+    ring_flat(add, 8, 13.6, 8, 5.2, 0.7, 0.5, "trim", n=16)
+    ring_flat(add, 8, 13.6, 8, 4.6, 0.3, 0.8, "wind", n=16, phase=11.25)
+    return E
+
+
+def gen_combiner():
+    """Combineur élémentaire : bloc 3D (textures dans textures/block/elemental_combiner/), recette et butin."""
+    out = ("block", "elemental_combiner")
+    shutil.rmtree(os.path.join(ASSETS, "textures", *out), ignore_errors=True)
+    gold = {"gem": gem_palette("ffd23a"), "trim": hexc("ffd23a")}
+    save_png(plate_texture(hexc("1c1626"), 41), *out, "base")
+    save_png(trim_texture(gold, 42), *out, "trim")
+    for i, (name, color) in enumerate(COMBINER_GEMS.items()):
+        save_png(gem_texture({"gem": gem_palette(color), "trim": hexc(color)}, 43 + i), *out, name)
+    save_animated(energy_frames({"gem": gem_palette("c77dff")}), 2, *out, "rune")
+    tex = {"particle": f"{MOD}:block/elemental_combiner/base"}
+    for name in ["base", "trim", "rune"] + list(COMBINER_GEMS):
+        tex[name] = f"{MOD}:block/elemental_combiner/{name}"
+    elements = combiner_elements()
+    for el in elements:
+        t = next(iter(el["faces"].values()))["texture"][1:]
+        if t == "rune":
+            el["light_emission"] = 15
+        elif t in COMBINER_GEMS:
+            el["light_emission"] = 12
+    write_json(os.path.join(ASSETS, "models", "block", "elemental_combiner.json"),
+               {"textures": tex, "elements": elements, "display": {
+                   "gui": {"rotation": [25, 45, 0], "translation": [0, -1, 0], "scale": [0.6, 0.6, 0.6]},
+                   "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.25, 0.25, 0.25]},
+                   "fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.5, 0.5, 0.5]},
+                   "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.375, 0.375, 0.375]},
+                   "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 0, 0], "scale": [0.4, 0.4, 0.4]},
+                   "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 0, 0], "scale": [0.4, 0.4, 0.4]}}})
+    write_json(os.path.join(ASSETS, "blockstates", "elemental_combiner.json"),
+               {"variants": {"": {"model": f"{MOD}:block/elemental_combiner"}}})
+    write_json(os.path.join(ASSETS, "items", "elemental_combiner.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:block/elemental_combiner"}})
+    # craft : diamant, éclat d'améthyste, diamant / évolium, bâton de blaze, évolium / trois obsidiennes pleureuses
+    write_json(os.path.join(DATA, "recipe", "elemental_combiner.json"), {
+        "type": "minecraft:crafting_shaped", "category": "misc",
+        "pattern": ["DAD", "EBE", "OOO"],
+        "key": {"D": "minecraft:diamond", "A": "minecraft:amethyst_shard", "E": f"{MOD}:evolium",
+                "B": "minecraft:blaze_rod", "O": "minecraft:crying_obsidian"},
+        "result": {"id": f"{MOD}:elemental_combiner", "count": 1},
+    })
+    write_json(os.path.join(DATA, "loot_table", "blocks", "elemental_combiner.json"), {
+        "type": "minecraft:block", "random_sequence": f"{MOD}:blocks/elemental_combiner",
+        "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:item", "name": f"{MOD}:elemental_combiner"}],
+                   "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
+
+
 # Recettes visibles dans le livre de recettes dès la connexion, sans avoir à ramasser un ingrédient.
-ALWAYS_VISIBLE_RECIPES = {"shield_generator"}
+ALWAYS_VISIBLE_RECIPES = {"shield_generator", "elemental_combiner"}
 # Recettes secrètes : elles marchent à la table de craft, mais le livre de recettes ne les montre jamais.
 HIDDEN_RECIPES = {"evolium_lighter"}
 
@@ -5234,5 +5316,6 @@ if __name__ == "__main__":
     gen_wings()
     gen_shield()
     gen_abyss()
+    gen_combiner()
     recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

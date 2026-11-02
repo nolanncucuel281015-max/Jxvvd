@@ -20,6 +20,7 @@ public final class ModItemGroup {
 						ModItems.MAGIC_WEAPONS.forEach(entries::add);
 						entries.add(ModBlocks.SANCTUARY_ALTAR);
 						entries.add(ModBlocks.SHIELD_GENERATOR);
+						entries.add(ModBlocks.ELEMENTAL_COMBINER);
 						entries.add(ModItems.EVOLITE_INGOT);
 						entries.add(ModItems.ABYSSITE);
 						entries.add(ModBlocks.ABYSSITE_ORE);

@@ -97,7 +97,46 @@ public class VisualGameTest implements FabricClientGameTest {
 		perspective(context, Perspective.FIRST_PERSON);
 		context.takeScreenshot("evotool_07_travel_first");
 		context.getInput().pressKey(EvoToolClient.TENTACLES);
+		context.waitTicks(20);
+
+		// le combineur élémentaire : le menu, l'animation de fusion, le résultat
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 35");
+		game.getServer().runOnServer(VisualGameTest::placeCombiner);
 		context.waitTicks(10);
+		game.getServer().runOnServer(server -> player(server).openHandledScreen(combiner(server)));
+		context.waitTicks(10);
+		context.takeScreenshot("evotool_08_combiner_gui");
+		context.runOnClient(client -> client.player.closeHandledScreen());
+		context.waitTicks(5);
+		game.getServer().runOnServer(server -> combiner(server).start());
+		context.waitTicks(25);
+		context.takeScreenshot("evotool_09_combiner_fusion");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.takeScreenshot("evotool_10_combiner_fusion_third");
+		perspective(context, Perspective.FIRST_PERSON);
+		context.waitTicks(45);
+		game.getServer().runOnServer(server -> player(server).openHandledScreen(combiner(server)));
+		context.waitTicks(10);
+		context.takeScreenshot("evotool_11_combiner_done");
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL combiner result: {}",
+				combiner(server).items().getStack(fr.evotool.combiner.ElementalCombinerBlockEntity.OUTPUT_SLOT)));
+		context.runOnClient(client -> client.player.closeHandledScreen());
+		context.waitTicks(5);
+	}
+
+	private static net.minecraft.util.math.BlockPos combinerPos;
+
+	private static void placeCombiner(MinecraftServer server) {
+		ServerPlayerEntity player = player(server);
+		combinerPos = player.getBlockPos().add(0, 0, 3);
+		player.getEntityWorld().setBlockState(combinerPos, fr.evotool.block.ModBlocks.ELEMENTAL_COMBINER.getDefaultState());
+		fr.evotool.combiner.ElementalCombinerBlockEntity combiner = combiner(server);
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.DIAMOND_SWORD));
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.FLINT_AND_STEEL));
+	}
+
+	private static fr.evotool.combiner.ElementalCombinerBlockEntity combiner(MinecraftServer server) {
+		return (fr.evotool.combiner.ElementalCombinerBlockEntity) player(server).getEntityWorld().getBlockEntity(combinerPos);
 	}
 
 	private static void perspective(ClientGameTestContext context, Perspective perspective) {

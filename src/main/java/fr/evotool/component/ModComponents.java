@@ -2,6 +2,7 @@ package fr.evotool.component;
 
 import com.mojang.serialization.Codec;
 import fr.evotool.EvoTool;
+import fr.evotool.element.Element;
 import net.minecraft.component.ComponentType;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -56,6 +57,13 @@ public final class ModComponents {
 			Registries.DATA_COMPONENT_TYPE,
 			EvoTool.id("shield_radius"),
 			ComponentType.<Integer>builder().codec(Codec.INT).packetCodec(PacketCodecs.VAR_INT).build()
+	);
+
+	/** Élément donné par le combineur élémentaire (glace, feu, électricité, eau, vent). */
+	public static final ComponentType<Element> ELEMENT = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("element"),
+			ComponentType.<Element>builder().codec(Element.CODEC).packetCodec(Element.PACKET_CODEC).build()
 	);
 
 	private ModComponents() {

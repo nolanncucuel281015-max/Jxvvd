@@ -71,6 +71,9 @@ public class EvoToolClient implements ClientModInitializer {
 		TentacleTravel.register();
 		// Générateur de bouclier : son menu.
 		HandledScreens.register(ShieldGeneratorScreenHandler.TYPE, ShieldGeneratorScreen::new);
+		// Combineur élémentaire : son menu, et les pouvoirs qui dépendent des déplacements (glissement, double saut).
+		HandledScreens.register(fr.evotool.combiner.ElementalCombinerScreenHandler.TYPE, ElementalCombinerScreen::new);
+		ElementalClient.register();
 		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.
 		ClientPlayNetworking.registerGlobalReceiver(EvolvedPayload.ID,
 				(payload, context) -> context.client().gameRenderer.showFloatingItem(payload.stack()));
@@ -98,6 +101,27 @@ public class EvoToolClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+			// l'élément donné par le combineur, et ses pouvoirs sur cet objet
+			fr.evotool.element.Element element = fr.evotool.element.Elements.get(stack);
+			if (element != null) {
+				int at = Math.min(1, lines.size());
+				lines.add(at++, Text.translatable("tooltip.evotool.element", element.symbol(), Text.translatable(element.translationKey()))
+						.formatted(element.color(), Formatting.BOLD));
+				net.minecraft.entity.EquipmentSlot slot = fr.evotool.element.Elements.armorSlot(stack);
+				if (slot == null) {
+					lines.add(at, Text.translatable("tooltip.evotool.element.weapon." + element.id()).formatted(element.color()));
+				} else {
+					lines.add(at++, Text.translatable("tooltip.evotool.element.armor." + element.id()).formatted(element.color()));
+					String special = fr.evotool.element.Elements.specialKey(element, slot);
+					if (special != null) {
+						lines.add(at, Text.translatable(special).formatted(element.color(), Formatting.ITALIC));
+					}
+				}
+			}
+			if (stack.isOf(ModBlocks.ELEMENTAL_COMBINER.asItem())) {
+				lines.add(Text.translatable("tooltip.evotool.combiner.hint").formatted(Formatting.LIGHT_PURPLE));
+				return;
+			}
 			if (stack.isOf(ModBlocks.SHIELD_GENERATOR.asItem())) {
 				lines.add(Text.translatable("tooltip.evotool.shield.fuel",
 						java.text.NumberFormat.getIntegerInstance(java.util.Locale.FRANCE)

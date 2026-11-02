@@ -88,6 +88,11 @@ public final class InfinityWings {
 			abilities.allowFlying = true;
 			abilities.setFlySpeed(SPEED);
 			player.addCommandTag(TAG);
+		} else if (fr.evotool.element.ElementalPowers.fireFlight(player)) {
+			// plastron de feu (combineur élémentaire) : le vol de feu
+			abilities.allowFlying = true;
+			abilities.setFlySpeed(fr.evotool.element.ElementalPowers.FIRE_FLY_SPEED);
+			player.removeCommandTag(TAG);
 		} else {
 			abilities.allowFlying = false;
 			abilities.flying = false;

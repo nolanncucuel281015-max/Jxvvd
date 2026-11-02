@@ -367,6 +367,25 @@ Recette (table de craft), visible dans le livre de recettes dès le début :
 [ Bloc d'évolium ] [ Bloc d'évolium ] [ Bloc d'évolium ]
 ```
 
+## Combineur élémentaire
+
+Un autel d'obsidienne cerclé d'or (vrai modèle 3D) : quatre obélisques coiffés d'un cristal (glace, feu,
+électricité, eau), des runes qui brillent et l'anneau du vent qui flotte au-dessus. Craft (visible dans le livre
+de recettes) : diamant, éclat d'améthyste, diamant / évolium, bâton de blaze, évolium / 3 obsidiennes pleureuses.
+
+Clic droit pour l'ouvrir : pose une **armure, une arme ou un outil** à gauche, un **élément** au milieu, puis
+**Combiner**. Les deux objets s'envolent au-dessus de l'autel, tournent l'un autour de l'autre en se rapprochant
+au milieu des particules de l'élément, puis fusionnent dans un éclair : l'objet élémentaire (brillant, avec son
+élément dans l'infobulle) apparaît à droite. Combiner à nouveau remplace l'élément.
+
+| Élément | Avec | Arme / outil (à chaque coup) | Armure (toute pièce) | Pièce spéciale |
+|---|---|---|---|---|
+| ❄ Glace | glace, glace compactée, glace bleue | gèle la cible (lenteur, givre) | attaquants gelés, plus de gel | **Bottes : glissement de glace** (sprinte pour glisser très vite, l'eau gèle sous tes pas) |
+| ✹ Feu | briquet, boule de feu | enflamme la cible | résistance au feu, attaquants enflammés | **Plastron : vol de feu** (double saut pour voler, traînée de flammes) |
+| ⚡ Électricité | poudre à canon | arcs électriques sur 3 monstres proches | décharge sur les attaquants | **Jambières : sprint électrique** (Vitesse II) |
+| ≈ Eau | seau d'eau (le seau vide reste), cœur de la mer | vague qui repousse, soigne 1 cœur | respiration aquatique | **Plastron : nage rapide** (grâce du dauphin, conduit) ; **bottes : marche sur l'eau** (accroupi pour plonger) |
+| ➶ Vent | charge de vent, bâton de breeze | projette la cible dans les airs | plus aucun dégât de chute | **Bottes : double saut** |
+
 ## Modèle 3D — 21 formes
 
 Chaque outil a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux il change de forme** :
