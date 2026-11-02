@@ -4553,16 +4553,16 @@ ABYSSITE = [hexc("050308"), hexc("1a0a2a"), hexc("4a1a7a"), hexc("b04aff"), hexc
 
 
 def tentacle_skin(seed):
-    """Peau de tentacule : noire et luisante, reflets violets, petites écailles."""
+    """Peau de tentacule : noire et luisante, reflets violets bien visibles, petites écailles."""
     img = Image.new("RGBA", (16, 16))
     r = random.Random(seed)
-    base = hexc("0c0a10")
+    base = hexc("14101c")
     for y in range(16):
         for x in range(16):
-            f = 1.0 + 0.5 * max(0.0, math.sin(x * 0.7 + y * 0.25)) ** 6 + r.uniform(-0.06, 0.06)
+            f = 1.0 + 0.9 * max(0.0, math.sin(x * 0.7 + y * 0.25)) ** 6 + r.uniform(-0.06, 0.06)
             c = shade(base, f)
             if (x + 2 * y) % 5 == 0:
-                c = lerp(c, hexc("2a1a3a"), 0.5)
+                c = lerp(c, hexc("3e2656"), 0.6)
             img.putpixel((x, y), c)
     return img
 
@@ -4573,16 +4573,23 @@ def tentacle_segment_elements(tip=False):
     E, add = builder()
     if tip:
         revolve(add, [(3.0, 0.0), (2.4, 5.0), (1.5, 10.0), (0.5, 15.0)], "skin", n=8, t=0.8)
-        obox(add, (8, 15.6, 8), (0.9, 0.9, 0.9), "glow", orient(("x", 45), ("z", 45)))
+        obox(add, (8, 15.6, 8), (1.6, 1.6, 1.6), "glow", orient(("x", 45), ("z", 45)))
+        # ventouses lumineuses jusqu'au bout
+        for y, rad in ((2.5, 2.75), (7.0, 2.0), (11.0, 1.3)):
+            obox(add, (8, y, 8 + rad + 0.1), (1.1, 1.1, 0.3), "glow")
     else:
         revolve(add, [(3.0, 0.0), (3.0, 16.0)], "skin", n=8, t=0.9)
         for y in (4.0, 11.0):
-            obox(add, (8, y, 8 + 3.05), (1.6, 1.6, 0.35), "sucker")
-            obox(add, (8, y, 8 + 3.2), (0.7, 0.7, 0.2), "glow")
+            obox(add, (8, y, 8 + 3.05), (2.0, 2.0, 0.35), "sucker")
+            obox(add, (8, y, 8 + 3.2), (1.2, 1.2, 0.2), "glow")
+        # une veine lumineuse court le long du dos, et deux points sur les flancs : on la voit de partout
+        obox(add, (8, 8, 8 - 3.1), (0.8, 16.02, 0.3), "glow")
+        for side in (-1, 1):
+            obox(add, (8 + side * 3.1, 7.5, 8), (0.3, 1.2, 1.2), "glow")
     for el in E:
         t = next(iter(el["faces"].values()))["texture"][1:]
         if t == "glow":
-            el["light_emission"] = 13
+            el["light_emission"] = 15
     return E
 
 

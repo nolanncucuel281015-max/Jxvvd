@@ -422,7 +422,7 @@ public final class TentacleTravel {
 			Vec3d dir = point.subtract(previous);
 			float segment = (float) dir.length();
 			if (segment > 1.0E-4F) {
-				float width = (float) (0.3 - 0.22 * (i - 1) / (double) SEGMENTS) / (2 * MODEL_RADIUS);
+				float width = (float) (0.46 - 0.32 * (i - 1) / (double) SEGMENTS) / (2 * MODEL_RADIUS);
 				Vec3d unit = dir.multiply(1 / segment);
 				matrices.push();
 				matrices.translate(previous.x - camera.x, previous.y - camera.y, previous.z - camera.z);

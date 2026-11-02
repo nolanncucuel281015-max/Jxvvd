@@ -250,7 +250,6 @@ public final class Tentacles {
 			stack.set(DataComponentTypes.ITEM_MODEL, EvoTool.id(i == count - 1 ? "tentacle/tip" : "tentacle/segment"));
 			DisplayEntity.ItemDisplayEntity segment = GiantItem.create(world, stack, ItemDisplayContext.NONE,
 					anchor, 0.0F, new Quaternionf(), 0.0F, 1);
-			segment.setBrightness(null);
 			segment.setTeleportDuration(1);
 			segment.setDisplayWidth(box);
 			segment.setDisplayHeight(box);
@@ -283,7 +282,7 @@ public final class Tentacles {
 				float length = (float) dir.length() + 0.04F;
 				Vec3d unit = dir.lengthSquared() < 1.0E-6 ? new Vec3d(0, 1, 0) : dir.normalize();
 				// épaisse au départ, fine au bout
-				float width = (0.32F - 0.2F * t0) / (2 * MODEL_RADIUS);
+				float width = (0.5F - 0.3F * t0) / (2 * MODEL_RADIUS);
 				Quaternionf rotation = new Quaternionf().rotationTo(0, 1, 0, (float) unit.x, (float) unit.y, (float) unit.z);
 				Vec3d center = a.add(unit.multiply(length / 2)).subtract(base);
 				segment.setTransformation(new AffineTransformation(new Vector3f((float) center.x, (float) center.y, (float) center.z),

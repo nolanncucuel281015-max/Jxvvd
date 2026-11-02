@@ -142,7 +142,7 @@ public class TentacleFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 				float curl = (upper ? -0.9F : 0.7F) * f * f * (1.0F - 0.9F * move);
 				Vector3f dir = new Vector3f(direction).rotateAxis(wave + curl, bendAxis.x, bendAxis.y, bendAxis.z);
 				dir.rotateAxis(0.25F * f * (float) Math.cos(t * 0.13F + k), direction.x, direction.y, direction.z);
-				float width = (0.2F - 0.13F * f) / (2 * MODEL_RADIUS);
+				float width = (0.28F - 0.17F * f) / (2 * MODEL_RADIUS);
 				matrices.push();
 				matrices.translate(point.x, point.y, point.z);
 				matrices.multiply(new Quaternionf().rotationTo(0, 1, 0, dir.x, dir.y, dir.z));
