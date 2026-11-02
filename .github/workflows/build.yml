@@ -61,7 +61,8 @@ jobs:
           timeout 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --stacktrace > clientgametest.log 2>&1 || echo "client gametest exit $?"
           grep -vE "^\s+at |^\s+\.\.\. |ALSA lib|flite|Suppressed:|Realms" clientgametest.log | grep -E "^\[|Exception|Error|Caused" | head -220 || true
           for f in $(find . -name 'latest.log' -path '*clientGameTest*' -not -path './.gradle/*'); do echo "##### $f"; grep -vE "^\s+at |ALSA|flite" "$f" | tail -120; done
-          for f in $(find . -name 'evotool_*.png' -not -path './.gradle/*' | sort); do
+          find . -path ./.gradle -prune -o -name '*.png' -path '*screenshot*' -print | head -20
+          for f in $(find . -path ./.gradle -prune -o -name '*evotool_*.png' -print | sort); do
             convert "$f" -resize 640x -quality 82 /tmp/shot.jpg
             echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg)"
             base64 -w 3000 /tmp/shot.jpg
