@@ -17,8 +17,11 @@ sigs() {
 	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "${2:-.}" | head -${3:-50}
 }
 
-echo "### rendu des entités : sections prêtes ?"
-sigs net.minecraft.client.render.WorldRenderer 'Ready|ntit|Section' 40
-J=$(jar_of net.minecraft.client.render.WorldRenderer)
-javap -c -p -cp "$J" net.minecraft.client.render.WorldRenderer 2>/dev/null | awk '/Entities|ntities\(/{p=1} p{print} /^$/{p=0}' | grep -E "Method|invoke|^  [a-z].*\(" | grep -iE "ready|section|shouldRender|getEntities|^  [a-z]" | head -60
-sigs net.minecraft.entity.decoration.DisplayEntity 'Box|isRendered|shouldRender|Visibility' 20
+echo "### client gametest : délais"
+for J in $(echo "$ALL" | tr ' ' '\n' | grep -i 'fabric-client-gametest' | grep -v sources | head -1); do
+	echo "jar: $J"
+	for c in $(unzip -l "$J" | awk '{print $4}' | grep '\.class$' | grep -iE 'World|Context|Timeout|Constants' | head -20); do
+		cls=${c%.class}; cls=${cls//\//.}
+		javap -c -p -constants -cp "$J" "$cls" 2>/dev/null | grep -iE "timeout|Timeout loading|ldc|sipush|bipush|class |static final" | grep -iE "timeout|class |TIMEOUT|loading world" | head -12
+	done
+done

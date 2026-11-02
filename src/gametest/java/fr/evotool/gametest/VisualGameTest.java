@@ -31,6 +31,11 @@ public class VisualGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		// rendu logiciel dans la CI : petit monde à charger
+		context.runOnClient(client -> {
+			client.options.getViewDistance().setValue(3);
+			client.options.getSimulationDistance().setValue(5);
+		});
 		try (TestSingleplayerContext game = context.worldBuilder().create()) {
 			game.getClientWorld().waitForChunksRender();
 			game.getServer().runCommand("time set noon");
