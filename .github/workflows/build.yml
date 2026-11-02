@@ -52,6 +52,22 @@ jobs:
             done
           done
 
+      # Test visuel dans le vrai client (commit contenant [visual]) : captures d'écran affichées dans le journal.
+      - name: Visual client test
+        if: contains(github.event.head_commit.message, '[visual]')
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils imagemagick > /dev/null 2>&1 || true
+          timeout 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --stacktrace > clientgametest.log 2>&1 || echo "client gametest exit $?"
+          grep -iE "evotool|exception|error|fail|screenshot|OpenGL|GL_" clientgametest.log | grep -v "DEBUG" | head -80 || true
+          tail -40 clientgametest.log
+          for f in $(find . -name 'evotool_*.png' -not -path './.gradle/*' | sort); do
+            convert "$f" -resize 640x -quality 82 /tmp/shot.jpg
+            echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg)"
+            base64 -w 3000 /tmp/shot.jpg
+            echo "=== END"
+          done
+
       # Inspection ponctuelle de Minecraft (commit contenant [inspect]).
       - name: Inspect vanilla Minecraft
         if: always() && contains(github.event.head_commit.message, '[inspect]')

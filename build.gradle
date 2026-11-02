@@ -31,6 +31,17 @@ loom {
 	}
 }
 
+// Test visuel dans le vrai client (./gradlew runClientGameTest, lancé par la CI pour un commit contenant [visual]).
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "evotool-gametest"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
