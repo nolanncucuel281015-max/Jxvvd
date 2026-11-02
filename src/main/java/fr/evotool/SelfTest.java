@@ -875,7 +875,8 @@ final class SelfTest {
 
 		// armes : la glace gèle, le feu enflamme, le vent projette
 		fr.evotool.element.Element[] tested = {fr.evotool.element.Element.ICE, fr.evotool.element.Element.FIRE,
-				fr.evotool.element.Element.WIND, fr.evotool.element.Element.EARTH, fr.evotool.element.Element.SHADOW};
+				fr.evotool.element.Element.WIND, fr.evotool.element.Element.EARTH, fr.evotool.element.Element.SHADOW,
+				fr.evotool.element.Element.LIGHT, fr.evotool.element.Element.POISON};
 		for (fr.evotool.element.Element element : tested) {
 			net.minecraft.entity.passive.PigEntity pig = EntityType.PIG.create(world, SpawnReason.COMMAND);
 			if (pig == null) {
@@ -893,6 +894,8 @@ final class SelfTest {
 				case EARTH -> pig.getStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS) != null
 						&& pig.getStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS).getAmplifier() >= 4;
 				case SHADOW -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.WITHER);
+				case LIGHT -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.GLOWING);
+				case POISON -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.POISON);
 				default -> pig.getVelocity().y > 0.5;
 			};
 			checks++;
@@ -949,6 +952,23 @@ final class SelfTest {
 		if (!player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION)
 				|| !player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.RESISTANCE)) {
 			failures.add("éléments : le casque d'ombre / le plastron de terre ne donnent pas leurs effets");
+		}
+		// plastron de lumière : Régénération ; bottes de poison : immunité au poison
+		player.equipStack(EquipmentSlot.CHEST,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_CHESTPLATE), fr.evotool.element.Element.LIGHT));
+		player.equipStack(EquipmentSlot.FEET,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_BOOTS), fr.evotool.element.Element.POISON));
+		player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.POISON, 200, 0));
+		fr.evotool.element.ElementalPowers.tick(player, 60);
+		checks++;
+		if (!player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.REGENERATION)
+				|| player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.POISON)) {
+			failures.add("éléments : le plastron de lumière / les bottes de poison ne donnent pas leurs effets");
+		}
+		checks++;
+		if (fr.evotool.element.Element.fromCatalyst(new ItemStack(net.minecraft.item.Items.GLOWSTONE_DUST)) != fr.evotool.element.Element.LIGHT
+				|| fr.evotool.element.Element.fromCatalyst(new ItemStack(net.minecraft.item.Items.SPIDER_EYE)) != fr.evotool.element.Element.POISON) {
+			failures.add("éléments : la poudre lumineuse ou l'œil d'araignée ne donnent pas la lumière / le poison");
 		}
 		// jambières électriques : vitesse
 		player.equipStack(EquipmentSlot.LEGS,

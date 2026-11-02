@@ -26,7 +26,9 @@ public enum Element implements StringIdentifiable {
 	WATER("water", "≈", Formatting.BLUE, 0x2F7BFF, List.of(Items.WATER_BUCKET, Items.HEART_OF_THE_SEA)),
 	WIND("wind", "➶", Formatting.WHITE, 0xE8F6FF, List.of(Items.WIND_CHARGE, Items.BREEZE_ROD)),
 	EARTH("earth", "▲", Formatting.DARK_GREEN, 0x9A6A3A, List.of(Items.DIRT, Items.COARSE_DIRT, Items.MOSS_BLOCK)),
-	SHADOW("shadow", "☾", Formatting.DARK_PURPLE, 0x8A4AD8, List.of(Items.INK_SAC, Items.ECHO_SHARD));
+	SHADOW("shadow", "☾", Formatting.DARK_PURPLE, 0x8A4AD8, List.of(Items.INK_SAC, Items.ECHO_SHARD)),
+	LIGHT("light", "☀", Formatting.YELLOW, 0xFFF3A0, List.of(Items.GLOWSTONE_DUST, Items.GLOWSTONE)),
+	POISON("poison", "☠", Formatting.GREEN, 0x6ACD3A, List.of(Items.SPIDER_EYE, Items.POISONOUS_POTATO, Items.PUFFERFISH));
 
 	public static final Codec<Element> CODEC = StringIdentifiable.createCodec(Element::values);
 	public static final PacketCodec<ByteBuf, Element> PACKET_CODEC = PacketCodecs.indexed(i -> values()[i], Element::ordinal);
@@ -84,6 +86,8 @@ public enum Element implements StringIdentifiable {
 			case WIND -> ParticleTypes.CLOUD;
 			case EARTH -> new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.ROOTED_DIRT.getDefaultState());
 			case SHADOW -> ParticleTypes.SQUID_INK;
+			case LIGHT -> ParticleTypes.END_ROD;
+			case POISON -> ParticleTypes.ITEM_SLIME;
 		};
 	}
 

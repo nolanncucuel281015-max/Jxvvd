@@ -279,7 +279,7 @@
   "gui.evotool.combiner.working": "Fusion…",
   "gui.evotool.combiner.preview": "%s %s : %s",
   "gui.evotool.combiner.need_equipment": "Pose une armure, une arme ou un outil à gauche",
-  "gui.evotool.combiner.need_element": "Élément : glace, poudre à canon, briquet, seau d'eau, charge de vent, terre, encre…",
+  "gui.evotool.combiner.need_element": "Élément : glace, poudre à canon, briquet, seau d'eau, charge de vent, terre, encre, poudre lumineuse, œil d'araignée…",
   "element.evotool.ice": "Glace",
   "element.evotool.fire": "Feu",
   "element.evotool.lightning": "Électricité",
@@ -311,5 +311,14 @@
   "tooltip.evotool.element.legs.earth": "Force tellurique : Célérité II (tu mines plus vite)",
   "tooltip.evotool.element.feet.earth": "Atterrissage sismique : pas de dégâts de chute, les monstres autour sont écrasés",
   "tooltip.evotool.element.head.shadow": "Vision nocturne",
-  "tooltip.evotool.element.chest.shadow": "Se fondre dans l'ombre : invisible quand tu t'accroupis"
+  "tooltip.evotool.element.chest.shadow": "Se fondre dans l'ombre : invisible quand tu t'accroupis",
+  "element.evotool.light": "Lumière",
+  "element.evotool.poison": "Poison",
+  "tooltip.evotool.element.weapon.light": "Fait briller la cible (visible à travers les murs) ; brûle les morts-vivants",
+  "tooltip.evotool.element.weapon.poison": "Empoisonne la cible (Poison II)",
+  "tooltip.evotool.element.armor.light": "Les attaquants brillent ; les morts-vivants qui te frappent brûlent",
+  "tooltip.evotool.element.armor.poison": "Immunité au poison ; les attaquants sont empoisonnés",
+  "tooltip.evotool.element.head.light": "Révélation : les monstres autour brillent à travers les murs",
+  "tooltip.evotool.element.chest.light": "Aura sacrée : Régénération",
+  "tooltip.evotool.element.chest.poison": "Aura toxique : empoisonne les monstres proches"
 }

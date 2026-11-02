@@ -21,6 +21,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.registry.tag.EntityTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -35,13 +36,16 @@ import net.minecraft.util.math.Vec3d;
  * <ul>
  *   <li>Arme / outil, à chaque coup : glace = gèle, feu = enflamme, électricité = arcs sur 3 ennemis proches,
  *   eau = vague qui repousse et soigne, vent = projette en l'air, terre = enracine et secoue les ennemis autour,
- *   ombre = aveugle, flétrit et vole de la vie.</li>
+ *   ombre = aveugle, flétrit et vole de la vie, lumière = fait briller (et brûler les morts-vivants),
+ *   poison = empoisonne.</li>
  *   <li>Armure : glace = attaquants gelés, pas de gel ; bottes = glissement de glace, l'eau gèle sous les pas.
  *   Feu = résistance au feu, attaquants enflammés ; plastron = vol de feu. Électricité = décharge sur les
  *   attaquants ; jambières = sprint électrique. Eau = respiration aquatique ; plastron = nage rapide ;
  *   bottes = marche sur l'eau. Vent = pas de dégâts de chute ; bottes = double saut. Terre = Résistance ;
  *   jambières = force tellurique (Célérité II) ; bottes = atterrissage sismique. Ombre = attaquants flétris ;
- *   casque = vision nocturne ; plastron = invisible accroupi.</li>
+ *   casque = vision nocturne ; plastron = invisible accroupi. Lumière = attaquants révélés (morts-vivants
+ *   brûlés) ; casque = révèle les monstres autour ; plastron = Régénération. Poison = attaquants empoisonnés,
+ *   immunité au poison ; plastron = aura toxique.</li>
  * </ul>
  */
 public final class ElementalPowers {
@@ -170,6 +174,21 @@ public final class ElementalPowers {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, c.x, c.y, c.z, 6, 0.3, 0.4, 0.3, 0.03);
 				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_WARDEN_HEARTBEAT, SoundCategory.PLAYERS, 1.0F, 1.4F);
 			}
+			case LIGHT -> {
+				// la cible brille (on la voit à travers les murs) ; les morts-vivants brûlent comme au soleil
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 100, 0), player);
+				if (target.getType().isIn(EntityTypeTags.UNDEAD)) {
+					target.setOnFireFor(5.0F);
+					target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, 0), player);
+				}
+				world.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, 20, 0.4, 0.5, 0.4, 0.08);
+				world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1.2F, 1.8F);
+			}
+			case POISON -> {
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 100, 1), player);
+				world.spawnParticles(ParticleTypes.ITEM_SLIME, c.x, c.y, c.z, 20, 0.4, 0.5, 0.4, 0.05);
+				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.0F, 1.4F);
+			}
 		}
 	}
 
@@ -216,6 +235,17 @@ public final class ElementalPowers {
 				attacker.setOnFireFor(4.0F);
 				world.spawnParticles(ParticleTypes.FLAME, c.x, c.y, c.z, 12, 0.3, 0.4, 0.3, 0.03);
 			}
+			case LIGHT -> {
+				attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 60, 0), player);
+				if (attacker.getType().isIn(EntityTypeTags.UNDEAD)) {
+					attacker.setOnFireFor(4.0F);
+				}
+				world.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, 10, 0.3, 0.4, 0.3, 0.05);
+			}
+			case POISON -> {
+				attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 60, 0), player);
+				world.spawnParticles(ParticleTypes.ITEM_SLIME, c.x, c.y, c.z, 10, 0.3, 0.4, 0.3, 0.03);
+			}
 			case SHADOW -> {
 				attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 40, 0), player);
 				world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 10, 0.3, 0.4, 0.3, 0.03);
@@ -258,10 +288,36 @@ public final class ElementalPowers {
 			if (Elements.wears(player, EquipmentSlot.LEGS, Element.EARTH)) {
 				effect(player, StatusEffects.HASTE, 1);
 			}
+			// casque de lumière : les monstres autour brillent, on les voit à travers les murs
+			if (Elements.wears(player, EquipmentSlot.HEAD, Element.LIGHT)) {
+				for (LivingEntity monster : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(24.0),
+						e -> e instanceof Monster && e.isAlive())) {
+					monster.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 40, 0, true, false), player);
+				}
+			}
+			// plastron de lumière : aura sacrée (rajoutée seulement quand elle s'épuise : soin au rythme normal)
+			if (Elements.wears(player, EquipmentSlot.CHEST, Element.LIGHT)) {
+				StatusEffectInstance regen = player.getStatusEffect(StatusEffects.REGENERATION);
+				if (regen == null || regen.getDuration() < 40) {
+					player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 0, true, false, true));
+				}
+			}
+			// plastron de poison : aura toxique qui empoisonne les monstres proches
+			if (Elements.wears(player, EquipmentSlot.CHEST, Element.POISON) && tick % 40 == 0) {
+				for (LivingEntity monster : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(4.0),
+						e -> e instanceof Monster && e.isAlive())) {
+					monster.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 60, 0), player);
+				}
+				world.spawnParticles(ParticleTypes.ITEM_SLIME, player.getX(), player.getY() + 1.0, player.getZ(), 25, 2.0, 0.6, 2.0, 0.02);
+			}
 			if (Elements.wears(player, EquipmentSlot.HEAD, Element.SHADOW)) {
 				// assez longue pour ne pas clignoter (la vision nocturne clignote ses 10 dernières secondes)
 				player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 260, 0, true, false, true));
 			}
+		}
+		// poison : on y est immunisé
+		if (hasPiece(player, Element.POISON) && player.hasStatusEffect(StatusEffects.POISON)) {
+			player.removeStatusEffect(StatusEffects.POISON);
 		}
 		// plastron d'ombre : accroupi, on se fond dans l'ombre
 		if (Elements.wears(player, EquipmentSlot.CHEST, Element.SHADOW) && player.isSneaking()) {

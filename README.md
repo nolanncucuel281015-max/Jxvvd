@@ -370,8 +370,8 @@ Recette (table de craft), visible dans le livre de recettes dès le début :
 ## Combineur élémentaire
 
 Un autel d'obsidienne cerclé d'or (vrai modèle 3D) : quatre obélisques coiffés d'un cristal (glace, feu,
-électricité, eau), des runes qui brillent, et au-dessus l'anneau du vent qui flotte entre un éclat de terre et
-un éclat d'ombre. Craft (visible dans le livre
+électricité, eau), des runes qui brillent, et au-dessus l'anneau du vent qui flotte entre les éclats de terre,
+d'ombre, de lumière et de poison. Craft (visible dans le livre
 de recettes) : diamant, éclat d'améthyste, diamant / évolium, bâton de blaze, évolium / 3 obsidiennes pleureuses.
 
 Clic droit pour l'ouvrir : pose une **armure, une arme ou un outil** à gauche, un **élément** au milieu, puis
@@ -388,6 +388,8 @@ au milieu des particules de l'élément, puis fusionnent dans un éclair : l'obj
 | ➶ Vent | charge de vent, bâton de breeze | projette la cible dans les airs | plus aucun dégât de chute | **Bottes : double saut** |
 | ▲ Terre | terre, terre stérile, bloc de mousse | séisme : enracine la cible, secoue et soulève les monstres autour | peau de pierre (Résistance) | **Jambières : force tellurique** (Célérité II) ; **bottes : atterrissage sismique** (pas de dégâts de chute, et en tombant de 4 blocs ou plus, les monstres autour sont écrasés) |
 | ☾ Ombre | poche d'encre, éclat d'écho | aveugle et flétrit la cible, vole un peu de vie | les attaquants sont flétris | **Casque : vision nocturne** ; **plastron : invisible quand tu t'accroupis** |
+| ☀ Lumière | poudre lumineuse, pierre lumineuse | la cible brille (visible à travers les murs) ; les morts-vivants brûlent comme au soleil | les attaquants brillent, les morts-vivants qui te frappent brûlent | **Casque : révélation** (les monstres à 24 blocs brillent à travers les murs) ; **plastron : aura sacrée** (Régénération) |
+| ☠ Poison | œil d'araignée, patate empoisonnée, poisson-globe | Poison II | immunité au poison, les attaquants sont empoisonnés | **Plastron : aura toxique** (empoisonne les monstres à 4 blocs) |
 
 ## Modèle 3D — 21 formes
 

@@ -56,7 +56,8 @@ public final class Elements {
 			case LIGHTNING -> slot == EquipmentSlot.LEGS;
 			case WATER -> slot == EquipmentSlot.CHEST || slot == EquipmentSlot.FEET;
 			case EARTH -> slot == EquipmentSlot.LEGS || slot == EquipmentSlot.FEET;
-			case SHADOW -> slot == EquipmentSlot.HEAD || slot == EquipmentSlot.CHEST;
+			case SHADOW, LIGHT -> slot == EquipmentSlot.HEAD || slot == EquipmentSlot.CHEST;
+			case POISON -> slot == EquipmentSlot.CHEST;
 		};
 		return special ? "tooltip.evotool.element." + slot.getName() + "." + element.id() : null;
 	}
