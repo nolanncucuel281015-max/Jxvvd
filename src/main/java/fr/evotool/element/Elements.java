@@ -2,6 +2,8 @@ package fr.evotool.element;
 
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoProgression;
+import fr.evotool.item.ModItems;
+import net.minecraft.item.Items;
 import java.util.EnumSet;
 import java.util.Set;
 import net.minecraft.component.DataComponentTypes;
@@ -32,16 +34,41 @@ public final class Elements {
 		return slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR ? slot : null;
 	}
 
-	/** Armures, armes et outils (un seul objet, qui s'use ou qui évolue) peuvent recevoir un élément. */
+	/** Un livre (ou un grimoire) : le combineur en fait un grimoire de sorts. */
+	public static boolean isBook(ItemStack stack) {
+		return stack.isOf(Items.BOOK) || stack.isOf(ModItems.ELEMENTAL_GRIMOIRE);
+	}
+
+	/**
+	 * Armures, armes et outils (un seul objet, qui s'use ou qui évolue) peuvent recevoir un élément ; un livre
+	 * devient un grimoire, et un grimoire apprend d'autres éléments.
+	 */
 	public static boolean canCombine(ItemStack stack) {
 		if (stack.isEmpty() || stack.getCount() != 1) {
 			return false;
 		}
-		return armorSlot(stack) != null || stack.isDamageable() || EvoProgression.kindOf(stack) != null;
+		return isBook(stack) || armorSlot(stack) != null || stack.isDamageable() || EvoProgression.kindOf(stack) != null;
 	}
 
-	/** L'objet avec son nouvel élément (il remplace l'ancien). */
+	/** Cet objet peut-il recevoir cet élément ? (Un grimoire qui le connaît déjà, non.) */
+	public static boolean canAccept(ItemStack stack, Element element) {
+		if (!canCombine(stack) || element == null) {
+			return false;
+		}
+		Grimoire grimoire = stack.get(ModComponents.GRIMOIRE);
+		return grimoire == null || !grimoire.elements().contains(element);
+	}
+
+	/** L'objet avec son nouvel élément (il remplace l'ancien) ; un livre devient un grimoire, qui en apprend un de plus. */
 	public static ItemStack combine(ItemStack equipment, Element element) {
+		if (isBook(equipment)) {
+			Grimoire grimoire = equipment.get(ModComponents.GRIMOIRE);
+			ItemStack book = equipment.isOf(ModItems.ELEMENTAL_GRIMOIRE) ? equipment.copyWithCount(1)
+					: new ItemStack(ModItems.ELEMENTAL_GRIMOIRE);
+			book.set(ModComponents.GRIMOIRE, grimoire == null ? new Grimoire(java.util.List.of(element), 0) : grimoire.withElement(element));
+			book.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+			return book;
+		}
 		ItemStack result = equipment.copyWithCount(1);
 		result.set(ModComponents.ELEMENT, element);
 		result.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);

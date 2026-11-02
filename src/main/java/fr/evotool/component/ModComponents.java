@@ -66,6 +66,14 @@ public final class ModComponents {
 			ComponentType.<Element>builder().codec(Element.CODEC).packetCodec(Element.PACKET_CODEC).build()
 	);
 
+	/** Contenu d'un grimoire élémentaire : ses éléments et le sort choisi. */
+	public static final ComponentType<fr.evotool.element.Grimoire> GRIMOIRE = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("grimoire"),
+			ComponentType.<fr.evotool.element.Grimoire>builder().codec(fr.evotool.element.Grimoire.CODEC)
+					.packetCodec(fr.evotool.element.Grimoire.PACKET_CODEC).build()
+	);
+
 	private ModComponents() {
 	}
 

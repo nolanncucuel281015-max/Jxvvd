@@ -118,6 +118,24 @@ public class EvoToolClient implements ClientModInitializer {
 					}
 				}
 			}
+			// grimoire élémentaire : ses sorts, le choisi en tête de flèche
+			fr.evotool.element.Grimoire grimoire = stack.get(ModComponents.GRIMOIRE);
+			if (grimoire != null) {
+				int at = Math.min(1, lines.size());
+				fr.evotool.element.Spell selected = grimoire.selectedSpell();
+				for (fr.evotool.element.Spell spell : grimoire.spells()) {
+					boolean chosen = spell == selected;
+					net.minecraft.text.MutableText line = Text.literal((chosen ? "▶ " : "   ") + spell.element().symbol() + " ")
+							.append(Text.translatable(spell.translationKey()))
+							.append(Text.translatable(spell.bolt() ? "tooltip.evotool.spell.bolt" : "tooltip.evotool.spell.burst"))
+							.formatted(spell.element().color());
+					lines.add(at++, chosen ? line.formatted(Formatting.BOLD) : line);
+				}
+				lines.add(at++, Text.translatable("tooltip.evotool.grimoire.cast").formatted(Formatting.GRAY));
+				lines.add(at++, Text.translatable("tooltip.evotool.grimoire.switch").formatted(Formatting.GRAY));
+				lines.add(at, Text.translatable("tooltip.evotool.grimoire.more").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
+				return;
+			}
 			if (stack.isOf(ModBlocks.ELEMENTAL_COMBINER.asItem())) {
 				lines.add(Text.translatable("tooltip.evotool.combiner.hint").formatted(Formatting.LIGHT_PURPLE));
 				return;

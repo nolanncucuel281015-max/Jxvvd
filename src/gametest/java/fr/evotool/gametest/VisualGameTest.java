@@ -122,6 +122,31 @@ public class VisualGameTest implements FabricClientGameTest {
 				combiner(server).items().getStack(fr.evotool.combiner.ElementalCombinerBlockEntity.OUTPUT_SLOT)));
 		context.runOnClient(client -> client.player.closeHandledScreen());
 		context.waitTicks(5);
+
+		// le grimoire en main : une boule de feu (trait), puis le brasier (explosion), avec la vraie souris
+		game.getServer().runOnServer(server -> {
+			ServerPlayerEntity player = player(server);
+			ItemStack grimoire = combiner(server).items().getStack(fr.evotool.combiner.ElementalCombinerBlockEntity.OUTPUT_SLOT).copy();
+			combiner(server).items().setStack(fr.evotool.combiner.ElementalCombinerBlockEntity.OUTPUT_SLOT, ItemStack.EMPTY);
+			player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, grimoire);
+			player.getEntityWorld().setBlockState(combinerPos, net.minecraft.block.Blocks.AIR.getDefaultState());
+		});
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 4");
+		context.waitTicks(10);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(3);
+		context.takeScreenshot("evotool_12_spell_bolt");
+		context.waitTicks(30);
+		context.getInput().holdKey(options -> options.sneakKey);
+		context.getInput().pressKey(options -> options.useKey);
+		context.getInput().releaseKey(options -> options.sneakKey);
+		context.waitTicks(5);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(4);
+		context.takeScreenshot("evotool_13_spell_burst");
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL grimoire: {}",
+				player(server).getMainHandStack().get(fr.evotool.component.ModComponents.GRIMOIRE)));
+		context.waitTicks(20);
 	}
 
 	private static net.minecraft.util.math.BlockPos combinerPos;
@@ -131,8 +156,12 @@ public class VisualGameTest implements FabricClientGameTest {
 		combinerPos = player.getBlockPos().add(0, 0, 3);
 		player.getEntityWorld().setBlockState(combinerPos, fr.evotool.block.ModBlocks.ELEMENTAL_COMBINER.getDefaultState());
 		fr.evotool.combiner.ElementalCombinerBlockEntity combiner = combiner(server);
-		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.DIAMOND_SWORD));
+		// un livre + un briquet : un grimoire de feu ; des ingrédients dans l'inventaire pour le panneau
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.BOOK));
 		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.FLINT_AND_STEEL));
+		player.getInventory().insertStack(new ItemStack(net.minecraft.item.Items.PACKED_ICE, 8));
+		player.getInventory().insertStack(new ItemStack(net.minecraft.item.Items.GUNPOWDER, 8));
+		player.getInventory().insertStack(new ItemStack(net.minecraft.item.Items.INK_SAC, 8));
 	}
 
 	private static fr.evotool.combiner.ElementalCombinerBlockEntity combiner(MinecraftServer server) {

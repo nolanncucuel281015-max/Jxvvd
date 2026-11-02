@@ -25,6 +25,8 @@ public class ElementalCombinerScreenHandler extends ScreenHandler {
 			new ExtendedScreenHandlerType<>(ElementalCombinerScreenHandler::new, BlockPos.PACKET_CODEC));
 
 	public static final int BUTTON_COMBINE = 0;
+	/** Panneau des ingrédients : bouton 100 + élément = poser son ingrédient (pris dans l'inventaire). */
+	public static final int BUTTON_INGREDIENT = 100;
 	public static final int EQUIPMENT_X = 27;
 	public static final int ELEMENT_X = 76;
 	public static final int OUTPUT_X = 134;
@@ -39,9 +41,12 @@ public class ElementalCombinerScreenHandler extends ScreenHandler {
 		this(syncId, playerInventory, new SimpleInventory(3), new ArrayPropertyDelegate(2), null);
 	}
 
+	private final PlayerInventory playerInventory;
+
 	public ElementalCombinerScreenHandler(int syncId, PlayerInventory playerInventory, Inventory items, PropertyDelegate properties,
 			ElementalCombinerBlockEntity combiner) {
 		super(TYPE, syncId);
+		this.playerInventory = playerInventory;
 		this.items = items;
 		this.properties = properties;
 		this.combiner = combiner;
@@ -91,8 +96,8 @@ public class ElementalCombinerScreenHandler extends ScreenHandler {
 
 	/** Les cases permettent-elles de lancer la fusion (côté client, pour le bouton) ? */
 	public boolean ready() {
-		return progress() < 0 && Elements.canCombine(items.getStack(ElementalCombinerBlockEntity.EQUIPMENT_SLOT))
-				&& Element.fromCatalyst(items.getStack(ElementalCombinerBlockEntity.ELEMENT_SLOT)) != null
+		return progress() < 0 && Elements.canAccept(items.getStack(ElementalCombinerBlockEntity.EQUIPMENT_SLOT),
+				Element.fromCatalyst(items.getStack(ElementalCombinerBlockEntity.ELEMENT_SLOT)))
 				&& items.getStack(ElementalCombinerBlockEntity.OUTPUT_SLOT).isEmpty();
 	}
 
@@ -104,6 +109,44 @@ public class ElementalCombinerScreenHandler extends ScreenHandler {
 	public boolean onButtonClick(PlayerEntity player, int id) {
 		if (id == BUTTON_COMBINE && combiner != null) {
 			return combiner.start();
+		}
+		int index = id - BUTTON_INGREDIENT;
+		if (index >= 0 && index < Element.values().length) {
+			return putIngredient(Element.values()[index]);
+		}
+		return false;
+	}
+
+	/** Pose dans la case de l'élément un ingrédient de cet élément pris dans l'inventaire du joueur. */
+	private boolean putIngredient(Element element) {
+		ItemStack slot = items.getStack(ElementalCombinerBlockEntity.ELEMENT_SLOT);
+		if (!slot.isEmpty() && Element.fromCatalyst(slot) != element) {
+			// un autre élément est déjà là : il retourne dans l'inventaire
+			if (!playerInventory.insertStack(slot)) {
+				return false;
+			}
+			items.setStack(ElementalCombinerBlockEntity.ELEMENT_SLOT, ItemStack.EMPTY);
+			slot = ItemStack.EMPTY;
+		}
+		for (int i = 0; i < playerInventory.size(); i++) {
+			ItemStack stack = playerInventory.getStack(i);
+			if (!stack.isEmpty() && Element.fromCatalyst(stack) == element && (slot.isEmpty() || ItemStack.areItemsAndComponentsEqual(slot, stack))) {
+				int room = slot.isEmpty() ? stack.getMaxCount() : slot.getMaxCount() - slot.getCount();
+				int moved = Math.min(room, stack.getCount());
+				if (moved <= 0) {
+					return false;
+				}
+				if (slot.isEmpty()) {
+					items.setStack(ElementalCombinerBlockEntity.ELEMENT_SLOT, stack.split(moved));
+				} else {
+					slot.increment(moved);
+					stack.decrement(moved);
+					items.markDirty();
+				}
+				playerInventory.markDirty();
+				sendContentUpdates();
+				return true;
+			}
 		}
 		return false;
 	}
@@ -124,7 +167,7 @@ public class ElementalCombinerScreenHandler extends ScreenHandler {
 			if (!insertItem(stack, 1, 2, false)) {
 				return ItemStack.EMPTY;
 			}
-		} else if (Elements.canCombine(stack)) {
+		} else if (Elements.canCombine(stack.copyWithCount(1))) {
 			if (!insertItem(stack, 0, 1, false)) {
 				return ItemStack.EMPTY;
 			}

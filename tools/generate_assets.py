@@ -4881,6 +4881,33 @@ def combiner_elements():
     return E
 
 
+def grimoire_sprite():
+    """Grimoire élémentaire : couverture violette cerclée d'or, tranche dorée, pages crème, et au centre une gemme
+    entourée des couleurs des éléments."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    cover, dark, gold, page = hexc("4a1f78"), hexc("2a0f48"), hexc("ffd23a"), hexc("efe3c2")
+    for y in range(1, 15):
+        for x in range(2, 14):
+            img.putpixel((x, y), cover)
+    for y in range(1, 15):
+        img.putpixel((2, y), dark)              # le dos
+        img.putpixel((3, y), gold)
+        img.putpixel((13, y), page)             # la tranche des pages
+        img.putpixel((12, y), shade(page, 0.85) if y % 2 else page)
+    for x in range(2, 14):
+        img.putpixel((x, 1), dark)
+        img.putpixel((x, 14), dark)
+    for (x, y) in ((4, 2), (11, 2), (4, 13), (11, 13), (5, 2), (11, 3), (4, 12), (10, 13)):
+        img.putpixel((x, y), gold)              # coins dorés
+    ring = [hexc(c) for c in ("8ff4ff", "ff7a1a", "ffe94a", "2f7bff", "e8f6ff", "9a6a3a", "8a4ad8", "fff3a0", "6acd3a")]
+    spots = [(7, 5), (9, 5), (10, 7), (10, 9), (9, 11), (7, 11), (6, 9), (6, 7), (8, 4)]
+    for c, (x, y) in zip(ring, spots):
+        img.putpixel((x, y), c)
+    for (x, y) in ((8, 7), (7, 8), (8, 8), (9, 8), (8, 9)):
+        img.putpixel((x, y), hexc("ffffff") if (x, y) == (8, 8) else hexc("c77dff"))
+    return img
+
+
 def gen_combiner():
     """Combineur élémentaire : bloc 3D (textures dans textures/block/elemental_combiner/), recette et butin."""
     out = ("block", "elemental_combiner")
@@ -4921,6 +4948,12 @@ def gen_combiner():
                 "B": "minecraft:blaze_rod", "O": "minecraft:crying_obsidian"},
         "result": {"id": f"{MOD}:elemental_combiner", "count": 1},
     })
+    # le grimoire élémentaire (un livre passé au combineur)
+    save_png(grimoire_sprite(), "item", "elemental_grimoire")
+    write_json(os.path.join(ASSETS, "models", "item", "elemental_grimoire.json"),
+               {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/elemental_grimoire"}})
+    write_json(os.path.join(ASSETS, "items", "elemental_grimoire.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/elemental_grimoire"}})
     write_json(os.path.join(DATA, "loot_table", "blocks", "elemental_combiner.json"), {
         "type": "minecraft:block", "random_sequence": f"{MOD}:blocks/elemental_combiner",
         "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:item", "name": f"{MOD}:elemental_combiner"}],

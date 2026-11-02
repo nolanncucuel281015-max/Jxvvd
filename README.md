@@ -374,7 +374,7 @@ Un autel d'obsidienne cerclé d'or (vrai modèle 3D) : quatre obélisques coiff�
 d'ombre, de lumière et de poison. Craft (visible dans le livre
 de recettes) : diamant, éclat d'améthyste, diamant / évolium, bâton de blaze, évolium / 3 obsidiennes pleureuses.
 
-Clic droit pour l'ouvrir : pose une **armure, une arme ou un outil** à gauche, un **élément** au milieu, puis
+Clic droit pour l'ouvrir : pose une **armure, une arme, un outil ou un livre** à gauche, un **élément** au milieu, puis
 **Combiner**. Les deux objets s'envolent au-dessus de l'autel, tournent l'un autour de l'autre en se rapprochant
 au milieu des particules de l'élément, puis fusionnent dans un éclair : l'objet élémentaire (brillant, avec son
 élément dans l'infobulle) apparaît à droite. Combiner à nouveau remplace l'élément.
@@ -390,6 +390,33 @@ au milieu des particules de l'élément, puis fusionnent dans un éclair : l'obj
 | ☾ Ombre | poche d'encre, éclat d'écho | aveugle et flétrit la cible, vole un peu de vie | les attaquants sont flétris | **Casque : vision nocturne** ; **plastron : invisible quand tu t'accroupis** |
 | ☀ Lumière | poudre lumineuse, pierre lumineuse | la cible brille (visible à travers les murs) ; les morts-vivants brûlent comme au soleil | les attaquants brillent, les morts-vivants qui te frappent brûlent | **Casque : révélation** (les monstres à 24 blocs brillent à travers les murs) ; **plastron : aura sacrée** (Régénération) |
 | ☠ Poison | œil d'araignée, patate empoisonnée, poisson-globe | Poison II | immunité au poison, les attaquants sont empoisonnés | **Plastron : aura toxique** (empoisonne les monstres à 4 blocs) |
+
+### Grimoire élémentaire — des sorts offensifs
+
+Pose un **livre** dans le combineur avec un élément : il devient un **grimoire** qui connaît les deux sorts
+offensifs de cet élément. Repasse le grimoire avec d'autres éléments pour lui en apprendre d'autres (jusqu'aux 9).
+À droite du menu, le **panneau des ingrédients** montre ce qu'il faut pour chaque élément (survole pour voir ce
+qu'il donne) : un clic pose l'ingrédient pris dans ton inventaire.
+
+- **Clic droit** : lance le sort choisi. **Accroupi + clic droit** : passe au sort suivant (affiché à l'écran).
+- **Trait** : un projectile d'énergie qui file droit devant et frappe la première créature sur son chemin.
+- **Explosion** : frappe tout ce qui est autour du point visé (jusqu'à 24 blocs). Les deux appliquent l'effet de
+  l'élément (gel, feu, arcs électriques, vague, projection, séisme, flétrissement, éclat, poison).
+
+| Élément | Trait | Explosion |
+|---|---|---|
+| ❄ Glace | Lance de givre (8) | Blizzard (9, rayon 4,5) |
+| ✹ Feu | Boule de feu (9) | Brasier (11, rayon 4) |
+| ⚡ Électricité | Trait de foudre (10, très rapide) | Foudre (12, la foudre tombe pour de vrai) |
+| ≈ Eau | Jet d'eau (7) | Raz-de-marée (8, rayon 5) |
+| ➶ Vent | Lame de vent (7, recharge 0,5 s) | Tornade (8, rayon 4,5) |
+| ▲ Terre | Pic de roche (12, lent) | Séisme (11, rayon 5) |
+| ☾ Ombre | Trait d'ombre (9) | Nova d'ombre (10, rayon 4) |
+| ☀ Lumière | Rayon sacré (9, très rapide) | Jugement (11, colonne de lumière) |
+| ☠ Poison | Crachat acide (7) | Nuage toxique (6, rayon 5) |
+
+(dégâts entre parenthèses ; les traits rechargent en 0,5 à 1 s, les explosions en 3 à 4 s.) En créatif, l'onglet
+du mod donne un grimoire qui connaît déjà les 9 éléments.
 
 ## Modèle 3D — 21 formes
 

@@ -21,6 +21,12 @@ public final class ModItemGroup {
 						entries.add(ModBlocks.SANCTUARY_ALTAR);
 						entries.add(ModBlocks.SHIELD_GENERATOR);
 						entries.add(ModBlocks.ELEMENTAL_COMBINER);
+						// un grimoire qui connaît déjà les 9 éléments (en survie, il se fait au combineur)
+						net.minecraft.item.ItemStack grimoire = new net.minecraft.item.ItemStack(ModItems.ELEMENTAL_GRIMOIRE);
+						grimoire.set(fr.evotool.component.ModComponents.GRIMOIRE,
+								new fr.evotool.element.Grimoire(java.util.List.of(fr.evotool.element.Element.values()), 0));
+						grimoire.set(net.minecraft.component.DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+						entries.add(grimoire);
 						entries.add(ModItems.EVOLITE_INGOT);
 						entries.add(ModItems.ABYSSITE);
 						entries.add(ModBlocks.ABYSSITE_ORE);

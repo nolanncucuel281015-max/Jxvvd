@@ -870,8 +870,64 @@ final class SelfTest {
 		if (combiner.start()) {
 			failures.add("combineur : il accepte de combiner un bloc de terre");
 		}
+		// un livre + de la poudre à canon = grimoire de l'électricité ; + un briquet = il apprend aussi le feu
+		combiner.items().setStack(0, new ItemStack(net.minecraft.item.Items.BOOK));
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.GUNPOWDER, 2));
+		combiner.start();
+		for (int i = 0; i < fr.evotool.combiner.ElementalCombinerBlockEntity.DURATION + 2; i++) {
+			fr.evotool.combiner.ElementalCombinerBlockEntity.tick(world, pos, state, combiner);
+		}
+		ItemStack book = combiner.items().getStack(2).copy();
+		fr.evotool.element.Grimoire learned = book.get(fr.evotool.component.ModComponents.GRIMOIRE);
+		combiner.items().setStack(2, ItemStack.EMPTY);
+		combiner.items().setStack(0, book.copy());
+		boolean refusesKnown = !combiner.start();   // il connaît déjà l'électricité
+		combiner.items().setStack(1, new ItemStack(net.minecraft.item.Items.FLINT_AND_STEEL));
+		combiner.start();
+		for (int i = 0; i < fr.evotool.combiner.ElementalCombinerBlockEntity.DURATION + 2; i++) {
+			fr.evotool.combiner.ElementalCombinerBlockEntity.tick(world, pos, state, combiner);
+		}
+		ItemStack grimoireStack = combiner.items().getStack(2).copy();
+		fr.evotool.element.Grimoire grimoire = grimoireStack.get(fr.evotool.component.ModComponents.GRIMOIRE);
+		EvoTool.LOGGER.info("EVOTOOL grimoire: first={} refusesKnown={} then={} spells={}", learned, refusesKnown, grimoire,
+				grimoire == null ? 0 : grimoire.spells().size());
+		checks++;
+		if (!book.isOf(fr.evotool.item.ModItems.ELEMENTAL_GRIMOIRE) || learned == null
+				|| !learned.elements().equals(java.util.List.of(fr.evotool.element.Element.LIGHTNING)) || !refusesKnown
+				|| grimoire == null || grimoire.spells().size() != 4 || !grimoire.elements().contains(fr.evotool.element.Element.FIRE)) {
+			failures.add("grimoire : livre + éléments ne donnent pas un grimoire aux bons sorts");
+		}
 		combiner.items().clear();
 		world.setBlockState(pos, net.minecraft.block.Blocks.AIR.getDefaultState());
+
+		// sorts : un trait de foudre file jusqu'au zombie ; une explosion frappe celui qu'on vise
+		if (grimoire != null) {
+			checks++;
+			if (grimoire.next().selectedSpell() != fr.evotool.element.Spell.STORM) {
+				failures.add("grimoire : accroupi + clic droit ne passe pas au sort suivant");
+			}
+			for (fr.evotool.element.Spell spell : new fr.evotool.element.Spell[] {fr.evotool.element.Spell.THUNDERBOLT,
+					fr.evotool.element.Spell.INFERNO}) {
+				ZombieEntity zombie = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+				if (zombie == null) {
+					continue;
+				}
+				zombie.refreshPositionAndAngles(x, y, z + 6.0, 180.0F, 0.0F);
+				zombie.setAiDisabled(true);
+				world.spawnEntity(zombie);
+				float before = zombie.getHealth();
+				fr.evotool.element.Spells.cast(player, spell);
+				for (int i = 0; i < 10 && fr.evotool.element.Spells.activeBolts() > 0; i++) {
+					fr.evotool.element.Spells.tickForTest();
+				}
+				EvoTool.LOGGER.info("EVOTOOL spell {}: zombie {} -> {}", spell.id(), before, zombie.getHealth());
+				checks++;
+				if (zombie.isAlive() && zombie.getHealth() > before - 5.0F) {
+					failures.add("grimoire : le sort " + spell.id() + " ne touche pas le zombie visé");
+				}
+				zombie.discard();
+			}
+		}
 
 		// armes : la glace gèle, le feu enflamme, le vent projette
 		fr.evotool.element.Element[] tested = {fr.evotool.element.Element.ICE, fr.evotool.element.Element.FIRE,

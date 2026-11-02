@@ -52,6 +52,9 @@ public final class ModItems {
 	/** Briquet d'évolium (évolium + silex) : allume le portail en blocs de rubis vers la dimension évolutive. */
 	public static final Item EVOLIUM_LIGHTER = register("evolium_lighter", EvoliumLighterItem::new,
 			new Item.Settings().maxDamage(128).rarity(Rarity.RARE));
+	/** Grimoire élémentaire : un livre passé au combineur avec des éléments ; il lance leurs sorts offensifs. */
+	public static final Item ELEMENTAL_GRIMOIRE = register("elemental_grimoire", GrimoireItem::new,
+			new Item.Settings().maxCount(1).rarity(Rarity.EPIC));
 	/** Morceaux du modèle du boss (objets d'affichage), pas dans l'inventaire créatif. */
 	public static final Item BELL_BOSS_PART = register("bell_boss_part", Item::new, new Item.Settings().maxCount(1));
 

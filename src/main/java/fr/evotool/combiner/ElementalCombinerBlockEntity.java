@@ -97,8 +97,8 @@ public class ElementalCombinerBlockEntity extends BlockEntity implements Extende
 
 	/** Peut-on lancer la fusion avec ce qu'il y a dans les cases ? */
 	public boolean canStart() {
-		return progress < 0 && Elements.canCombine(items.getStack(EQUIPMENT_SLOT))
-				&& Element.fromCatalyst(items.getStack(ELEMENT_SLOT)) != null && items.getStack(OUTPUT_SLOT).isEmpty();
+		return progress < 0 && Elements.canAccept(items.getStack(EQUIPMENT_SLOT), Element.fromCatalyst(items.getStack(ELEMENT_SLOT)))
+				&& items.getStack(OUTPUT_SLOT).isEmpty();
 	}
 
 	/** Bouton « Combiner » : l'équipement et un élément sont avalés, l'animation commence. */

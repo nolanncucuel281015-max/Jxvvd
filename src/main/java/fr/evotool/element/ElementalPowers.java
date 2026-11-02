@@ -121,6 +121,19 @@ public final class ElementalPowers {
 
 	// ------------------------------------------------------------------ coups
 
+	/** L'effet de l'élément sur une cible (sorts du grimoire), sans relancer les pouvoirs en cascade. */
+	public static void hitEffect(ServerWorld world, ServerPlayerEntity player, LivingEntity target, Element element) {
+		if (applying || !target.isAlive()) {
+			return;
+		}
+		applying = true;
+		try {
+			onHit(world, player, target, element);
+		} finally {
+			applying = false;
+		}
+	}
+
 	private static void onHit(ServerWorld world, ServerPlayerEntity player, LivingEntity target, Element element) {
 		Vec3d c = target.getBoundingBox().getCenter();
 		switch (element) {
