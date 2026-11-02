@@ -4841,7 +4841,8 @@ def gen_shield():
 
 
 # Combineur élémentaire : les quatre cristaux des éléments autour de l'autel, et l'anneau du vent au-dessus.
-COMBINER_GEMS = {"ice": "8ff4ff", "fire": "ff7a1a", "spark": "ffe94a", "water": "2f7bff", "wind": "e8f6ff"}
+COMBINER_GEMS = {"ice": "8ff4ff", "fire": "ff7a1a", "spark": "ffe94a", "water": "2f7bff", "wind": "e8f6ff",
+                 "earth": "9a6a3a", "shadow": "8a4ad8"}
 
 
 def combiner_elements():
@@ -4869,8 +4870,10 @@ def combiner_elements():
     obox(add, (8, 6.25, 8), (4.2, 1.5, 4.2), "base")
     obox(add, (8, 7.25, 8), (6.8, 0.5, 6.8), "trim")
     obox(add, (8, 7.55, 8), (5.2, 0.12, 5.2), "rune")
-    # l'orbe et l'anneau du vent, qui flottent
+    # l'orbe et l'anneau du vent, qui flottent, entre un éclat de terre et un éclat d'ombre
     obox(add, (8, 12.5, 8), (1.6, 1.6, 1.6), "wind", orient(("x", 45), ("y", 45)))
+    obox(add, (8 - 3.0, 11.6, 8), (1.2, 1.6, 1.2), "earth", orient(("y", 45)))
+    obox(add, (8 + 3.0, 11.6, 8), (1.2, 1.6, 1.2), "shadow", orient(("y", 45)))
     ring_flat(add, 8, 13.6, 8, 5.2, 0.7, 0.5, "trim", n=16)
     ring_flat(add, 8, 13.6, 8, 4.6, 0.3, 0.8, "wind", n=16, phase=11.25)
     return E

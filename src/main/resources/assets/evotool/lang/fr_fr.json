@@ -279,7 +279,7 @@
   "gui.evotool.combiner.working": "Fusion…",
   "gui.evotool.combiner.preview": "%s %s : %s",
   "gui.evotool.combiner.need_equipment": "Pose une armure, une arme ou un outil à gauche",
-  "gui.evotool.combiner.need_element": "Élément : glace, poudre à canon, briquet, seau d'eau, charge de vent…",
+  "gui.evotool.combiner.need_element": "Élément : glace, poudre à canon, briquet, seau d'eau, charge de vent, terre, encre…",
   "element.evotool.ice": "Glace",
   "element.evotool.fire": "Feu",
   "element.evotool.lightning": "Électricité",
@@ -301,5 +301,15 @@
   "tooltip.evotool.element.legs.lightning": "Sprint électrique : Vitesse II",
   "tooltip.evotool.element.chest.water": "Nage rapide : grâce du dauphin et conduit sous l'eau",
   "tooltip.evotool.element.feet.water": "Marche sur l'eau (accroupi pour plonger)",
-  "tooltip.evotool.element.feet.wind": "Double saut"
+  "tooltip.evotool.element.feet.wind": "Double saut",
+  "element.evotool.earth": "Terre",
+  "element.evotool.shadow": "Ombre",
+  "tooltip.evotool.element.weapon.earth": "Séisme : enracine la cible et secoue les monstres autour",
+  "tooltip.evotool.element.weapon.shadow": "Aveugle et flétrit la cible, vole un peu de vie",
+  "tooltip.evotool.element.armor.earth": "Peau de pierre : Résistance",
+  "tooltip.evotool.element.armor.shadow": "Les attaquants sont flétris",
+  "tooltip.evotool.element.legs.earth": "Force tellurique : Célérité II (tu mines plus vite)",
+  "tooltip.evotool.element.feet.earth": "Atterrissage sismique : pas de dégâts de chute, les monstres autour sont écrasés",
+  "tooltip.evotool.element.head.shadow": "Vision nocturne",
+  "tooltip.evotool.element.chest.shadow": "Se fondre dans l'ombre : invisible quand tu t'accroupis"
 }

@@ -370,7 +370,8 @@ Recette (table de craft), visible dans le livre de recettes dès le début :
 ## Combineur élémentaire
 
 Un autel d'obsidienne cerclé d'or (vrai modèle 3D) : quatre obélisques coiffés d'un cristal (glace, feu,
-électricité, eau), des runes qui brillent et l'anneau du vent qui flotte au-dessus. Craft (visible dans le livre
+électricité, eau), des runes qui brillent, et au-dessus l'anneau du vent qui flotte entre un éclat de terre et
+un éclat d'ombre. Craft (visible dans le livre
 de recettes) : diamant, éclat d'améthyste, diamant / évolium, bâton de blaze, évolium / 3 obsidiennes pleureuses.
 
 Clic droit pour l'ouvrir : pose une **armure, une arme ou un outil** à gauche, un **élément** au milieu, puis
@@ -385,6 +386,8 @@ au milieu des particules de l'élément, puis fusionnent dans un éclair : l'obj
 | ⚡ Électricité | poudre à canon | arcs électriques sur 3 monstres proches | décharge sur les attaquants | **Jambières : sprint électrique** (Vitesse II) |
 | ≈ Eau | seau d'eau (le seau vide reste), cœur de la mer | vague qui repousse, soigne 1 cœur | respiration aquatique | **Plastron : nage rapide** (grâce du dauphin, conduit) ; **bottes : marche sur l'eau** (accroupi pour plonger) |
 | ➶ Vent | charge de vent, bâton de breeze | projette la cible dans les airs | plus aucun dégât de chute | **Bottes : double saut** |
+| ▲ Terre | terre, terre stérile, bloc de mousse | séisme : enracine la cible, secoue et soulève les monstres autour | peau de pierre (Résistance) | **Jambières : force tellurique** (Célérité II) ; **bottes : atterrissage sismique** (pas de dégâts de chute, et en tombant de 4 blocs ou plus, les monstres autour sont écrasés) |
+| ☾ Ombre | poche d'encre, éclat d'écho | aveugle et flétrit la cible, vole un peu de vie | les attaquants sont flétris | **Casque : vision nocturne** ; **plastron : invisible quand tu t'accroupis** |
 
 ## Modèle 3D — 21 formes
 

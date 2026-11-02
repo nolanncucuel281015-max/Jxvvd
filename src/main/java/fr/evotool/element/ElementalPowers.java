@@ -34,11 +34,14 @@ import net.minecraft.util.math.Vec3d;
  * client, la marche sur l'eau dans LivingEntityMixin).
  * <ul>
  *   <li>Arme / outil, à chaque coup : glace = gèle, feu = enflamme, électricité = arcs sur 3 ennemis proches,
- *   eau = vague qui repousse et soigne, vent = projette en l'air.</li>
+ *   eau = vague qui repousse et soigne, vent = projette en l'air, terre = enracine et secoue les ennemis autour,
+ *   ombre = aveugle, flétrit et vole de la vie.</li>
  *   <li>Armure : glace = attaquants gelés, pas de gel ; bottes = glissement de glace, l'eau gèle sous les pas.
  *   Feu = résistance au feu, attaquants enflammés ; plastron = vol de feu. Électricité = décharge sur les
  *   attaquants ; jambières = sprint électrique. Eau = respiration aquatique ; plastron = nage rapide ;
- *   bottes = marche sur l'eau. Vent = pas de dégâts de chute ; bottes = double saut.</li>
+ *   bottes = marche sur l'eau. Vent = pas de dégâts de chute ; bottes = double saut. Terre = Résistance ;
+ *   jambières = force tellurique (Célérité II) ; bottes = atterrissage sismique. Ombre = attaquants flétris ;
+ *   casque = vision nocturne ; plastron = invisible accroupi.</li>
  * </ul>
  */
 public final class ElementalPowers {
@@ -49,6 +52,8 @@ public final class ElementalPowers {
 	private static final int EFFECT_TICKS = 60;
 	/** Un arc électrique (ou une décharge) ne déclenche pas à son tour les pouvoirs. */
 	private static boolean applying;
+	/** Hauteur de chute en cours des joueurs aux bottes de terre (pour l'atterrissage sismique). */
+	private static final java.util.Map<java.util.UUID, Double> FALLING = new java.util.HashMap<>();
 
 	private ElementalPowers() {
 	}
@@ -86,8 +91,9 @@ public final class ElementalPowers {
 			if (!(entity instanceof ServerPlayerEntity player)) {
 				return true;
 			}
-			if (source.isIn(DamageTypeTags.IS_FALL) && hasPiece(player, Element.WIND)) {
-				return false;   // le vent amortit les chutes
+			if (source.isIn(DamageTypeTags.IS_FALL) && (hasPiece(player, Element.WIND)
+					|| Elements.wears(player, EquipmentSlot.FEET, Element.EARTH))) {
+				return false;   // le vent amortit les chutes ; la terre les encaisse (atterrissage sismique)
 			}
 			return !(source.isOf(DamageTypes.FREEZE) && hasPiece(player, Element.ICE));
 		});
@@ -151,6 +157,38 @@ public final class ElementalPowers {
 				world.spawnParticles(ParticleTypes.CLOUD, c.x, target.getY(), c.z, 20, 0.5, 0.1, 0.5, 0.1);
 				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PHANTOM_FLAP, SoundCategory.PLAYERS, 1.2F, 0.7F);
 			}
+			case EARTH -> {
+				// la cible est enracinée, le sol tremble autour d'elle
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 4), player);
+				quake(world, player, target.getEntityPos(), 3.0, 3.0F, target);
+			}
+			case SHADOW -> {
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 60, 0), player);
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 60, 0), player);
+				player.heal(1.0F);
+				world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 20, 0.4, 0.5, 0.4, 0.05);
+				world.spawnParticles(ParticleTypes.SCULK_SOUL, c.x, c.y, c.z, 6, 0.3, 0.4, 0.3, 0.03);
+				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_WARDEN_HEARTBEAT, SoundCategory.PLAYERS, 1.0F, 1.4F);
+			}
+		}
+	}
+
+	/**
+	 * Le sol tremble : les monstres autour de {@code at} (sauf {@code spared}) prennent des dégâts et décollent,
+	 * avec des éclats de terre.
+	 */
+	private static void quake(ServerWorld world, ServerPlayerEntity player, Vec3d at, double radius, float damage, LivingEntity spared) {
+		BlockState ground = world.getBlockState(BlockPos.ofFloored(at.x, at.y - 0.5, at.z));
+		if (ground.isAir()) {
+			ground = Blocks.DIRT.getDefaultState();
+		}
+		world.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(ParticleTypes.BLOCK, ground),
+				at.x, at.y + 0.1, at.z, (int) (radius * 25), radius * 0.5, 0.1, radius * 0.5, 0.2);
+		world.playSound(null, BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.5F, 0.6F);
+		for (LivingEntity other : world.getEntitiesByClass(LivingEntity.class, new net.minecraft.util.math.Box(at, at).expand(radius, 2.0, radius),
+				e -> e != spared && e != player && e.isAlive() && e instanceof Monster)) {
+			other.damage(world, player.getDamageSources().playerAttack(player), damage);
+			other.addVelocity(0.0, 0.45, 0.0);
 		}
 	}
 
@@ -177,6 +215,10 @@ public final class ElementalPowers {
 			case FIRE -> {
 				attacker.setOnFireFor(4.0F);
 				world.spawnParticles(ParticleTypes.FLAME, c.x, c.y, c.z, 12, 0.3, 0.4, 0.3, 0.03);
+			}
+			case SHADOW -> {
+				attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 40, 0), player);
+				world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 10, 0.3, 0.4, 0.3, 0.03);
 			}
 			case LIGHTNING -> {
 				arc(world, player.getBoundingBox().getCenter(), c);
@@ -210,6 +252,39 @@ public final class ElementalPowers {
 			if (Elements.wears(player, EquipmentSlot.LEGS, Element.LIGHTNING)) {
 				effect(player, StatusEffects.SPEED, 1);
 			}
+			if (hasPiece(player, Element.EARTH)) {
+				effect(player, StatusEffects.RESISTANCE, 0);
+			}
+			if (Elements.wears(player, EquipmentSlot.LEGS, Element.EARTH)) {
+				effect(player, StatusEffects.HASTE, 1);
+			}
+			if (Elements.wears(player, EquipmentSlot.HEAD, Element.SHADOW)) {
+				// assez longue pour ne pas clignoter (la vision nocturne clignote ses 10 dernières secondes)
+				player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 260, 0, true, false, true));
+			}
+		}
+		// plastron d'ombre : accroupi, on se fond dans l'ombre
+		if (Elements.wears(player, EquipmentSlot.CHEST, Element.SHADOW) && player.isSneaking()) {
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 10, 0, true, false, false));
+			if (tick % 4 == 0) {
+				world.spawnParticles(ParticleTypes.SQUID_INK, player.getX(), player.getY() + 0.8, player.getZ(), 1, 0.3, 0.4, 0.3, 0.0);
+			}
+		}
+		// bottes de terre : en tombant de haut, on retombe dans un séisme (sans dégâts)
+		if (Elements.wears(player, EquipmentSlot.FEET, Element.EARTH)) {
+			double fall = player.fallDistance;
+			if (!player.isOnGround()) {
+				if (fall > 0) {
+					FALLING.merge(player.getUuid(), fall, Math::max);
+				}
+			} else {
+				Double fell = FALLING.remove(player.getUuid());
+				if (fell != null && fell >= 4.0) {
+					quake(world, player, player.getEntityPos(), Math.min(6.0, 2.0 + fell / 3.0), (float) Math.min(12.0, fell), null);
+				}
+			}
+		} else {
+			FALLING.remove(player.getUuid());
 		}
 
 		// vol de feu : le plastron donne le vol (double saut), avec une traînée de flammes

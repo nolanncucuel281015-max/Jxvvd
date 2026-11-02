@@ -875,7 +875,7 @@ final class SelfTest {
 
 		// armes : la glace gèle, le feu enflamme, le vent projette
 		fr.evotool.element.Element[] tested = {fr.evotool.element.Element.ICE, fr.evotool.element.Element.FIRE,
-				fr.evotool.element.Element.WIND};
+				fr.evotool.element.Element.WIND, fr.evotool.element.Element.EARTH, fr.evotool.element.Element.SHADOW};
 		for (fr.evotool.element.Element element : tested) {
 			net.minecraft.entity.passive.PigEntity pig = EntityType.PIG.create(world, SpawnReason.COMMAND);
 			if (pig == null) {
@@ -890,6 +890,9 @@ final class SelfTest {
 			boolean ok = switch (element) {
 				case ICE -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS);
 				case FIRE -> pig.isOnFire();
+				case EARTH -> pig.getStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS) != null
+						&& pig.getStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS).getAmplifier() >= 4;
+				case SHADOW -> pig.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.WITHER);
 				default -> pig.getVelocity().y > 0.5;
 			};
 			checks++;
@@ -929,6 +932,23 @@ final class SelfTest {
 		checks++;
 		if (!player.canWalkOnFluid(net.minecraft.fluid.Fluids.WATER.getDefaultState())) {
 			failures.add("éléments : les bottes d'eau ne marchent pas sur l'eau");
+		}
+		// catalyseurs de la terre et de l'ombre
+		checks++;
+		if (fr.evotool.element.Element.fromCatalyst(new ItemStack(net.minecraft.item.Items.DIRT)) != fr.evotool.element.Element.EARTH
+				|| fr.evotool.element.Element.fromCatalyst(new ItemStack(net.minecraft.item.Items.INK_SAC)) != fr.evotool.element.Element.SHADOW) {
+			failures.add("éléments : la terre ou l'encre ne donnent pas la terre / l'ombre");
+		}
+		// casque d'ombre : vision nocturne ; plastron de terre : Résistance
+		player.equipStack(EquipmentSlot.HEAD,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_HELMET), fr.evotool.element.Element.SHADOW));
+		player.equipStack(EquipmentSlot.CHEST,
+				fr.evotool.element.Elements.combine(new ItemStack(net.minecraft.item.Items.IRON_CHESTPLATE), fr.evotool.element.Element.EARTH));
+		fr.evotool.element.ElementalPowers.tick(player, 40);
+		checks++;
+		if (!player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION)
+				|| !player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.RESISTANCE)) {
+			failures.add("éléments : le casque d'ombre / le plastron de terre ne donnent pas leurs effets");
 		}
 		// jambières électriques : vitesse
 		player.equipStack(EquipmentSlot.LEGS,

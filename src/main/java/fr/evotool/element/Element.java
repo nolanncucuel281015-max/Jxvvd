@@ -3,11 +3,13 @@ package fr.evotool.element;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import java.util.List;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Formatting;
@@ -22,7 +24,9 @@ public enum Element implements StringIdentifiable {
 	FIRE("fire", "✹", Formatting.GOLD, 0xFF7A1A, List.of(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE)),
 	LIGHTNING("lightning", "⚡", Formatting.YELLOW, 0xFFE94A, List.of(Items.GUNPOWDER)),
 	WATER("water", "≈", Formatting.BLUE, 0x2F7BFF, List.of(Items.WATER_BUCKET, Items.HEART_OF_THE_SEA)),
-	WIND("wind", "➶", Formatting.WHITE, 0xE8F6FF, List.of(Items.WIND_CHARGE, Items.BREEZE_ROD));
+	WIND("wind", "➶", Formatting.WHITE, 0xE8F6FF, List.of(Items.WIND_CHARGE, Items.BREEZE_ROD)),
+	EARTH("earth", "▲", Formatting.DARK_GREEN, 0x9A6A3A, List.of(Items.DIRT, Items.COARSE_DIRT, Items.MOSS_BLOCK)),
+	SHADOW("shadow", "☾", Formatting.DARK_PURPLE, 0x8A4AD8, List.of(Items.INK_SAC, Items.ECHO_SHARD));
 
 	public static final Codec<Element> CODEC = StringIdentifiable.createCodec(Element::values);
 	public static final PacketCodec<ByteBuf, Element> PACKET_CODEC = PacketCodecs.indexed(i -> values()[i], Element::ordinal);
@@ -78,6 +82,8 @@ public enum Element implements StringIdentifiable {
 			case LIGHTNING -> ParticleTypes.ELECTRIC_SPARK;
 			case WATER -> ParticleTypes.SPLASH;
 			case WIND -> ParticleTypes.CLOUD;
+			case EARTH -> new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.ROOTED_DIRT.getDefaultState());
+			case SHADOW -> ParticleTypes.SQUID_INK;
 		};
 	}
 

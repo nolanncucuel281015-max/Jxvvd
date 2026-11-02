@@ -279,7 +279,7 @@
   "gui.evotool.combiner.working": "Fusing…",
   "gui.evotool.combiner.preview": "%s %s: %s",
   "gui.evotool.combiner.need_equipment": "Put armor, a weapon or a tool on the left",
-  "gui.evotool.combiner.need_element": "Element: ice, gunpowder, flint and steel, water bucket, wind charge…",
+  "gui.evotool.combiner.need_element": "Element: ice, gunpowder, flint and steel, water bucket, wind charge, dirt, ink…",
   "element.evotool.ice": "Ice",
   "element.evotool.fire": "Fire",
   "element.evotool.lightning": "Lightning",
@@ -301,5 +301,15 @@
   "tooltip.evotool.element.legs.lightning": "Electric sprint: Speed II",
   "tooltip.evotool.element.chest.water": "Fast swimming: dolphin's grace and conduit power underwater",
   "tooltip.evotool.element.feet.water": "Walk on water (sneak to dive)",
-  "tooltip.evotool.element.feet.wind": "Double jump"
+  "tooltip.evotool.element.feet.wind": "Double jump",
+  "element.evotool.earth": "Earth",
+  "element.evotool.shadow": "Shadow",
+  "tooltip.evotool.element.weapon.earth": "Quake: roots the target and shakes the monsters around",
+  "tooltip.evotool.element.weapon.shadow": "Blinds and withers the target, steals a bit of life",
+  "tooltip.evotool.element.armor.earth": "Stone skin: Resistance",
+  "tooltip.evotool.element.armor.shadow": "Attackers wither",
+  "tooltip.evotool.element.legs.earth": "Telluric strength: Haste II (you mine faster)",
+  "tooltip.evotool.element.feet.earth": "Seismic landing: no fall damage, monsters around are crushed",
+  "tooltip.evotool.element.head.shadow": "Night vision",
+  "tooltip.evotool.element.chest.shadow": "Melt into the shadows: invisible while sneaking"
 }
