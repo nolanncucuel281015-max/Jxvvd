@@ -13,31 +13,27 @@ jar_of() {
 
 sigs() {
 	local JAR=$(jar_of "$1")
-	echo "=== $1 ~ ${2:-.}"
-	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "${2:-.}" | head -${3:-40}
+	echo "=== $1 ~ ${2:-.} ($(basename "$JAR"))"
+	javap -p -cp "$JAR" "$1" 2>/dev/null | grep -E "${2:-.}" | head -${3:-50}
 }
 
-sigs net.minecraft.block.entity.BlockEntityType 'BlockEntityType\(|interface|Factory|create'
-sigs 'net.minecraft.block.entity.BlockEntityType$BlockEntityFactory' '.'
-sigs net.minecraft.block.entity.BlockEntity 'writeData|readData|markRemoved|markDirty|addComponents|readComponents|toInitialChunkDataNbt|toUpdatePacket|onBlockReplaced|getWorld|getPos|protected|public BlockEntity'
-sigs net.minecraft.storage.WriteView 'put|public'
-sigs net.minecraft.storage.ReadView 'get|public'
-sigs net.minecraft.block.BlockWithEntity 'validateTicker|getCodec|getTicker|createBlockEntity|onSyncedBlockEvent'
-sigs net.minecraft.block.Block 'onBreak|onPlaced|onStateReplaced|createCodec'
-sigs net.minecraft.block.AbstractBlock 'onStateReplaced|getRenderType|onUse\('
-sigs net.minecraft.screen.ScreenHandlerType 'ScreenHandlerType\(|Factory|public'
-sigs 'net.minecraft.screen.ScreenHandlerType$Factory' '.'
-sigs net.minecraft.screen.ScreenHandler 'addPlayerSlots|onButtonClick|quickMove|insertItem|addProperties|canUse|ScreenHandler\('
-sigs net.minecraft.screen.ArrayPropertyDelegate 'public'
-sigs net.minecraft.client.gui.screen.ingame.HandledScreens 'register|Provider'
-sigs net.minecraft.client.gui.screen.ingame.HandledScreen 'drawBackground|drawForeground|render\(|drawMouseoverTooltip|protected int|HandledScreen\(|titleX|backgroundWidth'
-sigs net.minecraft.client.gui.DrawContext 'public void (fill|drawText|drawItem|drawStackOverlay|drawBorder|drawCenteredTextWithShadow|drawStrokedRectangle)'
-sigs net.minecraft.client.network.ClientPlayerInteractionManager 'clickButton'
-sigs net.minecraft.entity.mob.CreeperEntity 'setFuseSpeed|isIgnited|getFuseSpeed'
-sigs net.minecraft.entity.decoration.DisplayEntity 'DisplayWidth|DisplayHeight|ViewRange'
-sigs net.minecraft.inventory.Inventory 'canPlayerUse'
-
-# Accès élargis par Fabric (constructeurs de BlockEntityType / ScreenHandlerType, HandledScreens.register, DisplayEntity)
-for J in $(echo "$ALL" | tr ' ' '\n' | grep -i fabric | grep -v sources); do
-	unzip -p "$J" '*.accesswidener' '*.classtweaker' 2>/dev/null | grep -E 'BlockEntityType|ScreenHandlerType|HandledScreens|DisplayEntity' | sed "s|^|$(basename $J): |"
-done | sort -u | head -40
+echo "### classes de rendu du monde (Fabric)"
+for J in $(echo "$ALL" | tr ' ' '\n' | grep -i 'fabric-rendering-v1' | grep -v sources | head -2); do
+	unzip -l "$J" | awk '{print $4}' | grep -i -E 'world|Render(Context|Events)' | head -30
+done
+for c in net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents \
+	net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext \
+	net.fabricmc.fabric.api.client.rendering.v1.world.WorldTerrainRenderContext \
+	net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents \
+	net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext; do
+	sigs "$c" '.' 60
+done
+for c in $(for J in $(echo "$ALL" | tr ' ' '\n' | grep -i 'fabric-rendering-v1' | grep -v sources | head -1); do unzip -l "$J" | awk '{print $4}' | grep -E 'world/WorldRenderEvents\$.*\.class$|WorldRenderEvents\$.*\.class$'; done); do
+	cls=${c%.class}; cls=${cls//\//.}
+	sigs "$cls" 'abstract|interface' 10
+done
+sigs net.minecraft.client.input.Input 'playerInput|movement|public'
+sigs net.minecraft.util.PlayerInput 'forward|public'
+sigs net.minecraft.client.render.Camera 'getPos|getCameraPos|public net.minecraft.util.math.Vec3d'
+sigs net.minecraft.client.render.state.CameraRenderState '.'
+sigs net.minecraft.entity.Entity 'velocityModified|velocityDirty|public void setVelocity'
