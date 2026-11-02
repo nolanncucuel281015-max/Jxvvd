@@ -703,6 +703,32 @@ final class SelfTest {
 			}
 			dropTarget.discard();
 		}
+		// les joueurs aussi se font attraper (le serveur les téléporte), puis projeter
+		FakePlayer victim = FakePlayer.get(world, new com.mojang.authlib.GameProfile(
+				java.util.UUID.nameUUIDFromBytes("evotool-tentacle-target".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+				"evotool_target"));
+		victim.refreshPositionAndAngles(x, y, z + 5.0, 180.0F, 0.0F);
+		checks++;
+		boolean grabbedPlayer = fr.evotool.armor.Tentacles.grabEntity(player, victim);
+		for (int i = 0; i < 30; i++) {
+			fr.evotool.armor.Tentacles.tickForTest();
+		}
+		double playerHold = victim.getBoundingBox().getCenter()
+				.distanceTo(player.getEyePos().add(player.getRotationVector().multiply(3.0)));
+		boolean heldPlayer = fr.evotool.armor.Tentacles.grabbed(player) == victim;
+		fr.evotool.armor.Tentacles.grabOrThrow(player);
+		Vec3d playerThrown = victim.getVelocity();
+		for (int i = 0; i < 8; i++) {
+			fr.evotool.armor.Tentacles.tickForTest();
+		}
+		EvoTool.LOGGER.info("EVOTOOL tentacle grab player: grabbed={} held={} distance={} thrown={}", grabbedPlayer, heldPlayer,
+				playerHold, playerThrown);
+		if (!grabbedPlayer || !heldPlayer || playerHold > 1.5 || playerThrown.z < 1.5
+				|| fr.evotool.armor.Tentacles.grabbed(player) != null || fr.evotool.armor.Tentacles.activeStrikes() != 0) {
+			failures.add("tentacules : le clic droit n'attrape pas / ne projette pas un joueur (tenu=" + heldPlayer
+					+ ", distance=" + playerHold + ", vitesse=" + playerThrown + ")");
+		}
+		victim.setVelocity(Vec3d.ZERO);
 		// touche J : on reste au sol, plus rapide ; accroupi sur le sol, les tentacules creusent
 		fr.evotool.armor.Tentacles.toggle(player);
 		net.minecraft.entity.attribute.EntityAttributeInstance moveSpeed = player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);

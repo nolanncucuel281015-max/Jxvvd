@@ -33,6 +33,7 @@ import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -318,7 +319,7 @@ public final class Tentacles {
 	// ------------------------------------------------------------------ attraper et projeter (clic droit à main nue)
 
 	/**
-	 * Clic droit à main nue : une tentacule attrape le monstre visé et le tient devant le joueur, sans jamais le
+	 * Clic droit à main nue : une tentacule attrape le monstre (ou le joueur) visé et le tient devant le joueur, sans jamais le
 	 * lâcher tout seul ; un deuxième clic droit le projette là où il regarde, ou le pose doucement si on regarde
 	 * par terre.
 	 */
@@ -344,18 +345,56 @@ public final class Tentacles {
 				RaycastContext.FluidHandling.NONE, player));
 		Vec3d end = block.getType() == HitResult.Type.MISS ? far : block.getPos();
 		EntityHitResult aimed = ProjectileUtil.raycast(player, eye, end, new Box(eye, end).expand(1.0),
-				e -> e instanceof LivingEntity living && !(e instanceof PlayerEntity) && e.isAlive()
-						&& !fr.evotool.evo.EvoProgression.isBoss(living), eye.squaredDistanceTo(end));
-		if (aimed == null) {
+				e -> e instanceof LivingEntity living && canGrab(player, living), eye.squaredDistanceTo(end));
+		return aimed != null && grabEntity(player, (LivingEntity) aimed.getEntity());
+	}
+
+	/** Monstres, animaux… et joueurs : tout ce qui vit, sauf les boss, les spectateurs et ce qui est déjà tenu. */
+	private static boolean canGrab(ServerPlayerEntity player, LivingEntity target) {
+		if (target == player || !target.isAlive() || fr.evotool.evo.EvoProgression.isBoss(target) || isHeld(target)) {
 			return false;
 		}
-		LivingEntity target = (LivingEntity) aimed.getEntity();
+		if (target instanceof PlayerEntity other) {
+			// pas un spectateur, ni celui qui nous tient déjà
+			Strike theirs = GRABS.get(other.getUuid());
+			return !other.isSpectator() && (theirs == null || theirs.grabbed != player);
+		}
+		return true;
+	}
+
+	/** La tentacule file vers cette créature (ou ce joueur) pour l'attraper (public pour l'auto-test). */
+	public static boolean grabEntity(ServerPlayerEntity player, LivingEntity target) {
+		if (GRABS.containsKey(player.getUuid()) || !canGrab(player, target)) {
+			return false;
+		}
+		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		Strike strike = chain(player, world, shoulder(player), target.getBoundingBox().getCenter());
 		strike.grabbed = target;
 		STRIKES.add(strike);
 		GRABS.put(player.getUuid(), strike);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SQUID_SQUIRT, SoundCategory.PLAYERS, 1.2F, 0.5F);
 		return true;
+	}
+
+	/**
+	 * Déplace ce qu'on tient. Un joueur gère lui-même ses déplacements (côté client) : le serveur le téléporte
+	 * (sans toucher à sa caméra) et annule sa vitesse, à chaque tick.
+	 */
+	private static void moveHeld(LivingEntity target, Vec3d to) {
+		if (target instanceof ServerPlayerEntity held) {
+			held.requestTeleport(to.x, to.y, to.z);
+		} else {
+			target.setPosition(to.x, to.y, to.z);
+		}
+	}
+
+	/** Donne une vitesse à ce qu'on tient (envoyée au client si c'est un joueur). */
+	private static void setHeldVelocity(LivingEntity target, Vec3d velocity) {
+		target.setVelocity(Vec3d.ZERO);
+		target.addVelocity(velocity.x, velocity.y, velocity.z);
+		if (target instanceof ServerPlayerEntity held) {
+			held.networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(held));
+		}
 	}
 
 	/** Un tick d'une prise ; faux quand elle est finie. */
@@ -385,6 +424,10 @@ public final class Tentacles {
 			Vec3d c = target.getBoundingBox().getCenter();
 			world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 25, 0.3, 0.4, 0.3, 0.1);
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.2F, 0.6F);
+			if (target instanceof ServerPlayerEntity held) {
+				held.sendMessage(Text.translatable("message.evotool.tentacle_grabbed", player.getDisplayName())
+						.formatted(Formatting.DARK_PURPLE), true);
+			}
 		}
 		// elle le ramène devant le joueur et le tient là, en l'air
 		Vec3d hold = player.getEyePos().add(player.getRotationVector().multiply(HOLD_DISTANCE)).add(0, -0.3 - target.getHeight() / 2, 0);
@@ -404,9 +447,9 @@ public final class Tentacles {
 			placed = player.getEntityPos();
 		}
 		if (placed != null) {
-			target.setPosition(placed.x, placed.y, placed.z);
+			moveHeld(target, placed);
 		}
-		target.setVelocity(Vec3d.ZERO);
+		setHeldVelocity(target, Vec3d.ZERO);
 		target.onLanding();
 		strike.end = target.getBoundingBox().getCenter();
 		strike.control = curve(strike.origin, strike.end, 0.25 * Math.sin(strike.age * 0.4));
@@ -440,10 +483,10 @@ public final class Tentacles {
 			Vec3d now = target.getEntityPos();
 			Vec3d feet = new Vec3d(spot.x, spot.y, spot.z);
 			if (world.isSpaceEmpty(target, target.getBoundingBox().offset(feet.subtract(now)))) {
-				target.setPosition(feet.x, feet.y, feet.z);
+				moveHeld(target, feet);
 			}
 		}
-		target.setVelocity(Vec3d.ZERO);
+		setHeldVelocity(target, Vec3d.ZERO);
 		target.onLanding();
 		Vec3d c = target.getBoundingBox().getCenter();
 		world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 12, 0.3, 0.3, 0.3, 0.05);
@@ -467,8 +510,7 @@ public final class Tentacles {
 		ServerPlayerEntity player = strike.player;
 		LivingEntity target = strike.grabbed;
 		Vec3d push = player.getRotationVector().multiply(2.6).add(0, 0.45, 0);
-		target.setVelocity(Vec3d.ZERO);
-		target.addVelocity(push.x, push.y, push.z);
+		setHeldVelocity(target, push);
 		THROWN.add(new Thrown(player, target, strike.world.getServer().getTicks()));
 		Vec3d c = target.getBoundingBox().getCenter();
 		strike.world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 30, 0.3, 0.3, 0.3, 0.2);

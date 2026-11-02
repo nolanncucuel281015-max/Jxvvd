@@ -271,5 +271,6 @@
   "armor.evotool.tentacles": "Tentacules (clic gauche à main nue, touche J)",
   "message.evotool.tentacles_locked": "Les tentacules s'éveillent avec l'armure abyssale complète au niveau 150.",
   "message.evotool.tentacles_on": "Tentacules : mode déplacement (accroupi pour creuser)",
-  "message.evotool.tentacles_off": "Tentacules rangées"
+  "message.evotool.tentacles_off": "Tentacules rangées",
+  "message.evotool.tentacle_grabbed": "%s t'a attrapé avec une tentacule !"
 }
