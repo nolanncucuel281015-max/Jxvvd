@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "evotool:evolium",
+    "minecraft:flint"
+  ],
+  "result": {
+    "id": "evotool:evolium_lighter",
+    "count": 1
+  }
+}

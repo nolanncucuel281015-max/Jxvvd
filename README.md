@@ -387,8 +387,9 @@ python3 tools/generate_assets.py
 ## Dimension évolutive
 
 **Y aller** : construis un cadre de **blocs de rubis** comme un portail du Nether (intérieur de 2x3 à 21x21,
-les coins sont facultatifs) et allume-le avec le **briquet d'évolium**. Il **ne se fabrique pas** : c'est un
-secret à découvrir en explorant (indice : regarde dans les coffres de certaines ruines…). Le portail
+les coins sont facultatifs) et allume-le avec le **briquet d'évolium**. Sa recette est **secrète** : elle
+marche à la table de craft, mais le livre de recettes ne la montre jamais (1 évolium + 1 silex, ne le dis à
+personne). On en trouve aussi dans les coffres de certaines ruines… Le portail
 évolutif (rouge rubis et violet) t'emmène dans la dimension évolutive ; un portail de retour est créé à l'arrivée.
 
 **La dimension** : ciel violet, collines, forêts de cristal et champs prismatiques, faits de **blocs évolutifs**

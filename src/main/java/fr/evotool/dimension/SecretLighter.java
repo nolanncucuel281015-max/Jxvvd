@@ -12,9 +12,10 @@ import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
 import net.minecraft.registry.RegistryKey;
 
 /**
- * Le briquet d'évolium (qui allume le portail de la dimension évolutive) ne se fabrique plus : c'est un secret à
- * découvrir. On le trouve parfois dans les coffres des portails en ruine (c'est logique : ils servent aux portails),
- * et plus rarement dans ceux des temples, des forteresses et des cités antiques.
+ * Le briquet d'évolium (qui allume le portail de la dimension évolutive) est un secret à découvrir : sa recette
+ * marche mais le livre de recettes ne la montre jamais. On le trouve aussi parfois dans les coffres des portails en
+ * ruine (c'est logique : ils servent aux portails), et plus rarement dans ceux des temples, des forteresses et des
+ * cités antiques.
  */
 public final class SecretLighter {
 	/** Table de butin → chance de trouver un briquet dans le coffre. */

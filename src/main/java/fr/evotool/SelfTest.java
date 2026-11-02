@@ -575,10 +575,14 @@ final class SelfTest {
 		}
 		world.setBlockState(shieldPos, net.minecraft.block.Blocks.AIR.getDefaultState());
 
-		// briquet d'évolium : plus de recette, c'est un secret (coffres des portails en ruine…)
+		// briquet d'évolium : recette secrète, elle marche mais le livre de recettes ne la montre pas
 		checks++;
-		if (server.getRecipeManager().get(RegistryKey.of(RegistryKeys.RECIPE, EvoTool.id("evolium_lighter"))).isPresent()) {
-			failures.add("le briquet d'évolium se fabrique encore");
+		if (server.getRecipeManager().get(RegistryKey.of(RegistryKeys.RECIPE, EvoTool.id("evolium_lighter"))).isEmpty()) {
+			failures.add("le briquet d'évolium ne se fabrique pas");
+		}
+		checks++;
+		if (server.getAdvancementLoader().get(EvoTool.id("recipes/equipment/evolium_lighter")) != null) {
+			failures.add("la recette secrète du briquet apparaît dans le livre de recettes");
 		}
 
 		// armure abyssale : niveau 100 + abyssite, puis jusqu'au niveau 150 avec 11 formes noires
@@ -897,6 +901,9 @@ final class SelfTest {
 				continue;
 			}
 			recipes++;
+			if (id.getPath().equals("evolium_lighter")) {
+				continue;   // recette secrète : jamais dans le livre de recettes
+			}
 			checks++;
 			boolean unlocked = false;
 			for (String category : new String[] {"equipment", "building", "misc", "redstone"}) {

@@ -2521,12 +2521,13 @@ def gen_dimension_data():
     write_json(os.path.join(tags, "minecraft", "tags", "block", "base_stone_overworld.json"),
                {"replace": False, "values": ids(["evolving_stone"])})
 
-    # --- briquet d'évolium : plus de recette, c'est un secret à découvrir (coffres des portails en ruine…,
-    # voir SecretLighter.java)
-    for old in (os.path.join(DATA, "recipe", "evolium_lighter.json"),
-                os.path.join(DATA, "advancement", "recipes", "equipment", "evolium_lighter.json")):
-        if os.path.exists(old):
-            os.remove(old)
+    # --- briquet d'évolium : recette secrète (elle marche, mais le livre de recettes ne la montre jamais,
+    # voir HIDDEN_RECIPES) ; on le trouve aussi dans des coffres (SecretLighter.java)
+    write_json(os.path.join(DATA, "recipe", "evolium_lighter.json"), {
+        "type": "minecraft:crafting_shapeless", "category": "equipment",
+        "ingredients": [f"{MOD}:evolium", "minecraft:flint"],
+        "result": {"id": f"{MOD}:evolium_lighter", "count": 1},
+    })
 
     # --- type de dimension : ciel violet, cycle jour / nuit normal
     sky = {
@@ -4834,6 +4835,8 @@ def gen_shield():
 
 # Recettes visibles dans le livre de recettes dès la connexion, sans avoir à ramasser un ingrédient.
 ALWAYS_VISIBLE_RECIPES = {"shield_generator"}
+# Recettes secrètes : elles marchent à la table de craft, mais le livre de recettes ne les montre jamais.
+HIDDEN_RECIPES = {"evolium_lighter"}
 
 
 def recipe_unlocks():
@@ -4843,6 +4846,12 @@ def recipe_unlocks():
     rec = os.path.join(DATA, "recipe")
     for file in sorted(os.listdir(rec)):
         name = file[:-5]
+        if name in HIDDEN_RECIPES:
+            for category in os.listdir(os.path.join(DATA, "advancement", "recipes")):
+                old = os.path.join(DATA, "advancement", "recipes", category, file)
+                if os.path.exists(old):
+                    os.remove(old)
+            continue
         recipe = json.load(open(os.path.join(rec, file), encoding="utf-8"))
         if "key" in recipe:
             items = list(recipe["key"].values())
