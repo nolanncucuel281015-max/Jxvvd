@@ -30,7 +30,7 @@ public abstract class PlayerEntityMixin {
 			target = "Lnet/minecraft/entity/player/PlayerEntity;experiencePickUpDelay:I", opcode = Opcodes.GETFIELD, ordinal = 0))
 	private void evotool$burrow(CallbackInfo ci) {
 		PlayerEntity self = (PlayerEntity) (Object) this;
-		if (Burrow.isBurrowing(self)) {
+		if (Burrow.phases(self)) {
 			self.noClip = true;
 			self.setOnGround(false);
 			self.getAbilities().flying = true;

@@ -1,5 +1,6 @@
 package fr.evotool.mixin;
 
+import fr.evotool.armor.Tentacles;
 import fr.evotool.weapon.WeaponPowers;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -21,6 +22,7 @@ public abstract class ServerPlayNetworkHandlerMixin {
 	private void evotool$blastSlash(HandSwingC2SPacket packet, CallbackInfo ci) {
 		if (packet.getHand() == Hand.MAIN_HAND) {
 			WeaponPowers.onSwing(this.player);
+			Tentacles.onSwing(this.player);
 		}
 	}
 }

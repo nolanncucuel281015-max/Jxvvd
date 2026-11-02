@@ -44,6 +44,8 @@ public final class ModItems {
 	public static final Item EVOLIUM = register("evolium", Item::new, new Item.Settings().rarity(Rarity.RARE));
 	public static final Item RUBY = register("ruby", Item::new, new Item.Settings());
 	public static final Item SAPPHIRE = register("sapphire", Item::new, new Item.Settings());
+	/** Abyssite : à l'enclume avec une pièce d'armure niveau 100, elle la rend abyssale (jusqu'au niveau 150). */
+	public static final Item ABYSSITE = register("abyssite", Item::new, new Item.Settings().rarity(Rarity.EPIC).fireproof());
 	public static final Item EVOLITE_INGOT = register("evolite_ingot", Item::new,
 			new Item.Settings().rarity(Rarity.EPIC).fireproof());
 

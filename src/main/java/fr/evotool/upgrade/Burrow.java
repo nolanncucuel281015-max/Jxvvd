@@ -1,5 +1,6 @@
 package fr.evotool.upgrade;
 
+import fr.evotool.armor.Tentacles;
 import fr.evotool.network.BurrowPayload;
 import fr.evotool.upgrade.EvoliteUpgrade.Upgrade;
 import java.util.HashMap;
@@ -102,12 +103,23 @@ public final class Burrow {
 		});
 	}
 
-	/** Vrai si ce joueur traverse les blocs en ce moment (appelé des deux côtés par le mixin). */
+	/** Vrai si ce joueur plonge sous terre avec ses bottes (côté client : s'il traverse les blocs, voir {@link #phases}). */
 	public static boolean isBurrowing(PlayerEntity player) {
 		if (player.getEntityWorld().isClient()) {
 			return clientActive && player.isMainPlayer();
 		}
 		return player.getCommandTags().contains(TAG);
+	}
+
+	/**
+	 * Vrai si ce joueur traverse les blocs en ce moment (appelé des deux côtés par le mixin) : plongée des bottes
+	 * ou mode déplacement des tentacules.
+	 */
+	public static boolean phases(PlayerEntity player) {
+		if (player.getEntityWorld().isClient()) {
+			return clientActive && player.isMainPlayer();
+		}
+		return player.getCommandTags().contains(TAG) || player.getCommandTags().contains(Tentacles.MOVE_TAG);
 	}
 
 	public static boolean hasBoots(PlayerEntity player) {
@@ -121,6 +133,11 @@ public final class Burrow {
 	/** Un tick de plongée pour ce joueur (public pour l'auto-test, qui utilise un faux joueur). */
 	public static void tick(ServerPlayerEntity player, int tick) {
 		UUID id = player.getUuid();
+		if (player.getCommandTags().contains(Tentacles.MOVE_TAG)) {
+			// les tentacules font déjà traverser la terre : la plongée des bottes attend
+			SNEAK.remove(id);
+			return;
+		}
 		if (isBurrowing(player)) {
 			if (canUse(player)) {
 				underground(player, tick);
@@ -243,7 +260,7 @@ public final class Burrow {
 		state.wasInside = inside;
 	}
 
-	private static boolean touchesUnbreakable(ServerWorld world, Box box) {
+	public static boolean touchesUnbreakable(ServerWorld world, Box box) {
 		for (BlockPos pos : BlockPos.iterate(BlockPos.ofFloored(box.minX, box.minY, box.minZ),
 				BlockPos.ofFloored(box.maxX, box.maxY, box.maxZ))) {
 			BlockState state = world.getBlockState(pos);
@@ -299,8 +316,13 @@ public final class Burrow {
 	}
 
 	private static void send(ServerPlayerEntity player, boolean active) {
+		syncClient(player);
+	}
+
+	/** Dit au client du joueur s'il doit traverser les blocs (plongée ou tentacules). */
+	public static void syncClient(ServerPlayerEntity player) {
 		if (ServerPlayNetworking.canSend(player, BurrowPayload.ID)) {
-			ServerPlayNetworking.send(player, new BurrowPayload(active));
+			ServerPlayNetworking.send(player, new BurrowPayload(phases(player)));
 		}
 	}
 

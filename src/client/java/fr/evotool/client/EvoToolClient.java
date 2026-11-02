@@ -20,6 +20,7 @@ import fr.evotool.shield.ShieldGeneratorBlockEntity;
 import fr.evotool.shield.ShieldGeneratorScreenHandler;
 import fr.evotool.network.EvolvePayload;
 import fr.evotool.network.EvolvedPayload;
+import fr.evotool.network.TentacleTogglePayload;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.EvoliteUpgrade;
 import net.fabricmc.api.ClientModInitializer;
@@ -45,6 +46,10 @@ public class EvoToolClient implements ClientModInitializer {
 	public static final KeyBinding OPEN_MENU = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.evotool.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, CATEGORY));
 
+	/** Allume / éteint le mode déplacement des tentacules (armure abyssale niveau 150). */
+	public static final KeyBinding TENTACLES = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.evotool.tentacles", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, CATEGORY));
+
 	/** Fait évoluer l'objet prêt (en main, ou l'armure portée) : le serveur joue l'animation. */
 	public static final KeyBinding EVOLVE = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.evotool.evolve", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
@@ -60,12 +65,19 @@ public class EvoToolClient implements ClientModInitializer {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> Burrow.clientActive = false);
 		// Ailes de l'infini du plastron : dessinées sur le buste du joueur, comme une cape.
 		InfinityWingsFeature.register();
+		// Tentacules noires de l'armure abyssale niveau 150.
+		TentacleFeature.register();
 		// Générateur de bouclier : son menu.
 		HandledScreens.register(ShieldGeneratorScreenHandler.TYPE, ShieldGeneratorScreen::new);
 		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.
 		ClientPlayNetworking.registerGlobalReceiver(EvolvedPayload.ID,
 				(payload, context) -> context.client().gameRenderer.showFloatingItem(payload.stack()));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			while (TENTACLES.wasPressed()) {
+				if (client.player != null) {
+					ClientPlayNetworking.send(TentacleTogglePayload.INSTANCE);
+				}
+			}
 			while (EVOLVE.wasPressed()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(EvolvePayload.INSTANCE);
@@ -120,15 +132,18 @@ public class EvoToolClient implements ClientModInitializer {
 			EvoProfile profile = kind.profile();
 			EvoData data = EvoProgression.get(stack);
 			int level = data.level();
-			lines.add(index++, Text.translatable("tooltip.evotool.level", level, EvoProgression.MAX_LEVEL)
+			lines.add(index++, Text.translatable("tooltip.evotool.level", level, EvoProgression.maxLevel(stack))
 					.formatted(Formatting.LIGHT_PURPLE));
-			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(level),
-					EvoProgression.stage(level), EvoProgression.MAX_STAGE).formatted(Formatting.YELLOW));
+			lines.add(index++, Text.translatable("tooltip.evotool.form", EvoProgression.stageName(stack),
+					EvoProgression.stage(stack), EvoProgression.maxStage(stack)).formatted(Formatting.YELLOW));
+			if (EvoProgression.isAbyssal(stack)) {
+				lines.add(index++, Text.translatable("tooltip.evotool.abyssal").formatted(Formatting.DARK_PURPLE, Formatting.BOLD));
+			}
 			if (EvoProgression.isReadyToEvolve(stack)) {
 				lines.add(index++, Text.translatable("tooltip.evotool.ready", EvoProgression.evolveKey())
 						.formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD));
-			} else if (level < EvoProgression.MAX_LEVEL) {
-				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), profile.curve().xpToNext(level))
+			} else if (level < EvoProgression.maxLevel(stack)) {
+				lines.add(index++, Text.translatable("tooltip.evotool.xp", data.xp(), EvoProgression.xpToNext(stack))
 						.formatted(Formatting.GRAY));
 			}
 			if (profile.modes().size() > 1) {

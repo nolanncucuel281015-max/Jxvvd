@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -60,6 +61,13 @@ public final class ArmorHandler {
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> APPLIED.remove(handler.getPlayer().getUuid()));
+
+		// Les pièces abyssales (au-delà du niveau 100) gagnent aussi de l'XP quand on tue des monstres.
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (entity instanceof Monster && source.getAttacker() instanceof ServerPlayerEntity player && !player.isCreative()) {
+				gainAbyssKillXp(player, EvoProgression.xpForKill(entity));
+			}
+		});
 	}
 
 	private static void gainArmorXp(ServerPlayerEntity player, int xp, int damage) {
@@ -95,7 +103,7 @@ public final class ArmorHandler {
 		}
 
 		int pieceLevel = EvoProgression.get(slowest).level();
-		int needed = EvoProgression.kindOf(slowest).profile().curve().xpToNext(pieceLevel);
+		int needed = EvoProgression.xpToNext(slowest);
 		if (EvoProgression.isReadyToEvolve(slowest)) {
 			player.sendMessage(Text.translatable("message.evotool.actionbar_ready", slowest.getName(), EvoProgression.evolveKey())
 					.formatted(Formatting.LIGHT_PURPLE), true);
@@ -107,9 +115,23 @@ public final class ArmorHandler {
 						EvoProgression.get(slowest).xp(), needed).formatted(Formatting.GRAY), true);
 	}
 
+	private static void gainAbyssKillXp(ServerPlayerEntity player, int xp) {
+		ServerWorld world = (ServerWorld) player.getEntityWorld();
+		for (EquipmentSlot slot : ArmorSet.SLOTS) {
+			ItemStack stack = player.getEquippedStack(slot);
+			if (ArmorSet.isEvolvingArmor(stack, slot) && EvoProgression.isAbyssal(stack)) {
+				boolean wasReady = EvoProgression.isReadyToEvolve(stack);
+				EvoProgression.gainXp(stack, xp, 0, world);
+				if (!wasReady && EvoProgression.isReadyToEvolve(stack)) {
+					EvoProgression.announceReady(player, world, stack.getName());
+				}
+			}
+		}
+	}
+
 	private static void announce(ServerPlayerEntity player, int setLevel) {
 		player.sendMessage(Text.translatable("message.evotool.armor_level", setLevel).formatted(Formatting.BLUE, Formatting.BOLD), false);
-		if (setLevel % EvoProgression.LEVELS_PER_STAGE == 0) {
+		if (setLevel % EvoProgression.LEVELS_PER_STAGE == 0 && setLevel <= EvoProgression.MAX_LEVEL) {
 			player.sendMessage(Text.translatable("message.evotool.new_form", EvoProgression.stageName(setLevel),
 					EvoProgression.stage(setLevel), EvoProgression.MAX_STAGE).formatted(Formatting.AQUA, Formatting.BOLD), false);
 		}

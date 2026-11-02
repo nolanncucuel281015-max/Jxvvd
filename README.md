@@ -145,6 +145,35 @@ donc il faut porter l'armure complète. Les effets sont **permanents** tant qu'o
 Chaque pièce doit être **évoluée avec R** à chaque nouvelle forme (sans rien en main, R fait évoluer toutes
 les pièces portées qui sont prêtes).
 
+### Armure abyssale — jusqu'au niveau 150
+
+Dans la **dimension évolutive** se cache un nouveau minerai noir, l'**abyssite** (sous terre, dans la pierre
+évolutive, pioche en diamant). À l'**enclume**, une pièce d'armure **niveau 100** + une abyssite (30 niveaux
+d'XP) = pièce **abyssale** : elle devient **noire** et continue d'évoluer **jusqu'au niveau 150**, avec
+**11 nouvelles formes** (une tous les 5 niveaux, toujours avec **R**). Les pièces abyssales gagnent aussi de l'XP
+quand tu tues des monstres. Avec un plastron abyssal, les **ailes de l'infini deviennent noires**.
+
+| Niveau d'ensemble | Bonus en plus |
+|------------------:|---------------|
+| 105 | Célérité II, Résistance au feu |
+| 110 | Force III, Apnée |
+| 115 | Vitesse III |
+| 120 | Régénération III |
+| 125 | **Résistance V** (plus aucun dégât, sauf /kill et le vide) |
+| 130 | **+10 cœurs** |
+| 140 | Force IV |
+| 150 | **+15 cœurs** et les **tentacules** |
+
+**Tentacules** (ensemble abyssal complet au niveau 150) : 4 tentacules noires (vrais modèles 3D) ondulent dans
+ton dos.
+- **Clic gauche à main nue** : une tentacule jaillit (« tchouf ») jusqu'à 14 blocs, droit sur ce que tu vises,
+  et frappe fort tout ce qu'elle traverse.
+- **Touche J** : **mode déplacement**. Les tentacules se tendent vers l'avant et te tirent à toute vitesse, même
+  **sous l'eau** et **à travers la terre** (elles creusent devant toi, avec de l'encre et des « tchouf »). Tu
+  respires, tu vois dans le noir, et ni la lave, ni la noyade, ni l'étouffement ne te touchent. La bedrock reste
+  infranchissable. **J** à nouveau pour les ranger (si tu es dans la roche, tu remontes à la surface).
+- `/upgrade armure 150` donne directement l'ensemble abyssal niveau 150.
+
 **Look de chevalier qui change tous les 5 niveaux** (21 formes) : nouvelles couleurs **et** un nouveau détail
 à chaque forme, qui s'ajoute aux précédents.
 
@@ -358,7 +387,8 @@ python3 tools/generate_assets.py
 ## Dimension évolutive
 
 **Y aller** : construis un cadre de **blocs de rubis** comme un portail du Nether (intérieur de 2x3 à 21x21,
-les coins sont facultatifs) et allume-le avec le **briquet d'évolium** (1 évolium + 1 silex). Le portail
+les coins sont facultatifs) et allume-le avec le **briquet d'évolium**. Il **ne se fabrique pas** : c'est un
+secret à découvrir en explorant (indice : regarde dans les coffres de certaines ruines…). Le portail
 évolutif (rouge rubis et violet) t'emmène dans la dimension évolutive ; un portail de retour est créé à l'arrivée.
 
 **La dimension** : ciel violet, collines, forêts de cristal et champs prismatiques, faits de **blocs évolutifs**

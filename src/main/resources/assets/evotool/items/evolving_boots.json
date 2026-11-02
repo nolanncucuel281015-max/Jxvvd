@@ -154,6 +154,83 @@
           "type": "minecraft:model",
           "model": "evotool:item/evolving_boots_stage20"
         }
+      },
+      {
+        "threshold": 21,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage21"
+        }
+      },
+      {
+        "threshold": 22,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage22"
+        }
+      },
+      {
+        "threshold": 23,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage23"
+        }
+      },
+      {
+        "threshold": 24,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage24"
+        }
+      },
+      {
+        "threshold": 25,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage25"
+        }
+      },
+      {
+        "threshold": 26,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage26"
+        }
+      },
+      {
+        "threshold": 27,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage27"
+        }
+      },
+      {
+        "threshold": 28,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage28"
+        }
+      },
+      {
+        "threshold": 29,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage29"
+        }
+      },
+      {
+        "threshold": 30,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage30"
+        }
+      },
+      {
+        "threshold": 31,
+        "model": {
+          "type": "minecraft:model",
+          "model": "evotool:item/evolving_boots_stage31"
+        }
       }
     ]
   }

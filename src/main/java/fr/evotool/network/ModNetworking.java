@@ -1,5 +1,6 @@
 package fr.evotool.network;
 
+import fr.evotool.armor.Tentacles;
 import fr.evotool.component.EvoData;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
@@ -20,6 +21,9 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(EvolvedPayload.ID, EvolvedPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(EvoSettingsPayload.ID, EvoSettingsPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(EvolvePayload.ID, EvolvePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(TentacleTogglePayload.ID, TentacleTogglePayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(TentacleStatePayload.ID, TentacleStatePayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(TentacleTogglePayload.ID, (payload, context) -> Tentacles.toggle(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(EvolvePayload.ID, (payload, context) -> Evolution.start(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(EvoSettingsPayload.ID, (payload, context) -> {
 			ItemStack stack = context.player().getMainHandStack();

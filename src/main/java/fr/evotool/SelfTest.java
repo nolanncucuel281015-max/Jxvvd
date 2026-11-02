@@ -232,6 +232,7 @@ final class SelfTest {
 		int stone = 0;
 		int grass = 0;
 		int others = 0;
+		int abyssite = 0;
 		for (int cx = 0; cx < 3; cx++) {
 			for (int cz = 0; cz < 3; cz++) {
 				net.minecraft.world.chunk.Chunk chunk = evo.getChunk(cx, cz);
@@ -243,6 +244,8 @@ final class SelfTest {
 								stone++;
 							} else if (state.isOf(ModBlocks.EVOLVING_GRASS)) {
 								grass++;
+							} else if (state.isOf(ModBlocks.ABYSSITE_ORE)) {
+								abyssite++;
 							} else if (state.contains(EvolvingBlock.EVOLUTION)) {
 								others++;
 							}
@@ -251,9 +254,14 @@ final class SelfTest {
 				}
 			}
 		}
-		EvoTool.LOGGER.info("EVOTOOL dimension in 9 chunks: stone={} grass={} other evolving blocks={}", stone, grass, others);
+		EvoTool.LOGGER.info("EVOTOOL dimension in 9 chunks: stone={} grass={} other evolving blocks={} abyssite ore={}",
+				stone, grass, others, abyssite);
 		if (stone == 0 || grass == 0) {
 			failures.add("relief de la dimension évolutive : pierre=" + stone + " herbe=" + grass);
+		}
+		checks++;
+		if (abyssite == 0) {
+			failures.add("pas de minerai d'abyssite dans la dimension évolutive");
 		}
 
 		// Portail : un cadre de rubis 4x5 s'allume au briquet, un cadre incomplet non.
@@ -566,6 +574,87 @@ final class SelfTest {
 			}
 		}
 		world.setBlockState(shieldPos, net.minecraft.block.Blocks.AIR.getDefaultState());
+
+		// briquet d'évolium : plus de recette, c'est un secret (coffres des portails en ruine…)
+		checks++;
+		if (server.getRecipeManager().get(RegistryKey.of(RegistryKeys.RECIPE, EvoTool.id("evolium_lighter"))).isPresent()) {
+			failures.add("le briquet d'évolium se fabrique encore");
+		}
+
+		// armure abyssale : niveau 100 + abyssite, puis jusqu'au niveau 150 avec 11 formes noires
+		ItemStack abyssChest = new ItemStack(ModItems.itemFor(EvoKind.CHESTPLATE));
+		abyssChest.set(ModComponents.EVO_DATA, new EvoData(100, 0, 0, -1, 0L));
+		checks++;
+		if (!fr.evotool.armor.AbyssalArmor.canUpgrade(abyssChest)) {
+			failures.add("armure abyssale : une pièce niveau 100 ne peut pas recevoir l'abyssite");
+		}
+		fr.evotool.armor.AbyssalArmor.apply(abyssChest);
+		EvoProgression.gainXp(abyssChest, 10_000_000, 0, world);
+		checks++;
+		if (EvoProgression.get(abyssChest).level() != 104 || !EvoProgression.isReadyToEvolve(abyssChest)
+				|| EvoProgression.stage(abyssChest) != 21) {
+			failures.add("armure abyssale : niveau " + EvoProgression.get(abyssChest).level() + ", forme "
+					+ EvoProgression.stage(abyssChest) + " (attendu 104 prêt à évoluer, forme 21)");
+		}
+		EvoProgression.evolve(abyssChest, null, world);
+		checks++;
+		if (EvoProgression.get(abyssChest).level() != 105 || EvoProgression.stage(abyssChest) != 22) {
+			failures.add("armure abyssale : l'évolution ne passe pas à la forme 22");
+		}
+
+		// tentacules : ensemble abyssal complet au niveau 150
+		EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+		EvoKind[] pieces = {EvoKind.HELMET, EvoKind.CHESTPLATE, EvoKind.LEGGINGS, EvoKind.BOOTS};
+		for (int i = 0; i < slots.length; i++) {
+			ItemStack piece = new ItemStack(ModItems.itemFor(pieces[i]));
+			fr.evotool.armor.AbyssalArmor.apply(piece);
+			piece.set(ModComponents.EVO_DATA, new EvoData(150, 0, 0, -1, 0L));
+			EvoProgression.refresh(piece, server.getRegistryManager());
+			player.equipStack(slots[i], piece);
+		}
+		checks++;
+		if (!fr.evotool.armor.Tentacles.hasTentacles(player) || EvoProgression.stage(player.getEquippedStack(EquipmentSlot.CHEST)) != 31) {
+			failures.add("tentacules : pas débloquées avec l'ensemble abyssal niveau 150");
+		}
+		player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+		ZombieEntity target = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+		float targetHealth = 0;
+		if (target != null) {
+			target.refreshPositionAndAngles(x, y, z + 4.0, 180.0F, 0.0F);
+			target.setAiDisabled(true);
+			world.spawnEntity(target);
+			targetHealth = target.getHealth();
+		}
+		checks++;
+		boolean struck = fr.evotool.armor.Tentacles.strike(player);
+		int strikes = fr.evotool.armor.Tentacles.activeStrikes();
+		for (int i = 0; i < 10; i++) {
+			fr.evotool.armor.Tentacles.tickForTest();
+		}
+		EvoTool.LOGGER.info("EVOTOOL tentacles: strike={} active={} zombie {} -> {} left={}", struck, strikes, targetHealth,
+				target == null ? -1 : target.getHealth(), fr.evotool.armor.Tentacles.activeStrikes());
+		if (!struck || strikes < 1 || target == null || target.isAlive() && target.getHealth() >= targetHealth
+				|| fr.evotool.armor.Tentacles.activeStrikes() != 0) {
+			failures.add("tentacules : le coup ne touche pas le zombie devant le joueur");
+		}
+		if (target != null) {
+			target.discard();
+		}
+		fr.evotool.armor.Tentacles.toggle(player);
+		checks++;
+		if (!player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || !fr.evotool.upgrade.Burrow.phases(player)
+				|| player.getAbilities().getFlySpeed() != fr.evotool.armor.Tentacles.MOVE_SPEED) {
+			failures.add("tentacules : le mode déplacement (J) ne s'allume pas");
+		}
+		fr.evotool.armor.Tentacles.toggle(player);
+		checks++;
+		if (player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || fr.evotool.upgrade.Burrow.phases(player)) {
+			failures.add("tentacules : le mode déplacement (J) ne s'éteint pas");
+		}
+		for (EquipmentSlot slot : slots) {
+			player.equipStack(slot, ItemStack.EMPTY);
+		}
+		InfinityWings.restoreAbilities(player);
 
 		// bottes : accroupi sur le sol de l'arène, on plonge dedans
 		ItemStack boots = new ItemStack(ModItems.itemFor(EvoKind.BOOTS));

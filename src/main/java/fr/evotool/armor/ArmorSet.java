@@ -29,6 +29,9 @@ import net.minecraft.text.Text;
  *   <li>Régénération I et II : niveaux 40 / 85</li>
  *   <li>Cœurs en plus : +4 au niveau 80, +6 au niveau 100</li>
  * </ul>
+ * Au-delà de 100 (armure abyssale, voir {@link AbyssalArmor}) : Célérité II (105), Résistance au feu (105),
+ * Apnée (110), Force III (110), Vitesse III (115), Régénération III (120), <b>Résistance V</b> (125),
+ * Force IV (140), +10 cœurs (130) puis +15 cœurs (150) ; au niveau 150, les tentacules.
  */
 public final class ArmorSet {
 	public static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
@@ -36,15 +39,21 @@ public final class ArmorSet {
 	private static final Map<RegistryEntry<StatusEffect>, int[]> EFFECTS = new LinkedHashMap<>();
 
 	static {
-		EFFECTS.put(StatusEffects.RESISTANCE, new int[] {20, 45, 70, 95});
-		EFFECTS.put(StatusEffects.STRENGTH, new int[] {35, 75});
-		EFFECTS.put(StatusEffects.SPEED, new int[] {25, 65});
-		EFFECTS.put(StatusEffects.HASTE, new int[] {55});
-		EFFECTS.put(StatusEffects.REGENERATION, new int[] {40, 85});
+		EFFECTS.put(StatusEffects.RESISTANCE, new int[] {20, 45, 70, 95, 125});
+		EFFECTS.put(StatusEffects.STRENGTH, new int[] {35, 75, 110, 140});
+		EFFECTS.put(StatusEffects.SPEED, new int[] {25, 65, 115});
+		EFFECTS.put(StatusEffects.HASTE, new int[] {55, 105});
+		EFFECTS.put(StatusEffects.REGENERATION, new int[] {40, 85, 120});
+		EFFECTS.put(StatusEffects.FIRE_RESISTANCE, new int[] {105});
+		EFFECTS.put(StatusEffects.WATER_BREATHING, new int[] {110});
 	}
 
 	public static final int HEARTS_LEVEL_1 = 80;
 	public static final int HEARTS_LEVEL_2 = 100;
+	public static final int HEARTS_LEVEL_3 = 130;
+	public static final int HEARTS_LEVEL_4 = 150;
+	/** Ensemble abyssal complet au niveau 150 : les tentacules. */
+	public static final int TENTACLE_LEVEL = 150;
 
 	private ArmorSet() {
 	}
@@ -52,6 +61,18 @@ public final class ArmorSet {
 	public static boolean isEvolvingArmor(ItemStack stack, EquipmentSlot slot) {
 		EvoKind kind = EvoProgression.kindOf(stack);
 		return kind != null && kind.profile().armorSlot() == slot;
+	}
+
+	/** Niveau d'ensemble à partir des 4 pièces (aussi utilisé par le client pour dessiner les tentacules). */
+	public static int setLevel(ItemStack head, ItemStack chest, ItemStack legs, ItemStack feet) {
+		ItemStack[] stacks = {head, chest, legs, feet};
+		int sum = 0;
+		for (int i = 0; i < SLOTS.length; i++) {
+			if (stacks[i] != null && isEvolvingArmor(stacks[i], SLOTS[i])) {
+				sum += EvoProgression.get(stacks[i]).level();
+			}
+		}
+		return sum / SLOTS.length;
 	}
 
 	public static int setLevel(PlayerEntity player) {
@@ -84,6 +105,12 @@ public final class ArmorSet {
 
 	/** Points de vie en plus (2 points = 1 cœur). */
 	public static double bonusHealth(int setLevel) {
+		if (setLevel >= HEARTS_LEVEL_4) {
+			return 30.0;
+		}
+		if (setLevel >= HEARTS_LEVEL_3) {
+			return 20.0;
+		}
 		if (setLevel >= HEARTS_LEVEL_2) {
 			return 12.0;
 		}
@@ -98,7 +125,7 @@ public final class ArmorSet {
 		if (health > 0) {
 			lines.add(Text.translatable("armor.evotool.hearts", (int) (health / 2)));
 		}
-		for (int level = setLevel + 1; level <= EvoProgression.MAX_LEVEL; level++) {
+		for (int level = setLevel + 1; level <= EvoProgression.ABYSS_MAX_LEVEL; level++) {
 			List<Text> next = unlocksAt(level);
 			if (!next.isEmpty()) {
 				lines.add(Text.translatable("armor.evotool.next", level, next.get(0)));
@@ -118,8 +145,11 @@ public final class ArmorSet {
 				}
 			}
 		});
-		if (setLevel == HEARTS_LEVEL_1 || setLevel == HEARTS_LEVEL_2) {
+		if (setLevel == HEARTS_LEVEL_1 || setLevel == HEARTS_LEVEL_2 || setLevel == HEARTS_LEVEL_3 || setLevel == HEARTS_LEVEL_4) {
 			lines.add(Text.translatable("armor.evotool.hearts", (int) (bonusHealth(setLevel) / 2)));
+		}
+		if (setLevel == TENTACLE_LEVEL) {
+			lines.add(Text.translatable("armor.evotool.tentacles"));
 		}
 		return lines;
 	}

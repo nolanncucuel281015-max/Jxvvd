@@ -69,7 +69,7 @@ public final class UpgradeCommand {
 		for (EvoKind kind : EvoKind.values()) {
 			for (String name : NAMES[kind.ordinal()]) {
 				root.then(CommandManager.literal(name)
-						.then(CommandManager.argument("level", IntegerArgumentType.integer(0, EvoProgression.MAX_LEVEL))
+						.then(CommandManager.argument("level", IntegerArgumentType.integer(0, EvoProgression.ABYSS_MAX_LEVEL))
 								.executes(context -> upgrade(context.getSource(), kind,
 										IntegerArgumentType.getInteger(context, "level")))));
 			}
@@ -77,7 +77,7 @@ public final class UpgradeCommand {
 		// /upgrade armor <niveau> : les 4 pièces d'un coup.
 		for (String name : new String[] {"armor", "armure"}) {
 			root.then(CommandManager.literal(name)
-					.then(CommandManager.argument("level", IntegerArgumentType.integer(0, EvoProgression.MAX_LEVEL))
+					.then(CommandManager.argument("level", IntegerArgumentType.integer(0, EvoProgression.ABYSS_MAX_LEVEL))
 							.executes(context -> {
 								int level = IntegerArgumentType.getInteger(context, "level");
 								for (EvoKind kind : ARMOR) {
@@ -97,6 +97,15 @@ public final class UpgradeCommand {
 			stack = new ItemStack(ModItems.itemFor(kind));
 		}
 
+		// au-delà de 100 : seule l'armure va plus loin, et elle devient abyssale
+		if (level > EvoProgression.MAX_LEVEL) {
+			if (kind.profile().isArmor()) {
+				stack.set(ModComponents.ABYSSAL, net.minecraft.util.Unit.INSTANCE);
+			} else {
+				level = EvoProgression.MAX_LEVEL;
+			}
+		}
+		int finalLevel = level;
 		EvoData data = EvoProgression.get(stack);
 		stack.set(ModComponents.EVO_DATA, new EvoData(level, 0, data.mode(), data.flags(), data.count()));
 		// Niveau imposé : les enchantements d'évolution suivent exactement le niveau, même vers le bas.
@@ -106,8 +115,9 @@ public final class UpgradeCommand {
 			player.dropItem(stack, false);
 		}
 		Text name = new ItemStack(ModItems.itemFor(kind)).getName();
+		Text form = EvoProgression.stageName(stack);
 		source.sendFeedback(() -> Text.translatable(given ? "command.evotool.upgrade.given" : "command.evotool.upgrade.done",
-				name, level, EvoProgression.stageName(level)), true);
+				name, finalLevel, form), true);
 		return level;
 	}
 

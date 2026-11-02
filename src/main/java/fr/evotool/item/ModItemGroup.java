@@ -21,6 +21,8 @@ public final class ModItemGroup {
 						entries.add(ModBlocks.SANCTUARY_ALTAR);
 						entries.add(ModBlocks.SHIELD_GENERATOR);
 						entries.add(ModItems.EVOLITE_INGOT);
+						entries.add(ModItems.ABYSSITE);
+						entries.add(ModBlocks.ABYSSITE_ORE);
 						entries.add(ModBlocks.EVOLITE_BLOCK);
 						entries.add(ModBlocks.EVOLITE_ORE);
 						entries.add(ModItems.EVOLIUM);

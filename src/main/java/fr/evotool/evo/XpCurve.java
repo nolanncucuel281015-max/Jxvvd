@@ -22,6 +22,20 @@ public enum XpCurve {
 		this.steep = steep;
 	}
 
+	/**
+	 * XP pour le niveau suivant d'un objet dont le niveau maximum est {@code maxLevel} : l'armure abyssale
+	 * (améliorée à l'abyssite) continue jusqu'à 150, chaque niveau après 100 coûtant de 1 à 2 fois le niveau 75.
+	 */
+	public int xpToNext(int level, int maxLevel) {
+		if (level >= maxLevel) {
+			return 0;
+		}
+		if (level >= EvoProgression.MAX_LEVEL) {
+			return (int) (xpToNext(75) * (1.0 + (level - EvoProgression.MAX_LEVEL) / 50.0));
+		}
+		return xpToNext(level);
+	}
+
 	public int xpToNext(int level) {
 		if (level >= EvoProgression.MAX_LEVEL) {
 			return 0;

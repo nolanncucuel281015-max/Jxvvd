@@ -1,12 +1,14 @@
 package fr.evotool;
 
 import fr.evotool.armor.ArmorHandler;
+import fr.evotool.armor.Tentacles;
 import fr.evotool.block.ModBlocks;
 import fr.evotool.boss.ModEntities;
 import fr.evotool.command.DimensionCommand;
 import fr.evotool.command.UpgradeCommand;
 import fr.evotool.component.ModComponents;
 import fr.evotool.dimension.EvoDimension;
+import fr.evotool.dimension.SecretLighter;
 import fr.evotool.evo.Evolution;
 import fr.evotool.item.ModItemGroup;
 import fr.evotool.item.ModItems;
@@ -61,11 +63,13 @@ public class EvoTool implements ModInitializer {
 		MagicPowers.init();
 		InfinityWings.init();
 		Burrow.init();
+		Tentacles.init();
 		GiantItem.init();
 		CelestialBow.init();
 		PickaxeSlam.init();
 		ModEntities.init();
 		EvoDimension.init();
+		SecretLighter.init();
 		if (Boolean.getBoolean("evotool.selftest")) {
 			SelfTest.register();
 		}

@@ -37,6 +37,13 @@ public final class ModComponents {
 			ComponentType.<Long>builder().codec(Codec.LONG).packetCodec(PacketCodecs.VAR_LONG).build()
 	);
 
+	/** Pièce d'armure améliorée à l'abyssite : elle monte jusqu'au niveau 150 et devient noire. */
+	public static final ComponentType<Unit> ABYSSAL = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("abyssal"),
+			ComponentType.<Unit>builder().codec(Unit.CODEC).packetCodec(PacketCodec.unit(Unit.INSTANCE)).build()
+	);
+
 	/** Évolium stocké dans un générateur de bouclier ramassé (il le garde quand on le casse puis le repose). */
 	public static final ComponentType<Long> SHIELD_FUEL = Registry.register(
 			Registries.DATA_COMPONENT_TYPE,

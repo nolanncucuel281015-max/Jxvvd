@@ -40,6 +40,9 @@ public final class EvoProgression {
 	/** Le modèle 3D change de forme tous les 5 niveaux : 21 formes (0 à 20). */
 	public static final int LEVELS_PER_STAGE = 5;
 	public static final int MAX_STAGE = MAX_LEVEL / LEVELS_PER_STAGE;
+	/** Armure améliorée à l'abyssite : elle continue jusqu'au niveau 150, avec 11 formes noires de plus (21 à 31). */
+	public static final int ABYSS_MAX_LEVEL = 150;
+	public static final int ABYSS_MAX_STAGE = MAX_STAGE + 1 + (ABYSS_MAX_LEVEL - MAX_LEVEL) / LEVELS_PER_STAGE;
 
 	private static final Identifier SPEED_MODIFIER_ID = EvoTool.id("evolution_speed");
 	private static final Identifier DAMAGE_MODIFIER_ID = EvoTool.id("evolution_damage");
@@ -63,9 +66,45 @@ public final class EvoProgression {
 		return Text.translatable("stage.evotool." + stage(level));
 	}
 
+	/** Pièce d'armure améliorée à l'abyssite. */
+	public static boolean isAbyssal(ItemStack stack) {
+		return stack.contains(ModComponents.ABYSSAL);
+	}
+
+	public static int maxLevel(ItemStack stack) {
+		return isAbyssal(stack) ? ABYSS_MAX_LEVEL : MAX_LEVEL;
+	}
+
+	public static int maxStage(ItemStack stack) {
+		return isAbyssal(stack) ? ABYSS_MAX_STAGE : MAX_STAGE;
+	}
+
+	/** Forme de l'objet : pour une pièce abyssale, 21 au niveau 100 puis une de plus tous les 5 niveaux (31 au niveau 150). */
+	public static int stage(ItemStack stack) {
+		int level = get(stack).level();
+		if (isAbyssal(stack) && level >= MAX_LEVEL) {
+			return MAX_STAGE + 1 + (Math.min(level, ABYSS_MAX_LEVEL) - MAX_LEVEL) / LEVELS_PER_STAGE;
+		}
+		return stage(level);
+	}
+
+	public static Text stageName(ItemStack stack) {
+		return Text.translatable("stage.evotool." + stage(stack));
+	}
+
+	/** XP qu'il faut à cet objet pour son prochain niveau (0 au maximum). */
+	public static int xpToNext(ItemStack stack) {
+		EvoKind kind = kindOf(stack);
+		return kind == null ? 0 : kind.profile().curve().xpToNext(get(stack).level(), maxLevel(stack));
+	}
+
 	/** Le niveau suivant commence une nouvelle forme : il faudra faire évoluer l'objet avec la touche R. */
 	public static boolean isFormGate(int level) {
-		return level < MAX_LEVEL && (level + 1) % LEVELS_PER_STAGE == 0;
+		return isFormGate(level, MAX_LEVEL);
+	}
+
+	public static boolean isFormGate(int level, int maxLevel) {
+		return level < maxLevel && (level + 1) % LEVELS_PER_STAGE == 0;
 	}
 
 	/** L'objet a toute l'XP de sa prochaine forme : il attend qu'on appuie sur R pour évoluer. */
@@ -75,7 +114,7 @@ public final class EvoProgression {
 			return false;
 		}
 		EvoData data = get(stack);
-		return isFormGate(data.level()) && data.xp() >= kind.profile().curve().xpToNext(data.level());
+		return isFormGate(data.level(), maxLevel(stack)) && data.xp() >= xpToNext(stack);
 	}
 
 	/** Pouvoir débloqué et, s'il peut être coupé, activé dans le menu. */
@@ -163,11 +202,11 @@ public final class EvoProgression {
 			}
 			player.sendMessage(Text.translatable("message.evotool.actionbar_ready", name, evolveKey())
 					.formatted(Formatting.LIGHT_PURPLE), true);
-		} else if (level >= MAX_LEVEL) {
+		} else if (level >= maxLevel(stack)) {
 			player.sendMessage(Text.translatable("message.evotool.actionbar_max", name).formatted(Formatting.GOLD), true);
 		} else {
 			player.sendMessage(Text.translatable("message.evotool.actionbar", name, level, get(stack).xp(),
-					profile.curve().xpToNext(level)).formatted(Formatting.AQUA), true);
+					xpToNext(stack)).formatted(Formatting.AQUA), true);
 		}
 	}
 
@@ -197,7 +236,12 @@ public final class EvoProgression {
 		stack.set(ModComponents.EVO_DATA, data.withProgress(level, 0, data.count()));
 		refresh(stack, world.getRegistryManager());
 		if (player != null) {
-			announceUnlocks(kindOf(stack).profile(), player, level);
+			if (level > MAX_LEVEL) {
+				player.sendMessage(Text.translatable("message.evotool.new_form", stageName(stack), stage(stack), ABYSS_MAX_STAGE)
+						.formatted(Formatting.DARK_PURPLE, Formatting.BOLD), false);
+			} else {
+				announceUnlocks(kindOf(stack).profile(), player, level);
+			}
 		}
 		return true;
 	}
@@ -215,17 +259,18 @@ public final class EvoProgression {
 			return data.level();
 		}
 		XpCurve curve = kind.profile().curve();
+		int max = maxLevel(stack);
 		int level = data.level();
 		int xp = data.xp() + amount;
-		while (level < MAX_LEVEL && xp >= curve.xpToNext(level)) {
-			if (isFormGate(level)) {
-				xp = curve.xpToNext(level);   // prêt à évoluer : on attend la touche R
+		while (level < max && xp >= curve.xpToNext(level, max)) {
+			if (isFormGate(level, max)) {
+				xp = curve.xpToNext(level, max);   // prêt à évoluer : on attend la touche R
 				break;
 			}
-			xp -= curve.xpToNext(level);
+			xp -= curve.xpToNext(level, max);
 			level++;
 		}
-		if (level >= MAX_LEVEL) {
+		if (level >= max) {
 			xp = 0;
 		}
 		boolean leveledUp = level != data.level();
@@ -237,7 +282,7 @@ public final class EvoProgression {
 	}
 
 	public static void announceUnlocks(EvoProfile profile, PlayerEntity player, int level) {
-		if (level % LEVELS_PER_STAGE == 0) {
+		if (level % LEVELS_PER_STAGE == 0 && level <= MAX_LEVEL) {
 			player.sendMessage(Text.translatable("message.evotool.new_form", stageName(level), stage(level), MAX_STAGE)
 					.formatted(Formatting.AQUA, Formatting.BOLD), false);
 		}
@@ -337,13 +382,23 @@ public final class EvoProgression {
 		}
 		stack.set(DataComponentTypes.ATTRIBUTE_MODIFIERS, modifiers);
 
+		applyForm(stack);
+	}
+
+	/** Met le modèle (et la texture portée de l'armure) de la forme actuelle. */
+	public static void applyForm(ItemStack stack) {
+		EvoKind kind = kindOf(stack);
+		if (kind == null) {
+			return;
+		}
+		EvoProfile profile = kind.profile();
 		stack.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(
-				List.of((float) stage(level)), List.of(), List.of(), List.of()));
+				List.of((float) stage(stack)), List.of(), List.of(), List.of()));
 
 		// Plastron, jambières et bottes : la texture portée change aussi avec la forme.
 		// (Le casque est un modèle 3D porté sur la tête : il suit déjà custom_model_data.)
 		if (profile.isArmor() && profile.armorSlot() != EquipmentSlot.HEAD) {
-			stack.set(DataComponentTypes.EQUIPPABLE, ModItems.equippable(profile.armorSlot(), stage(level)));
+			stack.set(DataComponentTypes.EQUIPPABLE, ModItems.equippable(profile.armorSlot(), stage(stack)));
 		}
 	}
 }

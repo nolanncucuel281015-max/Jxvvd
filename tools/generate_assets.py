@@ -323,6 +323,26 @@ STAGES = [
     for (_, w, g, m, c, opts) in STAGE_THEMES
 ]
 
+# Armure améliorée à l'abyssite (niveaux 100 à 150) : 11 formes de plus, noires, aux lignes d'énergie vives.
+ABYSS_THEMES = [
+    ("Abyssal",           "0b0a10", "1a0f24", "1c1824", "9a1aff", {}),
+    ("Ténèbres",          "0a090e", "200a1a", "18141e", "c01848", {}),
+    ("Ombre",             "08080c", "120a24", "16131c", "6a2aff", {"stars": True}),
+    ("Éclipse",           "0a0a0a", "2a0a0a", "141014", "ff3a2a", {"cracks": True}),
+    ("Néant noir",        "060608", "0a0a1a", "121018", "3ad0ff", {"stars": True}),
+    ("Abîme",             "08060a", "1a0628", "151018", "b02aff", {"cracks": True}),
+    ("Cauchemar",         "0a0608", "2a0612", "130e12", "ff1a5a", {"stars": True}),
+    ("Kraken",            "06080a", "06202a", "0f1418", "1affc8", {"cracks": True}),
+    ("Léviathan",         "050508", "180a30", "100e16", "8a4aff", {"stars": True}),
+    ("Abysse éternel",    "040406", "2a0a2a", "0e0b12", "ff2ad0", {"stars": True, "cracks": True}),
+    ("Roi des Abysses",   "030305", "1a0a2a", "0c0a10", "ffd23a", {"stars": True}),
+]
+ABYSS_STAGES = [
+    {"wood": hexc(w), "grip": hexc(g), "metal": hexc(m), "gem": gem_palette(c), **opts}
+    for (_, w, g, m, c, opts) in ABYSS_THEMES
+]
+ALL_STAGES = STAGES + ABYSS_STAGES
+
 
 def wood_texture(base, seed):
     img = Image.new("RGBA", (16, 16))
@@ -1497,7 +1517,7 @@ SIDES = ("front", "back", "right", "left")
 def armor_textures(stage):
     """Textures portées HD (256x128) + masques des lignes lumineuses.
     Chaque forme (tous les 5 niveaux) ajoute de nouveaux détails aux précédents."""
-    st = STAGES[stage]
+    st = ALL_STAGES[stage]
     H = ArmorPainter(st, stage, 10 + stage)        # couche « humanoid » : plastron, bras, bottes
     L = ArmorPainter(st, stage, 50 + stage)        # couche « humanoid_leggings » : ceinture, cuissards
     metal = st["metal"]
@@ -1641,9 +1661,23 @@ def armor_textures(stage):
 ARMOR_ITEMS = ["evolving_helmet", "evolving_chestplate", "evolving_leggings", "evolving_boots"]
 
 
+def stage_texture_set(i, st):
+    """Textures d'une forme (manche, métal, gemme, énergie…), partagées par les outils et l'armure."""
+    save_png(wood_texture(st["wood"], i), "item", "pickaxe", f"stage{i}_handle")
+    save_png(grip_texture(st["grip"], i), "item", "pickaxe", f"stage{i}_grip")
+    save_png(metal_texture(st, i), "item", "pickaxe", f"stage{i}_metal")
+    save_png(gem_texture(st, i), "item", "pickaxe", f"stage{i}_gem")
+    save_animated(energy_frames(st), 2, "item", "pickaxe", f"stage{i}_energy")
+    save_png(edge_texture(st, i), "item", "pickaxe", f"stage{i}_edge")
+    save_png(dark_texture(st, i), "item", "pickaxe", f"stage{i}_dark")
+    save_png(trim_texture(st, i), "item", "pickaxe", f"stage{i}_trim")
+
+
 def gen_armor():
     save_png(visor_texture(), "item", "armor", "visor")
-    for i, st in enumerate(STAGES):
+    for i, st in enumerate(ALL_STAGES):
+        if i >= len(STAGES):
+            stage_texture_set(i, st)      # formes abyssales : seule l'armure les utilise
         save_png(horn_texture(st, i), "item", "armor", f"stage{i}_horn")
         humanoid, leggings, humanoid_glow, leggings_glow = armor_textures(i)
         save_png(humanoid, "entity", "equipment", "humanoid", f"evolium_stage{i}")
@@ -1660,7 +1694,7 @@ def gen_armor():
         for item in ARMOR_ITEMS[1:]:
             write_json(os.path.join(ASSETS, "models", "item", f"{item}_stage{i}.json"), armor_icon_model(item, i))
     for item in ARMOR_ITEMS:
-        write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item))
+        write_json(os.path.join(ASSETS, "items", f"{item}.json"), stage_dispatch(item, len(ALL_STAGES)))
 
 
 def mod_icon():
@@ -2471,7 +2505,7 @@ def gen_dimension_data():
     ids = lambda names: [f"{MOD}:{n}" for n in names]
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "pickaxe.json"),
                {"replace": False, "values": [f"{MOD}:{o}" for o in ORES] + [f"{MOD}:{g}_block" for g in GEMS]
-                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar", "shield_generator"])})
+                + [f"{MOD}:evolite_ore", f"{MOD}:evolite_block"] + ids(["evolving_stone", "evolving_crystal", "evolving_ore", "sanctuary_altar", "shield_generator", "abyssite_ore"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "shovel.json"),
                {"replace": False, "values": ids(["evolving_dirt", "evolving_grass"])})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "mineable", "axe.json"),
@@ -2487,12 +2521,12 @@ def gen_dimension_data():
     write_json(os.path.join(tags, "minecraft", "tags", "block", "base_stone_overworld.json"),
                {"replace": False, "values": ids(["evolving_stone"])})
 
-    # --- briquet d'évolium
-    write_json(os.path.join(DATA, "recipe", "evolium_lighter.json"), {
-        "type": "minecraft:crafting_shapeless", "category": "equipment",
-        "ingredients": [f"{MOD}:evolium", "minecraft:flint"],
-        "result": {"id": f"{MOD}:evolium_lighter", "count": 1},
-    })
+    # --- briquet d'évolium : plus de recette, c'est un secret à découvrir (coffres des portails en ruine…,
+    # voir SecretLighter.java)
+    for old in (os.path.join(DATA, "recipe", "evolium_lighter.json"),
+                os.path.join(DATA, "advancement", "recipes", "equipment", "evolium_lighter.json")):
+        if os.path.exists(old):
+            os.remove(old)
 
     # --- type de dimension : ciel violet, cycle jour / nuit normal
     sky = {
@@ -2656,7 +2690,7 @@ def gen_dimension_data():
     def biome(trees, crystals, particle, prob, sky_color, fog_color):
         features = [[] for _ in range(11)]
         features[2] = [f"{MOD}:evolving_geode"]
-        features[6] = [f"{MOD}:ore_evolving"]
+        features[6] = [f"{MOD}:ore_evolving", f"{MOD}:ore_abyssite"]
         features[9] = [f"{MOD}:{trees}", f"{MOD}:{crystals}"]
         features[10] = [f"{MOD}:sanctuary"]                     # sanctuaires (après la végétation)
         return {
@@ -4510,10 +4544,105 @@ def infinity_emblem_elements():
     return E
 
 
+# Ailes noires du plastron abyssal : plumes d'obsidienne aux veines cramoisies.
+WING_PALETTE_ABYSS = {"deep": "040306", "violet": "1c1226", "tip": "5a1a6a", "nebula": ("08060c", "2a1438"),
+                      "plume": ("1a1620", "3c3448"), "bone": "2c2a34", "gem": "8a0a2a", "energy": "ff2a5a", "star": "ff7a9a"}
+
+ABYSSITE = [hexc("050308"), hexc("1a0a2a"), hexc("4a1a7a"), hexc("b04aff"), hexc("ffffff")]
+
+
+def tentacle_skin(seed):
+    """Peau de tentacule : noire et luisante, reflets violets, petites écailles."""
+    img = Image.new("RGBA", (16, 16))
+    r = random.Random(seed)
+    base = hexc("0c0a10")
+    for y in range(16):
+        for x in range(16):
+            f = 1.0 + 0.5 * max(0.0, math.sin(x * 0.7 + y * 0.25)) ** 6 + r.uniform(-0.06, 0.06)
+            c = shade(base, f)
+            if (x + 2 * y) % 5 == 0:
+                c = lerp(c, hexc("2a1a3a"), 0.5)
+            img.putpixel((x, y), c)
+    return img
+
+
+def tentacle_segment_elements(tip=False):
+    """Segment de tentacule : un cylindre (octogone) le long de y, base au centre du bas du modèle (8, 0, 8),
+    une ventouse sur un côté ; la pointe est un cône terminé par une lueur."""
+    E, add = builder()
+    if tip:
+        revolve(add, [(3.0, 0.0), (2.4, 5.0), (1.5, 10.0), (0.5, 15.0)], "skin", n=8, t=0.8)
+        obox(add, (8, 15.6, 8), (0.9, 0.9, 0.9), "glow", orient(("x", 45), ("z", 45)))
+    else:
+        revolve(add, [(3.0, 0.0), (3.0, 16.0)], "skin", n=8, t=0.9)
+        for y in (4.0, 11.0):
+            obox(add, (8, y, 8 + 3.05), (1.6, 1.6, 0.35), "sucker")
+            obox(add, (8, y, 8 + 3.2), (0.7, 0.7, 0.2), "glow")
+    for el in E:
+        t = next(iter(el["faces"].values()))["texture"][1:]
+        if t == "glow":
+            el["light_emission"] = 13
+    return E
+
+
+def gen_abyss():
+    """Abyssite (minerai de la dimension évolutive), tentacules noires (modèles 3D)."""
+    # minerai
+    save_png(ore_texture(evo_stone(0, 77), ABYSSITE, glow=True), "block", "abyssite_ore")
+    save_png(gem_sprite(ABYSSITE), "item", "abyssite")
+    write_json(os.path.join(ASSETS, "blockstates", "abyssite_ore.json"), {"variants": {"": {"model": f"{MOD}:block/abyssite_ore"}}})
+    write_json(os.path.join(ASSETS, "models", "block", "abyssite_ore.json"),
+               {"parent": "minecraft:block/cube_all", "textures": {"all": f"{MOD}:block/abyssite_ore"}})
+    write_json(os.path.join(ASSETS, "items", "abyssite_ore.json"), {"model": {"type": "minecraft:model", "model": f"{MOD}:block/abyssite_ore"}})
+    write_json(os.path.join(ASSETS, "models", "item", "abyssite.json"),
+               {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/abyssite"}})
+    write_json(os.path.join(ASSETS, "items", "abyssite.json"), {"model": {"type": "minecraft:model", "model": f"{MOD}:item/abyssite"}})
+    silk = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+    write_json(os.path.join(DATA, "loot_table", "blocks", "abyssite_ore.json"), {
+        "type": "minecraft:block", "random_sequence": f"{MOD}:blocks/abyssite_ore",
+        "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": f"{MOD}:abyssite_ore", "conditions": [silk]},
+            {"type": "minecraft:item", "name": f"{MOD}:abyssite", "functions": [
+                {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:ore_drops"},
+                {"function": "minecraft:explosion_decay"}]}]}]}]})
+    wg = os.path.join(DATA, "worldgen")
+    write_json(os.path.join(wg, "configured_feature", "ore_abyssite.json"), {"type": "minecraft:ore", "config": {
+        "discard_chance_on_air_exposure": 0.3, "size": 4,
+        "targets": [{"target": {"predicate_type": "minecraft:block_match", "block": f"{MOD}:evolving_stone"},
+                     "state": {"Name": f"{MOD}:abyssite_ore"}}]}})
+    write_json(os.path.join(wg, "placed_feature", "ore_abyssite.json"), {"feature": f"{MOD}:ore_abyssite", "placement": [
+        {"type": "minecraft:count", "count": 4}, {"type": "minecraft:in_square"},
+        {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform",
+                                                      "min_inclusive": {"absolute": -60}, "max_inclusive": {"absolute": 50}}},
+        {"type": "minecraft:biome"}]})
+
+    # tentacules
+    out = ("item", "tentacle")
+    shutil.rmtree(os.path.join(ASSETS, "textures", "item", "tentacle"), ignore_errors=True)
+    save_png(tentacle_skin(91), *out, "skin")
+    save_png(feather_texture(hexc("1e1426"), hexc("4a2a5a"), 92), *out, "sucker")
+    save_animated(energy_frames({"gem": gem_palette("ff2a5a")}), 2, *out, "glow")
+    tex = {"particle": f"{MOD}:item/tentacle/skin", "skin": f"{MOD}:item/tentacle/skin",
+           "sucker": f"{MOD}:item/tentacle/sucker", "glow": f"{MOD}:item/tentacle/glow"}
+    for name, tip in (("segment", False), ("tip", True)):
+        write_json(os.path.join(ASSETS, "models", "item", "tentacle", f"{name}.json"),
+                   {"textures": tex, "elements": tentacle_segment_elements(tip)}, compact=True)
+        write_json(os.path.join(ASSETS, "items", "tentacle", f"{name}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:item/tentacle/{name}"}})
+
+
 def gen_wings():
-    pal = WING_PALETTE
     shutil.rmtree(os.path.join(ASSETS, "textures", "item", "wings"), ignore_errors=True)
-    out = ("item", "wings")
+    gen_wing_set(WING_PALETTE, "")
+    gen_wing_set(WING_PALETTE_ABYSS, "_abyss")
+
+
+def gen_wing_set(pal, suffix):
+    """Un jeu d'ailes (textures dans textures/item/wings/<suffixe>/) : normal ou abyssal (suffixe « _abyss »)."""
+    folder = suffix.strip("_")
+    out = ("item", "wings", folder) if folder else ("item", "wings")
+    path = "/".join(out[1:])
     save_png(cosmos_texture(hexc(pal["deep"]), hexc(pal["violet"]), hexc(pal["tip"]), 21), *out, "cosmos")
     save_png(cosmos_texture(hexc(pal["nebula"][0]), hexc(pal["nebula"][1]), shade(hexc(pal["nebula"][1]), 1.3), 22, 4),
              *out, "nebula")
@@ -4523,9 +4652,9 @@ def gen_wings():
     save_png(gem_texture(st, 25), *out, "core")
     save_png(gem_texture({"gem": gem_palette(pal["star"]), "trim": hexc(pal["bone"])}, 26), *out, "star")
     save_animated(energy_frames({"gem": gem_palette(pal["energy"])}), 2, *out, "energy")
-    tex = {"particle": f"{MOD}:item/wings/cosmos"}
+    tex = {"particle": f"{MOD}:item/{path}/cosmos"}
     for name in ("cosmos", "nebula", "plume", "bone", "core", "star", "energy"):
-        tex[name] = f"{MOD}:item/wings/{name}"
+        tex[name] = f"{MOD}:item/{path}/{name}"
 
     def glow(elements):
         for el in elements:
@@ -4537,7 +4666,8 @@ def gen_wings():
         return elements
 
     wing = infinity_wing_elements()
-    models = {"infinity_wing": wing, "infinity_wing_right": mirror_model(wing), "infinity_emblem": infinity_emblem_elements()}
+    models = {"infinity_wing" + suffix: wing, "infinity_wing_right" + suffix: mirror_model(wing),
+              "infinity_emblem" + suffix: infinity_emblem_elements()}
     for name, elements in models.items():
         write_json(os.path.join(ASSETS, "models", "item", "wings", f"{name}.json"),
                    {"textures": tex, "elements": glow(json.loads(json.dumps(elements)))}, compact=True)
@@ -4755,14 +4885,7 @@ def gen_textures():
         save_png(storage_block(GEMS[g]), "block", f"{g}_block")
         save_png(gem_sprite(GEMS[g]), "item", g)
     for i, st in enumerate(STAGES):
-        save_png(wood_texture(st["wood"], i), "item", "pickaxe", f"stage{i}_handle")
-        save_png(grip_texture(st["grip"], i), "item", "pickaxe", f"stage{i}_grip")
-        save_png(metal_texture(st, i), "item", "pickaxe", f"stage{i}_metal")
-        save_png(gem_texture(st, i), "item", "pickaxe", f"stage{i}_gem")
-        save_animated(energy_frames(st), 2, "item", "pickaxe", f"stage{i}_energy")
-        save_png(edge_texture(st, i), "item", "pickaxe", f"stage{i}_edge")
-        save_png(dark_texture(st, i), "item", "pickaxe", f"stage{i}_dark")
-        save_png(trim_texture(st, i), "item", "pickaxe", f"stage{i}_trim")
+        stage_texture_set(i, st)
     mod_icon().save(os.path.join(ASSETS, "icon.png"))
 
 
@@ -4775,7 +4898,7 @@ ORES = {
 }
 
 
-def stage_dispatch(item):
+def stage_dispatch(item, count=None):
     """L'apparence change selon la forme (custom_model_data floats[0], mis à jour par le mod)."""
     def ref(i):
         return {"type": "minecraft:model", "model": f"{MOD}:item/{item}_stage{i}"}
@@ -4786,7 +4909,7 @@ def stage_dispatch(item):
             "property": "minecraft:custom_model_data",
             "index": 0,
             "fallback": ref(0),
-            "entries": [{"threshold": i, "model": ref(i)} for i in range(len(STAGES))],
+            "entries": [{"threshold": i, "model": ref(i)} for i in range(count or len(STAGES))],
         }
     }
 
@@ -4959,7 +5082,8 @@ def gen_data():
                {"replace": False, "values": ore_ids + gem_blocks + evolite})
     # Évolium : pioche en diamant obligatoire. Rubis / saphir : pioche en fer.
     write_json(os.path.join(tags, "minecraft", "tags", "block", "needs_diamond_tool.json"),
-               {"replace": False, "values": [f"{MOD}:deepslate_evolium_ore", f"{MOD}:evolium_block"] + evolite})
+               {"replace": False, "values": [f"{MOD}:deepslate_evolium_ore", f"{MOD}:evolium_block", f"{MOD}:abyssite_ore"]
+                + evolite})
     write_json(os.path.join(tags, "minecraft", "tags", "block", "needs_iron_tool.json"),
                {"replace": False, "values": [o for o in ore_ids if "evolium" not in o]
                 + [f"{MOD}:ruby_block", f"{MOD}:sapphire_block"]})
@@ -5093,5 +5217,6 @@ if __name__ == "__main__":
     gen_sanctuary()
     gen_wings()
     gen_shield()
+    gen_abyss()
     recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

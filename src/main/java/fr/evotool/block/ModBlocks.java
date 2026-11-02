@@ -99,6 +99,12 @@ public final class ModBlocks {
 					.nonOpaque().pistonBehavior(PistonBehavior.BLOCK),
 			Rarity.EPIC);
 
+	/** Abyssite : minerai noir de la dimension évolutive, il fait passer l'armure niveau 100 jusqu'au niveau 150. */
+	public static final Block ABYSSITE_ORE = register("abyssite_ore",
+			s -> new ExperienceDroppingBlock(UniformIntProvider.create(6, 11), s),
+			AbstractBlock.Settings.copy(Blocks.DEEPSLATE_DIAMOND_ORE).strength(6.0F, 9.0F).luminance(state -> 5),
+			Rarity.EPIC);
+
 	/**
 	 * Générateur de bouclier : un dôme d'énergie au rayon réglable qui repousse les monstres et détruit leurs
 	 * projectiles. Il brûle 1 évolium toutes les 10 minutes ; sa case en avale jusqu'à 1 milliard.

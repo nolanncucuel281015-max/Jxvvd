@@ -37,6 +37,8 @@ public class EvoScreen extends Screen {
 	/** Pouvoir d'amélioration à l'évolite, ou null si l'objet n'est pas amélioré. */
 	private EvoliteUpgrade.Upgrade upgrade;
 	private EvoData data = EvoData.DEFAULT;
+	/** Copie de l'objet ouvert (niveau maximum, forme et XP dépendent de lui : armure abyssale…). */
+	private ItemStack shown = ItemStack.EMPTY;
 	private Text itemName = Text.empty();
 	private int selectedMode;
 	private int flags;
@@ -58,6 +60,7 @@ public class EvoScreen extends Screen {
 		}
 		boolean firstInit = profile == null;
 		profile = kind.profile();
+		shown = stack.copy();
 		itemName = stack.getName();
 		upgrade = EvoliteUpgrade.isUpgraded(stack) ? EvoliteUpgrade.upgradeFor(kind) : null;
 		if (firstInit) {
@@ -185,14 +188,14 @@ public class EvoScreen extends Screen {
 		int center = width / 2;
 		context.drawCenteredTextWithShadow(textRenderer, itemName, center, panelTop + 8, 0xFFE0B0FF);
 		context.drawCenteredTextWithShadow(textRenderer,
-				Text.translatable("screen.evotool.level_form", level, EvoProgression.MAX_LEVEL, EvoProgression.stageName(level)),
+				Text.translatable("screen.evotool.level_form", level, EvoProgression.maxLevel(shown), EvoProgression.stageName(shown)),
 				center, panelTop + 22, 0xFFFFFFFF);
 
 		int barLeft = left + 20;
 		int barRight = left + PANEL_WIDTH - 20;
 		int barTop = panelTop + 36;
 		context.fill(barLeft, barTop, barRight, barTop + 6, 0xFF2A2A3A);
-		int needed = profile.curve().xpToNext(level);
+		int needed = EvoProgression.xpToNext(shown);
 		float progress = needed == 0 ? 1.0F : Math.min(1.0F, data.xp() / (float) needed);
 		context.fill(barLeft, barTop, barLeft + (int) ((barRight - barLeft) * progress), barTop + 6, 0xFF7CF0FF);
 		Text xpText = needed == 0

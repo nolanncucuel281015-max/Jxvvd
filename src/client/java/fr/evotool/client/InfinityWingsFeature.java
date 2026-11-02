@@ -1,6 +1,7 @@
 package fr.evotool.client;
 
 import fr.evotool.EvoTool;
+import fr.evotool.evo.EvoProgression;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.InfinityWings;
 import java.util.HashMap;
@@ -58,6 +59,10 @@ public class InfinityWingsFeature extends FeatureRenderer<PlayerEntityRenderStat
 	private final ItemStack leftStack = wingStack("infinity_wing");
 	private final ItemStack rightStack = wingStack("infinity_wing_right");
 	private final ItemStack emblemStack = wingStack("infinity_emblem");
+	// plastron abyssal : les mêmes ailes, en noir
+	private final ItemStack leftAbyss = wingStack("infinity_wing_abyss");
+	private final ItemStack rightAbyss = wingStack("infinity_wing_right_abyss");
+	private final ItemStack emblemAbyss = wingStack("infinity_emblem_abyss");
 	private final ItemRenderState left = new ItemRenderState();
 	private final ItemRenderState right = new ItemRenderState();
 	private final ItemRenderState emblem = new ItemRenderState();
@@ -126,9 +131,13 @@ public class InfinityWingsFeature extends FeatureRenderer<PlayerEntityRenderStat
 		if (Burrow.clientActive && client.player != null && client.player.getId() == state.id) {
 			return;   // sous terre, les ailes sont rangées
 		}
-		itemModelManager.clearAndUpdate(left, leftStack, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, state.id);
-		itemModelManager.clearAndUpdate(right, rightStack, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, state.id);
-		itemModelManager.clearAndUpdate(emblem, emblemStack, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, state.id);
+		boolean abyss = EvoProgression.isAbyssal(state.equippedChestStack);
+		itemModelManager.clearAndUpdate(left, abyss ? leftAbyss : leftStack, ItemDisplayContext.NONE, client.world,
+				(HeldItemContext) null, state.id);
+		itemModelManager.clearAndUpdate(right, abyss ? rightAbyss : rightStack, ItemDisplayContext.NONE, client.world,
+				(HeldItemContext) null, state.id);
+		itemModelManager.clearAndUpdate(emblem, abyss ? emblemAbyss : emblemStack, ItemDisplayContext.NONE, client.world,
+				(HeldItemContext) null, state.id);
 
 		float open = open(state.id);
 		float t = state.age;
