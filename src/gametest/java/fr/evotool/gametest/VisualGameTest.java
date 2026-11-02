@@ -32,9 +32,12 @@ public class VisualGameTest implements FabricClientGameTest {
 	@Override
 	public void runTest(ClientGameTestContext context) {
 		// rendu logiciel dans la CI : petit monde à charger
+		// (le rendu logiciel de l'écran de chargement prendrait tout le processeur au serveur)
 		context.runOnClient(client -> {
 			client.options.getViewDistance().setValue(3);
 			client.options.getSimulationDistance().setValue(5);
+			client.options.getMaxFps().setValue(10);
+			client.options.getEnableVsync().setValue(false);
 		});
 		try (TestSingleplayerContext game = context.worldBuilder().create()) {
 			game.getClientWorld().waitForChunksRender();
