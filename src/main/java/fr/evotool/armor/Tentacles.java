@@ -233,7 +233,7 @@ public final class Tentacles {
 		Vec3d look = player.getRotationVector();
 		Vec3d right = new Vec3d(-look.z, 0, look.x);
 		right = right.lengthSquared() < 1.0E-6 ? new Vec3d(1, 0, 0) : right.normalize();
-		return player.getEyePos().add(right.multiply(0.4)).add(0, -0.45, 0).subtract(look.multiply(0.25));
+		return player.getEyePos().add(right.multiply(0.55)).add(0, -0.55, 0).subtract(look.multiply(0.2));
 	}
 
 	private static Vec3d curve(Vec3d origin, Vec3d end, double wobble) {
@@ -241,7 +241,8 @@ public final class Tentacles {
 		Vec3d right = new Vec3d(-look.z, 0, look.x);
 		right = right.lengthSquared() < 1.0E-6 ? new Vec3d(1, 0, 0) : right.normalize();
 		double length = look.length();
-		return origin.add(end).multiply(0.5).add(0, 0.15 + length * 0.04, 0).add(right.multiply(length * 0.03 + wobble));
+		// un bel arc vers le haut et sur le côté : on voit la tentacule s'enrouler, même de derrière le joueur
+		return origin.add(end).multiply(0.5).add(0, 0.3 + length * 0.1, 0).add(right.multiply(length * 0.12 + wobble));
 	}
 
 	/** Crée une tentacule repliée (ses segments sont des objets d'affichage) d'{@code origin} vers {@code end}. */

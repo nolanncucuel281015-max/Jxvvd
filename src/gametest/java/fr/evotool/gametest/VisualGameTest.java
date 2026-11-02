@@ -145,6 +145,7 @@ public class VisualGameTest implements FabricClientGameTest {
 		if (cow != null) {
 			cow.refreshPositionAndAngles(player.getX(), player.getY(), player.getZ() + 8.0, 180.0F, 0.0F);
 			cow.setAiDisabled(true);
+			cow.setInvulnerable(true);   // les coups de tentacule ne doivent pas la tuer avant la prise
 			world.spawnEntity(cow);
 			target = cow;
 		}

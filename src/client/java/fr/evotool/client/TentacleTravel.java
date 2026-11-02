@@ -380,7 +380,7 @@ public final class TentacleTravel {
 			double s = k % 2 == 0 ? 1 : -1;
 			boolean upper = k < 2;
 			// elles sortent du dos, derrière les épaules : en vue à la première personne, elles entrent par les bords
-			Vec3d root = eye.add(right.multiply(s * 0.55)).add(up.multiply(upper ? -0.2 : -0.65)).subtract(look.multiply(0.35));
+			Vec3d root = eye.add(right.multiply(s * 0.7)).add(up.multiply(upper ? -0.35 : -0.75)).subtract(look.multiply(0.1));
 			// au repos : courtes et pointées vers l'avant et l'extérieur (au sol : vers le bas, comme des pattes)
 			Vec3d rest = digging || swimming
 					? look.add(right.multiply(s * 0.75)).add(up.multiply(upper ? 0.35 : -0.35))
@@ -396,13 +396,13 @@ public final class TentacleTravel {
 			} else {
 				tip = lerp(arm.anchor, ready, ease((arm.age - arm.releaseAge + delta) / RETRACT_TICKS));
 			}
-			drawTentacle(matrices, queue, camera, root, tip, up, time, k);
+			drawTentacle(matrices, queue, camera, root, tip, up, time, k, arm.rest != null);
 		}
 	}
 
 	/** Une tentacule courbe, épaisse à la racine et fine au bout, qui ondule. */
 	private static void drawTentacle(MatrixStack matrices, OrderedRenderCommandQueue queue, Vec3d camera, Vec3d root, Vec3d tip,
-			Vec3d up, double time, int k) {
+			Vec3d up, double time, int k, boolean leg) {
 		Vec3d span = tip.subtract(root);
 		double length = span.length();
 		if (length < 0.05) {
@@ -416,7 +416,9 @@ public final class TentacleTravel {
 		for (int i = 1; i <= SEGMENTS; i++) {
 			double t = (double) i / SEGMENTS;
 			// arc vers le haut + vague qui court jusqu'au bout
-			double arc = Math.sin(Math.PI * t) * Math.min(1.2, length * 0.12);
+			// une patte qui porte le joueur : un grand genou relevé vers l'extérieur, comme une araignée (on le voit
+			// sur les côtés de l'écran en vue à la première personne)
+			double arc = Math.sin(Math.PI * t) * (leg ? Math.min(1.8, length * 0.4) : Math.min(1.2, length * 0.12));
 			double wave = Math.sin(Math.PI * t) * Math.sin(time * 0.6 - t * 7 + k * 1.7) * Math.min(0.5, length * 0.06);
 			Vec3d point = root.add(span.multiply(t)).add(bend.multiply(arc)).add(side.multiply(wave));
 			Vec3d dir = point.subtract(previous);
