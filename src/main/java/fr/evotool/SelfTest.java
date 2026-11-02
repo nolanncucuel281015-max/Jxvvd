@@ -658,7 +658,7 @@ final class SelfTest {
 			for (int i = 0; i < 300; i++) {
 				fr.evotool.armor.Tentacles.tickForTest();
 			}
-			Vec3d holdPoint = player.getEyePos().add(player.getRotationVector().multiply(3.0));
+			Vec3d holdPoint = player.getEyePos().add(player.getRotationVector().multiply(6.0));
 			double holdDistance = grabTarget.getBoundingBox().getCenter().distanceTo(holdPoint);
 			boolean held = fr.evotool.armor.Tentacles.grabbed(player) == grabTarget;
 			fr.evotool.armor.Tentacles.grabOrThrow(player);
@@ -714,7 +714,7 @@ final class SelfTest {
 			fr.evotool.armor.Tentacles.tickForTest();
 		}
 		double playerHold = victim.getBoundingBox().getCenter()
-				.distanceTo(player.getEyePos().add(player.getRotationVector().multiply(3.0)));
+				.distanceTo(player.getEyePos().add(player.getRotationVector().multiply(6.0)));
 		boolean heldPlayer = fr.evotool.armor.Tentacles.grabbed(player) == victim;
 		fr.evotool.armor.Tentacles.grabOrThrow(player);
 		Vec3d playerThrown = victim.getVelocity();

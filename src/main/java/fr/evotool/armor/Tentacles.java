@@ -92,7 +92,8 @@ public final class Tentacles {
 	/** Regarder plus bas que ça (degrés) au clic droit : le monstre est posé doucement au lieu d'être projeté. */
 	private static final float DROP_PITCH = 50.0F;
 	private static final int RELEASE_TICKS = 5;
-	private static final double HOLD_DISTANCE = 3.0;
+	/** Distance à laquelle la tentacule tient ce qu'elle a attrapé, devant le joueur (blocs). */
+	private static final double HOLD_DISTANCE = 6.0;
 	private static final float SEGMENT = 0.5F;
 	/** Rayon du modèle de segment (3 pixels) : sert à calculer l'épaisseur voulue. */
 	private static final float MODEL_RADIUS = 3.0F / 16.0F;
@@ -475,7 +476,7 @@ public final class Tentacles {
 		LivingEntity target = strike.grabbed;
 		ServerWorld world = strike.world;
 		Vec3d eye = player.getEyePos();
-		Vec3d far = eye.add(player.getRotationVector().multiply(6.0));
+		Vec3d far = eye.add(player.getRotationVector().multiply(HOLD_DISTANCE + 3.0));
 		BlockHitResult hit = world.raycast(new RaycastContext(eye, far, RaycastContext.ShapeType.COLLIDER,
 				RaycastContext.FluidHandling.NONE, player));
 		if (hit.getType() == HitResult.Type.BLOCK) {

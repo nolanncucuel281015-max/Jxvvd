@@ -169,7 +169,7 @@ ton dos.
 - **Clic gauche à main nue** : une tentacule part du dos et file (on la voit partir, en un tiers de seconde)
   jusqu'à 14 blocs, droit sur ce que tu vises, frappe fort tout ce qu'elle traverse (« tchouf ») puis se rétracte.
 - **Clic droit à main nue** : une tentacule **attrape** le monstre, l'animal **ou le joueur** visé (jusqu'à
-  14 blocs) et le tient en l'air devant toi (un joueur attrapé ne peut plus bouger). Elle **ne le lâche jamais toute seule** : tu peux le ramener à ta base, même en courant ou sous
+  14 blocs) et le tient en l'air **à 6 blocs devant toi** (un joueur attrapé ne peut plus bouger). Elle **ne le lâche jamais toute seule** : tu peux le ramener à ta base, même en courant ou sous
   terre (il n'étouffe pas). **Clic droit** encore :
   - en regardant **devant** : elle le **projette** là où tu regardes, et il se fracasse sur le premier mur ou au
     sol (10 dégâts) ;
