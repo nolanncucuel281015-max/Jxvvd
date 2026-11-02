@@ -457,13 +457,17 @@ public final class Tentacles {
 		// elle le ramène devant le joueur et le tient là, en l'air
 		Vec3d hold = player.getEyePos().add(player.getRotationVector().multiply(HOLD_DISTANCE)).add(0, -0.3 - target.getHeight() / 2, 0);
 		Vec3d now = target.getEntityPos();
+		// en regardant vers le bas, le point de prise tombe dans le sol : on le remonte au-dessus
+		for (int i = 0; i < 10 && !free(world, target, now, hold); i++) {
+			hold = hold.add(0, 0.5, 0);
+		}
 		Vec3d next = strike.age < GRAB_REACH + 6 ? now.lerp(hold, 0.45) : hold;
 		// pas dans un mur : sinon au-dessus de la tête du joueur, sinon à ses pieds ; s'il n'y a de place nulle part
 		// (le joueur traverse la roche), il suit quand même, il ne peut pas étouffer
 		Vec3d above = player.getEntityPos().add(0, player.getHeight() + 0.2, 0);
 		Vec3d placed = null;
-		for (Vec3d candidate : new Vec3d[] {next, above, player.getEntityPos()}) {
-			if (world.isSpaceEmpty(target, target.getBoundingBox().offset(candidate.subtract(now)))) {
+		for (Vec3d candidate : new Vec3d[] {next, hold, above, player.getEntityPos()}) {
+			if (free(world, target, now, candidate)) {
 				placed = candidate;
 				break;
 			}
@@ -481,6 +485,11 @@ public final class Tentacles {
 		follow(strike);
 		pose(strike, 1.0F);
 		return true;
+	}
+
+	/** Y a-t-il la place pour {@code target} (actuellement en {@code now}) à la position {@code at} ? */
+	private static boolean free(ServerWorld world, LivingEntity target, Vec3d now, Vec3d at) {
+		return world.isSpaceEmpty(target, target.getBoundingBox().offset(at.subtract(now)));
 	}
 
 	/** Les segments d'une prise suivent la tentacule, que le joueur peut emmener aussi loin qu'il veut. */

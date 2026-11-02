@@ -1,6 +1,8 @@
 package fr.evotool.gametest;
 
+import fr.evotool.EvoTool;
 import fr.evotool.armor.AbyssalArmor;
+import fr.evotool.client.EvoToolClient;
 import fr.evotool.armor.Tentacles;
 import fr.evotool.component.EvoData;
 import fr.evotool.component.ModComponents;
@@ -48,50 +50,64 @@ public class VisualGameTest implements FabricClientGameTest {
 
 	private static void run(ClientGameTestContext context, TestServerContext gameServer, TestClientWorldContext clientWorld) {
 		Game game = new Game(gameServer, clientWorld);
-		{
-			game.getClientWorld().waitForChunksRender();
-			game.getServer().runCommand("time set noon");
-			game.getServer().runCommand("weather clear");
-			game.getServer().runOnServer(VisualGameTest::equip);
-			game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 8");
-			context.waitTicks(20);
-			game.getServer().runOnServer(VisualGameTest::spawnTarget);
-			context.waitTicks(20);
-			game.getClientWorld().waitForChunksRender();
-			context.takeScreenshot("evotool_00_base");
+		game.getClientWorld().waitForChunksRender();
+		game.getServer().runCommand("time set noon");
+		game.getServer().runCommand("weather clear");
+		game.getServer().runOnServer(VisualGameTest::equip);
+		// la vache droit devant, le viseur sur elle
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 6");
+		context.waitTicks(20);
+		game.getServer().runOnServer(VisualGameTest::spawnTarget);
+		context.waitTicks(20);
+		game.getClientWorld().waitForChunksRender();
+		context.takeScreenshot("evotool_00_rest_first");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.takeScreenshot("evotool_01_rest_third");
 
-			// clic gauche : le coup
-			game.getServer().runOnServer(server -> Tentacles.strike(player(server)));
-			context.waitTicks(4);
-			context.takeScreenshot("evotool_01_strike_first");
-			context.waitTicks(30);
-			context.runOnClient(client -> client.options.setPerspective(Perspective.THIRD_PERSON_BACK));
-			context.waitTicks(5);
-			game.getServer().runOnServer(server -> Tentacles.strike(player(server)));
-			context.waitTicks(5);
-			context.takeScreenshot("evotool_02_strike_third");
-			context.waitTicks(30);
+		// clic gauche à main nue, avec la vraie souris : le coup
+		perspective(context, Perspective.FIRST_PERSON);
+		context.getInput().pressKey(options -> options.attackKey);
+		context.waitTicks(4);
+		context.takeScreenshot("evotool_02_strike_first");
+		log(game, "strike first");
+		context.waitTicks(40);
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.getInput().pressKey(options -> options.attackKey);
+		context.waitTicks(5);
+		context.takeScreenshot("evotool_03_strike_third");
+		log(game, "strike third");
+		context.waitTicks(40);
 
-			// clic droit : la prise
-			game.getServer().runOnServer(server -> Tentacles.grabEntity(player(server), target));
-			context.waitTicks(30);
-			context.takeScreenshot("evotool_03_grab_third");
-			context.runOnClient(client -> client.options.setPerspective(Perspective.FIRST_PERSON));
-			context.waitTicks(5);
-			context.takeScreenshot("evotool_04_grab_first");
-			game.getServer().runOnServer(server -> Tentacles.grabOrThrow(player(server)));
-			context.waitTicks(40);
+		// clic droit à main nue : la prise, puis le lancer
+		perspective(context, Perspective.FIRST_PERSON);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(25);
+		context.takeScreenshot("evotool_04_grab_first");
+		log(game, "grab");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.takeScreenshot("evotool_05_grab_third");
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(30);
+		log(game, "throw");
 
-			// touche J : le mode déplacement
-			game.getServer().runOnServer(server -> Tentacles.toggle(player(server)));
-			context.waitTicks(40);
-			context.takeScreenshot("evotool_05_travel_first");
-			context.runOnClient(client -> client.options.setPerspective(Perspective.THIRD_PERSON_BACK));
-			context.waitTicks(10);
-			context.takeScreenshot("evotool_06_travel_third");
-			game.getServer().runOnServer(server -> Tentacles.toggle(player(server)));
-			context.waitTicks(10);
-		}
+		// touche J : le mode déplacement
+		context.getInput().pressKey(EvoToolClient.TENTACLES);
+		context.waitTicks(40);
+		context.takeScreenshot("evotool_06_travel_third");
+		perspective(context, Perspective.FIRST_PERSON);
+		context.takeScreenshot("evotool_07_travel_first");
+		context.getInput().pressKey(EvoToolClient.TENTACLES);
+		context.waitTicks(10);
+	}
+
+	private static void perspective(ClientGameTestContext context, Perspective perspective) {
+		context.runOnClient(client -> client.options.setPerspective(perspective));
+		context.waitTicks(3);
+	}
+
+	private static void log(Game game, String step) {
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL {}: strikes={} grabbed={}", step,
+				Tentacles.activeStrikes(), Tentacles.grabbed(player(server))));
 	}
 
 	/** Le serveur et le monde du client du test. */
@@ -127,7 +143,7 @@ public class VisualGameTest implements FabricClientGameTest {
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		CowEntity cow = EntityType.COW.create(world, SpawnReason.COMMAND);
 		if (cow != null) {
-			cow.refreshPositionAndAngles(player.getX() + 1.5, player.getY(), player.getZ() + 8.0, 180.0F, 0.0F);
+			cow.refreshPositionAndAngles(player.getX(), player.getY(), player.getZ() + 8.0, 180.0F, 0.0F);
 			cow.setAiDisabled(true);
 			world.spawnEntity(cow);
 			target = cow;

@@ -1,7 +1,7 @@
 package fr.evotool.client;
 
 import fr.evotool.EvoTool;
-import fr.evotool.armor.ArmorSet;
+import fr.evotool.armor.Tentacles;
 import fr.evotool.network.TentacleStatePayload;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +20,7 @@ import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.render.item.ItemRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -99,11 +100,15 @@ public class TentacleFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 	@Override
 	public void render(MatrixStack matrices, OrderedRenderCommandQueue queue, int light, PlayerEntityRenderState state,
 			float limbAngle, float limbDistance) {
-		if (state.invisible || state.spectator || ArmorSet.setLevel(state.equippedHeadStack, state.equippedChestStack,
-				state.equippedLegsStack, state.equippedFeetStack) < ArmorSet.TENTACLE_LEVEL) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (state.invisible || state.spectator || client.world == null) {
 			return;
 		}
-		MinecraftClient client = MinecraftClient.getInstance();
+		// l'armure portée, lue sur le joueur lui-même : l'état de rendu ne garde pas les pièces sans modèle d'armure
+		// classique (le casque 3D), il ne suffit donc pas pour savoir si l'ensemble abyssal est complet
+		if (!(client.world.getEntityById(state.id) instanceof PlayerEntity player) || !Tentacles.hasTentacles(player)) {
+			return;
+		}
 		if (TentacleTravel.drawsLocalPlayer() && client.player != null && client.player.getId() == state.id) {
 			return;   // en mode déplacement, ses tentacules sont dessinées dans le monde (TentacleTravel)
 		}
