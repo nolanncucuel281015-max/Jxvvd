@@ -654,7 +654,8 @@ final class SelfTest {
 			grabTarget.setAiDisabled(true);
 			world.spawnEntity(grabTarget);
 			boolean grabbed = fr.evotool.armor.Tentacles.grabOrThrow(player);
-			for (int i = 0; i < 14; i++) {
+			// tenu bien plus que 5 s : la tentacule ne le lâche jamais toute seule (on le ramène à la base)
+			for (int i = 0; i < 300; i++) {
 				fr.evotool.armor.Tentacles.tickForTest();
 			}
 			Vec3d holdPoint = player.getEyePos().add(player.getRotationVector().multiply(3.0));
@@ -674,12 +675,41 @@ final class SelfTest {
 			}
 			grabTarget.discard();
 		}
+		// regarder par terre + clic droit : il est posé doucement, sans dégâts
+		ZombieEntity dropTarget = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+		checks++;
+		if (dropTarget != null) {
+			dropTarget.refreshPositionAndAngles(x, y, z + 5.0, 180.0F, 0.0F);
+			dropTarget.setAiDisabled(true);
+			world.spawnEntity(dropTarget);
+			float health = dropTarget.getHealth();
+			boolean grabbed = fr.evotool.armor.Tentacles.grabOrThrow(player);
+			for (int i = 0; i < 14; i++) {
+				fr.evotool.armor.Tentacles.tickForTest();
+			}
+			player.setPitch(80.0F);
+			fr.evotool.armor.Tentacles.grabOrThrow(player);
+			player.setPitch(0.0F);
+			Vec3d velocity = dropTarget.getVelocity();
+			double distance = dropTarget.getEntityPos().distanceTo(player.getEntityPos());
+			for (int i = 0; i < 8; i++) {
+				fr.evotool.armor.Tentacles.tickForTest();
+			}
+			EvoTool.LOGGER.info("EVOTOOL tentacle drop: grabbed={} velocity={} distance={} health {} -> {}", grabbed, velocity,
+					distance, health, dropTarget.getHealth());
+			if (!grabbed || velocity.length() > 0.1 || distance > 3.0 || dropTarget.getHealth() < health
+					|| fr.evotool.armor.Tentacles.grabbed(player) != null || fr.evotool.armor.Tentacles.activeStrikes() != 0) {
+				failures.add("tentacules : en regardant par terre, le clic droit ne pose pas doucement le monstre");
+			}
+			dropTarget.discard();
+		}
 		// touche J : on reste au sol, plus rapide ; accroupi sur le sol, les tentacules creusent
 		fr.evotool.armor.Tentacles.toggle(player);
 		net.minecraft.entity.attribute.EntityAttributeInstance moveSpeed = player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
 		checks++;
 		if (!player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || fr.evotool.upgrade.Burrow.phases(player)
-				|| player.getAbilities().flying || moveSpeed == null || moveSpeed.getModifier(fr.evotool.armor.Tentacles.SPEED_ID) == null) {
+				|| player.getAbilities().flying || !player.getAbilities().allowFlying
+				|| moveSpeed == null || moveSpeed.getModifier(fr.evotool.armor.Tentacles.SPEED_ID) == null) {
 			failures.add("tentacules : le mode déplacement (J) ne s'allume pas au sol (vol=" + player.getAbilities().flying + ")");
 		}
 		player.setSneaking(true);

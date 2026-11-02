@@ -270,6 +270,6 @@
   "tooltip.evotool.abyssal": "✦ Abyssal armor (up to level 150)",
   "armor.evotool.tentacles": "Tentacles (bare-hand left click, J key)",
   "message.evotool.tentacles_locked": "The tentacles awaken with the full abyssal armor at level 150.",
-  "message.evotool.tentacles_on": "Tentacles: travel mode (sneak on the ground to dig)",
+  "message.evotool.tentacles_on": "Tentacles: travel mode (sneak to dig)",
   "message.evotool.tentacles_off": "Tentacles put away"
 }

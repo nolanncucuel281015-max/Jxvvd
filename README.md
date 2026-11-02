@@ -169,14 +169,21 @@ ton dos.
 - **Clic gauche à main nue** : une tentacule part du dos et file (on la voit partir, en un tiers de seconde)
   jusqu'à 14 blocs, droit sur ce que tu vises, frappe fort tout ce qu'elle traverse (« tchouf ») puis se rétracte.
 - **Clic droit à main nue** : une tentacule **attrape** le monstre visé (jusqu'à 14 blocs) et le tient en l'air
-  devant toi. **Clic droit** encore : elle le **projette** là où tu regardes, et il se fracasse sur le premier mur
-  ou au sol (10 dégâts). Au bout de 5 s, elle le projette toute seule. Les boss ne se laissent pas attraper.
-- **Touche J** : **mode déplacement**. **Tu restes au sol** (plus de vol) mais tu cours **3,5 fois plus vite**
-  et tu montes les blocs sans sauter : les 4 tentacules se plantent dans le sol loin devant (« tchouf »), te
-  **tirent d'un coup** puis se détachent quand tu les dépasses, chacune à son tour comme les pattes d'une araignée.
-  Tu les vois aussi **en vue à la première personne**.
-  - **Accroupi sur le sol** : elles **creusent** et tu plonges **sous terre** ; tu traverses la roche dans toutes
-    les directions (espace pour monter, accroupi pour descendre) et tu ressors en remontant à travers le sol.
+  devant toi. Elle **ne le lâche jamais toute seule** : tu peux le ramener à ta base, même en courant ou sous
+  terre (il n'étouffe pas). **Clic droit** encore :
+  - en regardant **devant** : elle le **projette** là où tu regardes, et il se fracasse sur le premier mur ou au
+    sol (10 dégâts) ;
+  - en regardant **par terre** : elle le **pose doucement** là où tu regardes, sans dégâts.
+
+  Les boss ne se laissent pas attraper.
+- **Touche J** : **mode déplacement**. Les 4 **longues tentacules te portent au-dessus du sol** (tu es surélevé
+  de 2,5 blocs, comme sur des pattes d'araignée) : tu suis le relief, tu **grimpes les murs**, tu te baisses sous
+  les plafonds et les portes, et **espace** te hausse encore plus. Tu cours **3,5 fois plus vite** : les
+  tentacules se plantent dans le sol loin devant (« tchouf »), te **tirent d'un coup** puis se détachent quand tu
+  les dépasses, chacune à son tour. À l'arrêt, elles restent plantées autour de toi. Tu les vois aussi **en vue à
+  la première personne**.
+  - **Accroupi** : elles t'**enfoncent sous terre** ; tu traverses la roche dans toutes les directions (espace
+    pour monter, accroupi pour descendre) et tu ressors en remontant à travers le sol.
   - **Sous l'eau** : elles nagent comme une pieuvre (grâce du dauphin) et tirent dans toutes les directions.
   - Tu respires, tu vois dans le noir, et ni la lave, ni la noyade, ni l'étouffement, ni les chutes ne te
     touchent. La bedrock reste infranchissable. **J** à nouveau pour les ranger (si tu es dans la roche, tu remontes

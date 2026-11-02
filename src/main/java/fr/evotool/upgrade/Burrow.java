@@ -154,9 +154,12 @@ public final class Burrow {
 			return;
 		}
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
-		BlockPos ground = BlockPos.ofFloored(player.getX(), player.getY() - 0.2, player.getZ());
-		if (canUse(player) && player.isSneaking() && player.isOnGround() && !player.getAbilities().flying
-				&& diggable(world, ground)) {
+		// les tentacules portent le joueur au-dessus du sol : on cherche le sol sous lui
+		boolean tentacle = tentacleDigger(player);
+		BlockPos ground = tentacle ? groundUnder(world, player)
+				: BlockPos.ofFloored(player.getX(), player.getY() - 0.2, player.getZ());
+		if (canUse(player) && player.isSneaking() && (player.isOnGround() || tentacle) && !player.getAbilities().flying
+				&& ground != null && diggable(world, ground)) {
 			// le sol s'effrite sous les pieds pendant qu'on reste accroupi, puis on plonge dedans
 			int held = SNEAK.merge(id, 1, Integer::sum);
 			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(ground)),
@@ -168,6 +171,18 @@ public final class Burrow {
 		} else {
 			SNEAK.remove(id);
 		}
+	}
+
+	/** Le premier bloc solide sous le joueur, jusqu'à 5 blocs plus bas (null s'il n'y en a pas). */
+	private static BlockPos groundUnder(ServerWorld world, ServerPlayerEntity player) {
+		BlockPos.Mutable pos = BlockPos.ofFloored(player.getX(), player.getY() - 0.2, player.getZ()).mutableCopy();
+		for (int i = 0; i <= 5; i++) {
+			if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) {
+				return pos.toImmutable();
+			}
+			pos.move(0, -1, 0);
+		}
+		return null;
 	}
 
 	private static boolean diggable(ServerWorld world, BlockPos pos) {
@@ -195,6 +210,14 @@ public final class Burrow {
 		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, block),
 				player.getX(), player.getY() + 0.2, player.getZ(), 40, 0.4, 0.2, 0.4, 0.2);
 		world.playSound(null, ground, block.getSoundGroup().getBreakSound(), SoundCategory.PLAYERS, 1.2F, 0.7F);
+		// porté par les tentacules au-dessus du sol : elles l'enfoncent d'un coup dans la terre
+		BlockPos under = tentacleDigger(player) ? groundUnder(world, player) : null;
+		if (under != null && player.getY() - (under.getY() + 1) > 0.3) {
+			BlockState below = world.getBlockState(under);
+			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, below),
+					player.getX(), under.getY() + 1.1, player.getZ(), 50, 0.6, 0.2, 0.6, 0.25);
+			player.requestTeleport(player.getX(), under.getY() + 1 - 2.0, player.getZ());
+		}
 		world.playSound(null, ground, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 0.4F, 0.6F);
 	}
 

@@ -4,6 +4,7 @@ import fr.evotool.EvoTool;
 import fr.evotool.network.TentacleStatePayload;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.GiantItem;
+import fr.evotool.upgrade.InfinityWings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,9 +81,15 @@ public final class Tentacles {
 	private static final float[] EXTENSION = {0.12F, 0.26F, 0.42F, 0.58F, 0.74F, 0.88F, 1.0F, 1.0F, 1.0F,
 			0.88F, 0.74F, 0.58F, 0.42F, 0.26F, 0.12F};
 	private static final int HIT_TICK = 6;
-	/** Attraper : la tentacule met 6 ticks à atteindre le monstre, puis le tient (au plus 5 s) avant de le projeter. */
+	/**
+	 * Attraper : la tentacule met 6 ticks à atteindre le monstre, puis le tient aussi longtemps qu'on veut (pour le
+	 * ramener à la base) : elle ne le lâche qu'au clic droit suivant.
+	 */
 	private static final int GRAB_REACH = 6;
-	private static final int GRAB_HOLD = 100;
+	/** Demi-hauteur de la zone d'affichage des segments (la position des entités d'affichage est en dessous). */
+	private static final float BOX = 48.0F;
+	/** Regarder plus bas que ça (degrés) au clic droit : le monstre est posé doucement au lieu d'être projeté. */
+	private static final float DROP_PITCH = 50.0F;
 	private static final int RELEASE_TICKS = 5;
 	private static final double HOLD_DISTANCE = 3.0;
 	private static final float SEGMENT = 0.5F;
@@ -94,8 +101,8 @@ public final class Tentacles {
 	private static final class Strike {
 		final ServerPlayerEntity player;
 		final ServerWorld world;
-		/** Position des entités d'affichage (fixe) : les segments sont placés par rapport à elle. */
-		final Vec3d anchor;
+		/** Position des entités d'affichage : les segments sont placés par rapport à elle (elle suit le joueur qui tient un monstre). */
+		Vec3d anchor;
 		Vec3d origin;
 		Vec3d control;
 		Vec3d end;
@@ -146,6 +153,9 @@ public final class Tentacles {
 				!(entity instanceof ServerPlayerEntity player && player.getCommandTags().contains(MOVE_TAG)
 						&& (source.isOf(DamageTypes.IN_WALL) || source.isIn(DamageTypeTags.IS_DROWNING)
 						|| source.isIn(DamageTypeTags.IS_FIRE) || source.isIn(DamageTypeTags.IS_FALL))));
+		// Un monstre tenu par une tentacule n'étouffe pas (on peut l'emmener sous terre) et ne se blesse pas en chutant.
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+				!((source.isOf(DamageTypes.IN_WALL) || source.isIn(DamageTypeTags.IS_FALL)) && isHeld(entity)));
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (handler.getPlayer().getCommandTags().contains(MOVE_TAG)) {
 				broadcast(handler.getPlayer(), true);
@@ -230,8 +240,8 @@ public final class Tentacles {
 	private static Strike chain(ServerPlayerEntity player, ServerWorld world, Vec3d origin, Vec3d end) {
 		double length = origin.distanceTo(end);
 		int count = Math.max(4, (int) Math.ceil(length / SEGMENT));
-		float box = 48.0F;
-		Vec3d anchor = origin.add(0, -box / 2, 0);
+		float box = 2 * BOX;
+		Vec3d anchor = origin.add(0, -BOX, 0);
 		List<DisplayEntity.ItemDisplayEntity> segments = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			ItemStack stack = new ItemStack(Items.INK_SAC);
@@ -239,7 +249,7 @@ public final class Tentacles {
 			DisplayEntity.ItemDisplayEntity segment = GiantItem.create(world, stack, ItemDisplayContext.NONE,
 					anchor, 0.0F, new Quaternionf(), 0.0F, 1);
 			segment.setBrightness(null);
-			segment.setTeleportDuration(0);
+			segment.setTeleportDuration(1);
 			segment.setDisplayWidth(box);
 			segment.setDisplayHeight(box);
 			segments.add(segment);
@@ -308,8 +318,9 @@ public final class Tentacles {
 	// ------------------------------------------------------------------ attraper et projeter (clic droit à main nue)
 
 	/**
-	 * Clic droit à main nue : une tentacule attrape le monstre visé et le tient devant le joueur ;
-	 * un deuxième clic droit le projette là où il regarde (sinon il est projeté tout seul au bout de 5 s).
+	 * Clic droit à main nue : une tentacule attrape le monstre visé et le tient devant le joueur, sans jamais le
+	 * lâcher tout seul ; un deuxième clic droit le projette là où il regarde, ou le pose doucement si on regarde
+	 * par terre.
 	 */
 	public static boolean grabOrThrow(ServerPlayerEntity player) {
 		if (player.isSpectator() || !hasTentacles(player)) {
@@ -318,7 +329,11 @@ public final class Tentacles {
 		Strike held = GRABS.get(player.getUuid());
 		if (held != null) {
 			if (held.releasing < 0 && held.age > GRAB_REACH) {
-				throwGrabbed(held);
+				if (player.getPitch() > DROP_PITCH) {
+					dropGrabbed(held);
+				} else {
+					throwGrabbed(held);
+				}
 			}
 			return true;
 		}
@@ -352,11 +367,12 @@ public final class Tentacles {
 			pose(strike, Math.max(0.0F, strike.releasing / (float) RELEASE_TICKS));
 			return strike.releasing > 0;
 		}
-		if (!target.isAlive() || target.isRemoved() || !player.isAlive() || target.getEntityWorld() != player.getEntityWorld()
-				|| target.squaredDistanceTo(player) > 24 * 24) {
+		// elle ne lâche que si le monstre meurt, si le joueur meurt ou s'il change de dimension
+		if (!target.isAlive() || target.isRemoved() || !player.isAlive() || target.getEntityWorld() != player.getEntityWorld()) {
 			return false;
 		}
 		strike.origin = shoulder(player);
+		follow(strike);
 		if (strike.age < GRAB_REACH) {
 			// elle file vers le monstre
 			strike.end = target.getBoundingBox().getCenter();
@@ -369,26 +385,81 @@ public final class Tentacles {
 			Vec3d c = target.getBoundingBox().getCenter();
 			world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 25, 0.3, 0.4, 0.3, 0.1);
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.2F, 0.6F);
-			target.damage(world, player.getDamageSources().playerAttack(player), 2.0F);
 		}
 		// elle le ramène devant le joueur et le tient là, en l'air
 		Vec3d hold = player.getEyePos().add(player.getRotationVector().multiply(HOLD_DISTANCE)).add(0, -0.3 - target.getHeight() / 2, 0);
 		Vec3d now = target.getEntityPos();
 		Vec3d next = strike.age < GRAB_REACH + 6 ? now.lerp(hold, 0.45) : hold;
-		// pas dans un mur : s'il n'y a pas la place, il reste où il est
-		if (world.isSpaceEmpty(target, target.getBoundingBox().offset(next.subtract(now)))) {
-			target.setPosition(next.x, next.y, next.z);
+		// pas dans un mur : sinon au-dessus de la tête du joueur, sinon à ses pieds ; s'il n'y a de place nulle part
+		// (le joueur traverse la roche), il suit quand même, il ne peut pas étouffer
+		Vec3d above = player.getEntityPos().add(0, player.getHeight() + 0.2, 0);
+		Vec3d placed = null;
+		for (Vec3d candidate : new Vec3d[] {next, above, player.getEntityPos()}) {
+			if (world.isSpaceEmpty(target, target.getBoundingBox().offset(candidate.subtract(now)))) {
+				placed = candidate;
+				break;
+			}
+		}
+		if (placed == null && now.squaredDistanceTo(player.getEntityPos()) > 4 * 4) {
+			placed = player.getEntityPos();
+		}
+		if (placed != null) {
+			target.setPosition(placed.x, placed.y, placed.z);
 		}
 		target.setVelocity(Vec3d.ZERO);
 		target.onLanding();
 		strike.end = target.getBoundingBox().getCenter();
 		strike.control = curve(strike.origin, strike.end, 0.25 * Math.sin(strike.age * 0.4));
 		pose(strike, 1.0F);
-		// au bout de 5 s (ou si le joueur s'est trop éloigné de l'endroit de la prise), il est projeté tout seul
-		if (strike.age > GRAB_REACH + GRAB_HOLD || strike.origin.squaredDistanceTo(strike.anchor.add(0, 24, 0)) > 16 * 16) {
-			throwGrabbed(strike);
-		}
 		return true;
+	}
+
+	/** Les segments d'une prise suivent le joueur, qui peut emmener le monstre aussi loin qu'il veut. */
+	private static void follow(Strike strike) {
+		Vec3d anchor = strike.origin.add(0, -BOX, 0);
+		if (anchor.squaredDistanceTo(strike.anchor) < 1.0E-6) {
+			return;
+		}
+		strike.anchor = anchor;
+		for (DisplayEntity.ItemDisplayEntity segment : strike.segments) {
+			segment.setPosition(anchor.x, anchor.y, anchor.z);
+		}
+	}
+
+	/** Regarder par terre + clic droit : la tentacule pose le monstre doucement, là où on regarde (sans dégâts). */
+	private static void dropGrabbed(Strike strike) {
+		ServerPlayerEntity player = strike.player;
+		LivingEntity target = strike.grabbed;
+		ServerWorld world = strike.world;
+		Vec3d eye = player.getEyePos();
+		Vec3d far = eye.add(player.getRotationVector().multiply(6.0));
+		BlockHitResult hit = world.raycast(new RaycastContext(eye, far, RaycastContext.ShapeType.COLLIDER,
+				RaycastContext.FluidHandling.NONE, player));
+		if (hit.getType() == HitResult.Type.BLOCK) {
+			Vec3d spot = hit.getPos().subtract(player.getRotationVector().multiply(0.3));
+			Vec3d now = target.getEntityPos();
+			Vec3d feet = new Vec3d(spot.x, spot.y, spot.z);
+			if (world.isSpaceEmpty(target, target.getBoundingBox().offset(feet.subtract(now)))) {
+				target.setPosition(feet.x, feet.y, feet.z);
+			}
+		}
+		target.setVelocity(Vec3d.ZERO);
+		target.onLanding();
+		Vec3d c = target.getBoundingBox().getCenter();
+		world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 12, 0.3, 0.3, 0.3, 0.05);
+		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.0F, 1.2F);
+		strike.releasing = RELEASE_TICKS;
+		GRABS.remove(player.getUuid());
+	}
+
+	/** Ce monstre est-il tenu par une tentacule ? */
+	private static boolean isHeld(net.minecraft.entity.Entity entity) {
+		for (Strike strike : GRABS.values()) {
+			if (strike.grabbed == entity) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** « Tchouf » : le monstre est projeté là où le joueur regarde. */
@@ -494,17 +565,18 @@ public final class Tentacles {
 	}
 
 	/**
-	 * Mode déplacement : on reste au sol, mais on court très vite (les tentacules s'accrochent devant et tirent,
-	 * voir TentacleTravel côté client) et on monte les blocs sans sauter. Accroupi sur le sol, elles creusent :
-	 * on plonge sous terre (voir {@link Burrow}) et on traverse la roche jusqu'à ressortir.
+	 * Mode déplacement : les longues tentacules portent le joueur au-dessus du sol, comme des pattes (TentacleTravel,
+	 * côté client, le tient surélevé et le fait tirer par les tentacules) ; il court très vite et suit le relief.
+	 * Accroupi, elles creusent : on plonge sous terre (voir {@link Burrow}) et on traverse la roche jusqu'à ressortir.
 	 */
 	public static void startMoving(ServerPlayerEntity player) {
 		player.addCommandTag(MOVE_TAG);
 		LAST_POS.put(player.getUuid(), player.getEntityPos());
 		groundBoost(player, true);
 		PlayerAbilities abilities = player.getAbilities();
-		if (abilities.flying && !Burrow.isBurrowing(player)) {
-			abilities.flying = false;     // on reste par terre
+		if (!Burrow.isBurrowing(player)) {
+			abilities.flying = false;     // porté par les tentacules, pas en vol
+			abilities.allowFlying = true; // sinon un serveur prendrait le joueur surélevé pour un tricheur qui vole
 			player.sendAbilitiesUpdate();
 		}
 		broadcast(player, true);
@@ -519,8 +591,12 @@ public final class Tentacles {
 		player.removeCommandTag(MOVE_TAG);
 		groundBoost(player, false);
 		// sous terre : on ressort (sauf si les bottes prennent le relais)
-		if (Burrow.isBurrowing(player) && !(Burrow.hasBoots(player) && !player.isCreative())) {
-			Burrow.stop(player, rescue);
+		if (Burrow.isBurrowing(player)) {
+			if (!(Burrow.hasBoots(player) && !player.isCreative())) {
+				Burrow.stop(player, rescue);
+			}
+		} else {
+			InfinityWings.restoreAbilities(player);
 		}
 		broadcast(player, false);
 		StatusEffectInstance vision = player.getStatusEffect(StatusEffects.NIGHT_VISION);
@@ -558,6 +634,11 @@ public final class Tentacles {
 		}
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		groundBoost(player, true);
+		PlayerAbilities abilities = player.getAbilities();
+		if (!abilities.allowFlying && !Burrow.isBurrowing(player)) {
+			abilities.allowFlying = true;
+			player.sendAbilitiesUpdate();
+		}
 		player.setAir(player.getMaxAir());
 		if (player.isOnFire()) {
 			player.extinguish();

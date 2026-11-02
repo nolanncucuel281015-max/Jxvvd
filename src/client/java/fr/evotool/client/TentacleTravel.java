@@ -32,9 +32,10 @@ import org.joml.Quaternionf;
  * Notre joueur et ses tentacules (armure abyssale niveau 150), côté client :
  * <ul>
  *   <li>clic droit à main nue : demande au serveur d'attraper le monstre visé (ou de projeter celui qu'on tient) ;</li>
- *   <li>mode déplacement (touche J) : on reste au sol. 4 tentacules sortent du dos, se plantent dans le sol loin
- *   devant (« tchouf ») et tirent le joueur d'un coup, chacune à son tour comme les pattes d'une araignée, puis se
- *   détachent quand on les a dépassées. Sous terre (accroupi) et sous l'eau, elles tirent dans toutes les directions.
+ *   <li>mode déplacement (touche J) : 4 longues tentacules portent le joueur au-dessus du sol, comme les pattes d'une
+ *   araignée (il suit le relief, monte les murs, se baisse sous les plafonds ; espace pour se hausser). Elles se
+ *   plantent dans le sol loin devant (« tchouf ») et le tirent d'un coup, chacune à son tour, puis se détachent quand
+ *   on les a dépassées. Sous terre (accroupi) et sous l'eau, elles tirent dans toutes les directions.
  *   Elles sont dessinées dans le monde : on les voit aussi en vue à la première personne.</li>
  * </ul>
  */
@@ -52,6 +53,11 @@ public final class TentacleTravel {
 	private static final double WATER_MAX_SPEED = 1.6;
 	private static final double GROUND_MAX_SPEED = 1.4;
 	private static final int SEGMENTS = 14;
+	/** Hauteur des pieds du joueur au-dessus du sol, portés par les tentacules ; espace : plus haut. */
+	private static final double HOVER = 2.5;
+	private static final double HOVER_RAISE = 1.5;
+	/** Jusqu'où, sous le joueur, les tentacules cherchent le sol. */
+	private static final double REACH_DOWN = HOVER + HOVER_RAISE + 3.5;
 	private static final float MODEL_RADIUS = 3.0F / 16.0F;
 	private static final int FULL_BRIGHT = 0xF000F0;
 
@@ -61,6 +67,8 @@ public final class TentacleTravel {
 		/** Âge auquel elle s'est détachée (-1 : pas encore). */
 		int releaseAge = -1;
 		Vec3d anchor = Vec3d.ZERO;
+		/** Au repos, porté : où la patte est plantée dans le sol, par rapport aux pieds du joueur (null : pas de sol). */
+		Vec3d rest;
 	}
 
 	private static final Arm[] STATE = new Arm[ARMS];
@@ -71,6 +79,8 @@ public final class TentacleTravel {
 	/** Mode du joueur : au sol (par défaut), sous terre (il traverse la roche) ou dans l'eau. */
 	private static boolean digging;
 	private static boolean swimming;
+	/** Porté au-dessus du sol par les tentacules ce tick-ci. */
+	private static boolean carried;
 	private static long lastTick = System.nanoTime();
 
 	private static final ItemStack SEGMENT_STACK = stack("tentacle/segment");
@@ -137,8 +147,11 @@ public final class TentacleTravel {
 		active = tentacles && TentacleFeature.isMoving(player.getId());
 		digging = fr.evotool.upgrade.Burrow.clientActive;
 		swimming = !digging && player.isTouchingWater();
+		carried = active && !digging && !swimming && !player.getAbilities().flying && !player.isGliding()
+				&& !player.hasVehicle() && hover(client, player);
 		Vec3d eye = player.getEyePos();
 		Vec3d look = heading(player);
+		plantLegs(client, player, look);
 		for (Arm arm : STATE) {
 			if (arm.age < 0) {
 				continue;
@@ -174,6 +187,73 @@ public final class TentacleTravel {
 				cooldown = LAUNCH_EVERY;
 				return;
 			}
+		}
+	}
+
+	// ------------------------------------------------------------------ porté par les tentacules
+
+	/** Hauteur du sol sous ce point (NaN s'il n'y en a pas assez près). */
+	private static double groundY(MinecraftClient client, ClientPlayerEntity player, Vec3d at) {
+		BlockHitResult hit = client.world.raycast(new RaycastContext(at.add(0, 0.5, 0), at.add(0, -REACH_DOWN, 0),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+		return hit.getType() == HitResult.Type.BLOCK ? hit.getPos().y : Double.NaN;
+	}
+
+	/** Hauteur maximale des pieds sous un plafond au-dessus de ce point (porte, tunnel…). */
+	private static double ceilingLimit(MinecraftClient client, ClientPlayerEntity player, Vec3d at, double base) {
+		double height = player.getHeight();
+		Vec3d from = new Vec3d(at.x, base + 0.1, at.z);
+		BlockHitResult hit = client.world.raycast(new RaycastContext(from, from.add(0, HOVER + HOVER_RAISE + height + 0.5, 0),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+		return hit.getType() == HitResult.Type.BLOCK ? hit.getPos().y - height - 0.05 : Double.POSITIVE_INFINITY;
+	}
+
+	/**
+	 * Les tentacules tiennent le joueur à {@link #HOVER} blocs au-dessus du sol : elles suivent le relief (et ce qui
+	 * arrive devant), se plient sous les plafonds et grimpent les murs. Le joueur marche comme au sol (frottement et
+	 * vitesse de marche), sans tomber. Faux s'il n'y a pas de sol assez près (il tombe, sans dégâts).
+	 */
+	private static boolean hover(MinecraftClient client, ClientPlayerEntity player) {
+		Vec3d feet = player.getEntityPos();
+		Vec3d velocity = player.getVelocity();
+		Vec3d moving = new Vec3d(velocity.x, 0, velocity.z);
+		Vec3d front = moving.lengthSquared() > 0.0025 ? feet.add(moving.normalize().multiply(0.9)) : feet;
+		double here = groundY(client, player, feet);
+		double ahead = groundY(client, player, feet.add(moving.multiply(3)));
+		if (Double.isNaN(here) && Double.isNaN(ahead)) {
+			return false;
+		}
+		double base = Double.isNaN(here) ? ahead : Double.isNaN(ahead) ? here : Math.max(here, ahead);
+		double wanted = base + HOVER + (player.input.playerInput.jump() ? HOVER_RAISE : 0);
+		double limit = Math.min(ceilingLimit(client, player, feet, base), ceilingLimit(client, player, front, base));
+		double target = Math.max(base, Math.min(wanted, limit));
+		double vy = Math.max(-0.7, Math.min(0.6, (target - feet.y) * 0.35));
+		if (player.horizontalCollision && target >= wanted - 0.01) {
+			vy = Math.max(vy, 0.45);   // un mur : elles grimpent
+		}
+		player.setVelocity(velocity.x, vy, velocity.z);
+		player.setOnGround(true);
+		player.onLanding();
+		return true;
+	}
+
+	/** Au repos, les pattes se plantent dans le sol autour du joueur (deux devant, deux sur les côtés). */
+	private static void plantLegs(MinecraftClient client, ClientPlayerEntity player, Vec3d look) {
+		Vec3d feet = player.getEntityPos();
+		Vec3d right = right(look);
+		for (int k = 0; k < ARMS; k++) {
+			Arm arm = STATE[k];
+			if (!carried) {
+				arm.rest = null;
+				continue;
+			}
+			double s = k % 2 == 0 ? 1 : -1;
+			boolean upper = k < 2;
+			Vec3d spot = feet.add(look.multiply(upper ? 1.6 : -0.5)).add(right.multiply(s * (upper ? 1.8 : 2.1)));
+			BlockHitResult hit = client.world.raycast(new RaycastContext(spot.add(0, 3.0, 0), spot.add(0, -REACH_DOWN, 0),
+					RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, player));
+			Vec3d planted = hit.getType() == HitResult.Type.BLOCK ? hit.getPos() : spot.add(0, -HOVER, 0);
+			arm.rest = planted.subtract(feet);
 		}
 	}
 
@@ -219,10 +299,10 @@ public final class TentacleTravel {
 			arm.anchor = hit.getType() == HitResult.Type.BLOCK && hit.getPos().squaredDistanceTo(eye) > 4 ? hit.getPos() : aim;
 		} else {
 			// au sol : les pattes de devant loin, celles de derrière plus près ; elles cherchent le sol
-			double reach = (upper ? 5.5 : 3.5) + speed * 4.0;
+			double reach = (upper ? 6.5 : 4.5) + speed * 4.0;
 			Vec3d feet = player.getEntityPos();
-			Vec3d aim = feet.add(direction.multiply(reach)).add(side.multiply(s * (upper ? 1.3 : 1.7)));
-			BlockHitResult hit = client.world.raycast(new RaycastContext(aim.add(0, 2.5, 0), aim.add(0, -4.0, 0),
+			Vec3d aim = feet.add(direction.multiply(reach)).add(side.multiply(s * (upper ? 1.5 : 2.0)));
+			BlockHitResult hit = client.world.raycast(new RaycastContext(aim.add(0, 3.0, 0), aim.add(0, -REACH_DOWN, 0),
 					RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, player));
 			arm.anchor = hit.getType() == HitResult.Type.BLOCK ? hit.getPos() : aim;
 		}
@@ -252,7 +332,7 @@ public final class TentacleTravel {
 				return;
 			}
 			Vec3d horizontal = new Vec3d(velocity.x, 0, velocity.z)
-					.add(flat.normalize().multiply(player.isOnGround() ? PULL : PULL * 0.35));
+					.add(flat.normalize().multiply(carried || player.isOnGround() ? PULL : PULL * 0.35));
 			double limit = Math.max(Math.hypot(velocity.x, velocity.z), GROUND_MAX_SPEED);
 			if (horizontal.length() > limit) {
 				horizontal = horizontal.normalize().multiply(limit);
@@ -288,6 +368,7 @@ public final class TentacleTravel {
 		Vec3d up = right.crossProduct(look).normalize();
 		Vec3d flat = heading(player);
 		double time = player.age + delta;
+		Vec3d feet = player.getLerpedPos(delta);
 
 		models.clearAndUpdate(SEGMENT, SEGMENT_STACK, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, player.getId());
 		models.clearAndUpdate(TIP, TIP_STACK, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, player.getId());
@@ -304,7 +385,9 @@ public final class TentacleTravel {
 			Vec3d rest = digging || swimming
 					? look.add(right.multiply(s * 0.75)).add(up.multiply(upper ? 0.35 : -0.35))
 					: flat.multiply(upper ? 0.9 : 0.4).add(right.multiply(s * 0.8)).add(0, upper ? -0.8 : -1.1, 0);
-			Vec3d ready = root.add(rest.normalize().multiply(1.3 + 0.12 * Math.sin(time * 0.3 + k)));
+			// porté : la patte au repos est plantée dans le sol
+			Vec3d ready = arm.rest != null ? feet.add(arm.rest)
+					: root.add(rest.normalize().multiply(1.3 + 0.12 * Math.sin(time * 0.3 + k)));
 			Vec3d tip;
 			if (arm.age < 0) {
 				tip = ready;
@@ -339,7 +422,7 @@ public final class TentacleTravel {
 			Vec3d dir = point.subtract(previous);
 			float segment = (float) dir.length();
 			if (segment > 1.0E-4F) {
-				float width = (float) (0.24 - 0.17 * (i - 1) / (double) SEGMENTS) / (2 * MODEL_RADIUS);
+				float width = (float) (0.3 - 0.22 * (i - 1) / (double) SEGMENTS) / (2 * MODEL_RADIUS);
 				Vec3d unit = dir.multiply(1 / segment);
 				matrices.push();
 				matrices.translate(previous.x - camera.x, previous.y - camera.y, previous.z - camera.z);
