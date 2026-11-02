@@ -87,8 +87,8 @@ public final class Tentacles {
 	 * ramener à la base) : elle ne le lâche qu'au clic droit suivant.
 	 */
 	private static final int GRAB_REACH = 6;
-	/** Demi-hauteur de la zone d'affichage des segments (la position des entités d'affichage est en dessous). */
-	private static final float BOX = 48.0F;
+	/** Marge autour de la tentacule pour la zone de rendu de ses segments (blocs). */
+	private static final float BOX_MARGIN = 3.0F;
 	/** Regarder plus bas que ça (degrés) au clic droit : le monstre est posé doucement au lieu d'être projeté. */
 	private static final float DROP_PITCH = 50.0F;
 	private static final int RELEASE_TICKS = 5;
@@ -103,8 +103,14 @@ public final class Tentacles {
 	private static final class Strike {
 		final ServerPlayerEntity player;
 		final ServerWorld world;
-		/** Position des entités d'affichage : les segments sont placés par rapport à elle (elle suit le joueur qui tient un monstre). */
+		/**
+		 * Position des entités d'affichage : les segments sont placés par rapport à elle. Elle est juste sous le point
+		 * le plus bas de la tentacule (la zone de rendu d'une entité d'affichage monte depuis sa position) : jamais
+		 * enfouie dans la roche, où le client ne dessine pas les entités. Elle suit une prise qui bouge.
+		 */
 		Vec3d anchor;
+		/** Taille de la zone de rendu (largeur = hauteur). */
+		float box;
 		Vec3d origin;
 		Vec3d control;
 		Vec3d end;
@@ -242,8 +248,9 @@ public final class Tentacles {
 	private static Strike chain(ServerPlayerEntity player, ServerWorld world, Vec3d origin, Vec3d end) {
 		double length = origin.distanceTo(end);
 		int count = Math.max(4, (int) Math.ceil(length / SEGMENT));
-		float box = 2 * BOX;
-		Vec3d anchor = origin.add(0, -BOX, 0);
+		Vec3d control = curve(origin, end, 0);
+		Vec3d anchor = anchorFor(origin, control, end);
+		float box = boxFor(origin, control, end);
 		List<DisplayEntity.ItemDisplayEntity> segments = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			ItemStack stack = new ItemStack(Items.INK_SAC);
@@ -255,9 +262,27 @@ public final class Tentacles {
 			segment.setDisplayHeight(box);
 			segments.add(segment);
 		}
-		Strike strike = new Strike(player, world, origin, curve(origin, end, 0), end, segments, anchor);
+		Strike strike = new Strike(player, world, origin, control, end, segments, anchor);
+		strike.box = box;
 		pose(strike, 0.0F);
 		return strike;
+	}
+
+	/** Sous le point le plus bas de la tentacule (la courbe reste entre ses trois points), au milieu à l'horizontale. */
+	private static Vec3d anchorFor(Vec3d a, Vec3d b, Vec3d c) {
+		double minX = Math.min(a.x, Math.min(b.x, c.x));
+		double maxX = Math.max(a.x, Math.max(b.x, c.x));
+		double minZ = Math.min(a.z, Math.min(b.z, c.z));
+		double maxZ = Math.max(a.z, Math.max(b.z, c.z));
+		double minY = Math.min(a.y, Math.min(b.y, c.y));
+		return new Vec3d((minX + maxX) / 2, minY - 0.3, (minZ + maxZ) / 2);
+	}
+
+	private static float boxFor(Vec3d a, Vec3d b, Vec3d c) {
+		double dx = Math.max(a.x, Math.max(b.x, c.x)) - Math.min(a.x, Math.min(b.x, c.x));
+		double dy = Math.max(a.y, Math.max(b.y, c.y)) - Math.min(a.y, Math.min(b.y, c.y));
+		double dz = Math.max(a.z, Math.max(b.z, c.z)) - Math.min(a.z, Math.min(b.z, c.z));
+		return (float) Math.max(dx, Math.max(dy, dz)) + 2 * BOX_MARGIN;
 	}
 
 	private static Vec3d bezier(Strike strike, double t) {
@@ -411,11 +436,11 @@ public final class Tentacles {
 			return false;
 		}
 		strike.origin = shoulder(player);
-		follow(strike);
 		if (strike.age < GRAB_REACH) {
 			// elle file vers le monstre
 			strike.end = target.getBoundingBox().getCenter();
 			strike.control = curve(strike.origin, strike.end, 0);
+			follow(strike);
 			pose(strike, strike.age / (float) GRAB_REACH);
 			return true;
 		}
@@ -453,19 +478,29 @@ public final class Tentacles {
 		target.onLanding();
 		strike.end = target.getBoundingBox().getCenter();
 		strike.control = curve(strike.origin, strike.end, 0.25 * Math.sin(strike.age * 0.4));
+		follow(strike);
 		pose(strike, 1.0F);
 		return true;
 	}
 
-	/** Les segments d'une prise suivent le joueur, qui peut emmener le monstre aussi loin qu'il veut. */
+	/** Les segments d'une prise suivent la tentacule, que le joueur peut emmener aussi loin qu'il veut. */
 	private static void follow(Strike strike) {
-		Vec3d anchor = strike.origin.add(0, -BOX, 0);
-		if (anchor.squaredDistanceTo(strike.anchor) < 1.0E-6) {
-			return;
-		}
+		Vec3d anchor = anchorFor(strike.origin, strike.control, strike.end);
+		float box = boxFor(strike.origin, strike.control, strike.end);
+		boolean moved = anchor.squaredDistanceTo(strike.anchor) > 1.0E-6;
+		boolean resized = Math.abs(box - strike.box) > 0.5F;
 		strike.anchor = anchor;
+		if (resized) {
+			strike.box = box;
+		}
 		for (DisplayEntity.ItemDisplayEntity segment : strike.segments) {
-			segment.setPosition(anchor.x, anchor.y, anchor.z);
+			if (moved) {
+				segment.setPosition(anchor.x, anchor.y, anchor.z);
+			}
+			if (resized) {
+				segment.setDisplayWidth(box);
+				segment.setDisplayHeight(box);
+			}
 		}
 	}
 
