@@ -4,7 +4,6 @@ import fr.evotool.EvoTool;
 import fr.evotool.network.TentacleStatePayload;
 import fr.evotool.upgrade.Burrow;
 import fr.evotool.upgrade.GiantItem;
-import fr.evotool.upgrade.InfinityWings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,6 +19,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -40,6 +41,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -47,7 +49,6 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Heightmap;
 import net.minecraft.world.RaycastContext;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -66,8 +67,13 @@ import org.joml.Vector3f;
 public final class Tentacles {
 	/** Tag posé sur le joueur tant que le mode déplacement est allumé (sauvegardé avec lui). */
 	public static final String MOVE_TAG = "evotool_tentacle_move";
-	/** Vitesse de vol en mode déplacement (créatif : 0,05). */
-	public static final float MOVE_SPEED = 0.1F;
+	/** Vitesse sous terre quand les tentacules creusent (créatif : 0,05). */
+	public static final float DIG_SPEED = 0.2F;
+	/** Au sol, en mode déplacement : +250 % de vitesse et on monte les blocs sans sauter. */
+	public static final Identifier SPEED_ID = EvoTool.id("tentacle_speed");
+	private static final Identifier STEP_ID = EvoTool.id("tentacle_step");
+	private static final double GROUND_SPEED_BONUS = 2.5;
+	private static final double STEP_BONUS = 0.9;
 	private static final double STRIKE_RANGE = 14.0;
 	private static final int STRIKE_COOLDOWN = 20;
 	/** Un coup : la tentacule jaillit en 6 ticks (on la voit partir), frappe, reste tendue puis se rétracte. */
@@ -121,7 +127,6 @@ public final class Tentacles {
 	private static final Map<UUID, Strike> GRABS = new HashMap<>();
 	private static final Map<UUID, Integer> COOLDOWN = new HashMap<>();
 	private static final Map<UUID, Vec3d> LAST_POS = new HashMap<>();
-	private static final Map<UUID, Vec3d> SAFE_POS = new HashMap<>();
 
 	private Tentacles() {
 	}
@@ -143,7 +148,6 @@ public final class Tentacles {
 						|| source.isIn(DamageTypeTags.IS_FIRE) || source.isIn(DamageTypeTags.IS_FALL))));
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (handler.getPlayer().getCommandTags().contains(MOVE_TAG)) {
-				Burrow.syncClient(handler.getPlayer());
 				broadcast(handler.getPlayer(), true);
 			}
 		});
@@ -151,7 +155,6 @@ public final class Tentacles {
 			UUID id = handler.getPlayer().getUuid();
 			COOLDOWN.remove(id);
 			LAST_POS.remove(id);
-			SAFE_POS.remove(id);
 		});
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			for (Strike strike : STRIKES) {
@@ -490,19 +493,20 @@ public final class Tentacles {
 		startMoving(player);
 	}
 
+	/**
+	 * Mode déplacement : on reste au sol, mais on court très vite (les tentacules s'accrochent devant et tirent,
+	 * voir TentacleTravel côté client) et on monte les blocs sans sauter. Accroupi sur le sol, elles creusent :
+	 * on plonge sous terre (voir {@link Burrow}) et on traverse la roche jusqu'à ressortir.
+	 */
 	public static void startMoving(ServerPlayerEntity player) {
-		if (Burrow.isBurrowing(player)) {
-			Burrow.stop(player, false);
-		}
 		player.addCommandTag(MOVE_TAG);
 		LAST_POS.put(player.getUuid(), player.getEntityPos());
-		SAFE_POS.put(player.getUuid(), player.getEntityPos());
-		Burrow.syncClient(player);
+		groundBoost(player, true);
 		PlayerAbilities abilities = player.getAbilities();
-		abilities.allowFlying = true;
-		abilities.flying = true;
-		abilities.setFlySpeed(MOVE_SPEED);
-		player.sendAbilitiesUpdate();
+		if (abilities.flying && !Burrow.isBurrowing(player)) {
+			abilities.flying = false;     // on reste par terre
+			player.sendAbilitiesUpdate();
+		}
 		broadcast(player, true);
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		world.spawnParticles(ParticleTypes.SQUID_INK, player.getX(), player.getY() + 1, player.getZ(), 40, 0.6, 0.6, 0.6, 0.1);
@@ -513,22 +517,38 @@ public final class Tentacles {
 	/** Éteint le mode ; avec {@code rescue}, un joueur resté dans la roche est remonté à la surface. */
 	public static void stopMoving(ServerPlayerEntity player, boolean rescue) {
 		player.removeCommandTag(MOVE_TAG);
-		Burrow.syncClient(player);
-		if (!player.isCreative() && !player.isSpectator()) {
-			player.getAbilities().flying = false;
+		groundBoost(player, false);
+		// sous terre : on ressort (sauf si les bottes prennent le relais)
+		if (Burrow.isBurrowing(player) && !(Burrow.hasBoots(player) && !player.isCreative())) {
+			Burrow.stop(player, rescue);
 		}
-		InfinityWings.restoreAbilities(player);
 		broadcast(player, false);
 		StatusEffectInstance vision = player.getStatusEffect(StatusEffects.NIGHT_VISION);
 		if (vision != null && vision.isAmbient() && vision.getDuration() <= 260) {
 			player.removeStatusEffect(StatusEffects.NIGHT_VISION);
 		}
-		ServerWorld world = (ServerWorld) player.getEntityWorld();
-		if (rescue && !world.isSpaceEmpty(player, player.getBoundingBox().contract(0.01))) {
-			int top = world.getTopY(Heightmap.Type.MOTION_BLOCKING, player.getBlockX(), player.getBlockZ());
-			player.requestTeleport(player.getX(), top + 0.1, player.getZ());
-		}
 		player.sendMessage(Text.translatable("message.evotool.tentacles_off").formatted(Formatting.GRAY), true);
+	}
+
+	/** Vitesse au sol et marche haute du mode déplacement (modificateurs temporaires : remis à chaque tick). */
+	private static void groundBoost(ServerPlayerEntity player, boolean on) {
+		modifier(player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED), SPEED_ID, GROUND_SPEED_BONUS,
+				EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE, on);
+		modifier(player.getAttributeInstance(EntityAttributes.STEP_HEIGHT), STEP_ID, STEP_BONUS,
+				EntityAttributeModifier.Operation.ADD_VALUE, on);
+	}
+
+	private static void modifier(EntityAttributeInstance attribute, Identifier id, double value,
+			EntityAttributeModifier.Operation operation, boolean on) {
+		if (attribute == null) {
+			return;
+		}
+		boolean present = attribute.getModifier(id) != null;
+		if (on && !present) {
+			attribute.addTemporaryModifier(new EntityAttributeModifier(id, value, operation));
+		} else if (!on && present) {
+			attribute.removeModifier(id);
+		}
 	}
 
 	private static void moveTick(ServerPlayerEntity player, int tick) {
@@ -537,39 +557,30 @@ public final class Tentacles {
 			return;
 		}
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
-		PlayerAbilities abilities = player.getAbilities();
-		if (!abilities.allowFlying || abilities.getFlySpeed() != MOVE_SPEED) {
-			abilities.allowFlying = true;
-			abilities.flying = true;
-			abilities.setFlySpeed(MOVE_SPEED);
-			player.sendAbilitiesUpdate();
-		}
-		// garde-fous : ni la bedrock (ni aucun bloc incassable), ni le fond du monde
-		Box box = player.getBoundingBox();
-		UUID id = player.getUuid();
-		if (player.getY() < world.getBottomY() + 1 || Burrow.touchesUnbreakable(world, box)) {
-			Vec3d safe = SAFE_POS.getOrDefault(id, player.getEntityPos());
-			player.requestTeleport(safe.x, safe.y, safe.z);
-			return;
-		}
-		SAFE_POS.put(id, player.getEntityPos());
+		groundBoost(player, true);
 		player.setAir(player.getMaxAir());
 		if (player.isOnFire()) {
 			player.extinguish();
 		}
 		if (tick % 20 == 0) {
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 260, 0, true, false, false));
+			if (player.isTouchingWater()) {
+				// sous l'eau, les tentacules nagent comme une pieuvre
+				player.addStatusEffect(new StatusEffectInstance(StatusEffects.DOLPHINS_GRACE, 40, 0, true, false, false));
+			}
 		}
 		if (tick % 40 == 0) {
 			broadcast(player, true);    // pour les joueurs qui arrivent près de lui
 		}
 
-		// les tentacules creusent devant le joueur… puis « tchouf »
+		// sous terre, les tentacules creusent devant le joueur… puis « tchouf »
+		UUID id = player.getUuid();
 		Vec3d last = LAST_POS.getOrDefault(id, player.getEntityPos());
 		Vec3d now = player.getEntityPos();
 		LAST_POS.put(id, now);
 		boolean moving = now.squaredDistanceTo(last) > 0.01;
-		boolean inside = !world.isSpaceEmpty(player, box.contract(0.01)) || player.isTouchingWater();
+		boolean inside = Burrow.isBurrowing(player) && !world.isSpaceEmpty(player, player.getBoundingBox().contract(0.01))
+				|| player.isSubmergedInWater();
 		if (moving && inside && tick % 3 == 0) {
 			Vec3d ahead = player.getEyePos().add(player.getRotationVector().multiply(1.2));
 			BlockState block = world.getBlockState(BlockPos.ofFloored(ahead));

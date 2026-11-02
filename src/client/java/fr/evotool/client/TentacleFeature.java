@@ -120,10 +120,10 @@ public class TentacleFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			int side = k % 2 == 0 ? 1 : -1;
 			boolean upper = k < 2;
 			Vector3f root = new Vector3f(side * 0.12F, upper ? -0.18F : -0.5F, -0.16F);
-			// au repos : vers l'arrière et l'extérieur ; en mouvement : vers l'avant, comme des pattes qui tirent
+			// au repos : vers l'arrière et l'extérieur ; en mouvement : vers l'avant et le sol, comme des pattes qui tirent
 			Vector3f rest = new Vector3f(side * 0.55F, upper ? 0.3F : -0.45F, -1.0F).normalize();
 			float pull = 0.5F + 0.5F * (float) Math.sin(t * 0.45F + k * Math.PI / 2);
-			Vector3f forward = new Vector3f(side * 0.85F, upper ? 0.15F - 0.3F * pull : -0.55F + 0.3F * pull, 0.75F).normalize();
+			Vector3f forward = new Vector3f(side * 0.8F, upper ? -0.35F - 0.3F * pull : -0.85F + 0.3F * pull, 0.7F).normalize();
 			Vector3f direction = rest.lerp(forward, move, new Vector3f()).normalize();
 			Vector3f bendAxis = new Vector3f(direction).cross(0, 1, 0);
 			if (bendAxis.lengthSquared() < 1.0E-4F) {

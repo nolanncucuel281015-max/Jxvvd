@@ -44,8 +44,9 @@ public final class Burrow {
 	public static final String TAG = "evotool_burrowing";
 	/** Vitesse de vol sous terre (créatif : 0,05). */
 	public static final float SPEED = 0.15F;
-	/** Il faut rester accroupi 0,3 s au sol pour plonger. */
+	/** Il faut rester accroupi 0,3 s au sol pour plonger (0,15 s avec les tentacules, qui creusent plus vite). */
 	private static final int DIVE_TICKS = 6;
+	private static final int TENTACLE_DIVE_TICKS = 3;
 	/** Plongée annulée si on n'est toujours pas entré dans le sol au bout de 2 s (accroupi relâché trop tôt). */
 	private static final int START_GRACE = 40;
 	private static final int FALL_IMMUNITY_TICKS = 100;
@@ -112,14 +113,24 @@ public final class Burrow {
 	}
 
 	/**
-	 * Vrai si ce joueur traverse les blocs en ce moment (appelé des deux côtés par le mixin) : plongée des bottes
-	 * ou mode déplacement des tentacules.
+	 * Vrai si ce joueur traverse les blocs en ce moment (appelé des deux côtés par le mixin) : plongée des bottes,
+	 * ou des tentacules (mode déplacement J, accroupi sur le sol).
 	 */
 	public static boolean phases(PlayerEntity player) {
 		if (player.getEntityWorld().isClient()) {
 			return clientActive && player.isMainPlayer();
 		}
-		return player.getCommandTags().contains(TAG) || player.getCommandTags().contains(Tentacles.MOVE_TAG);
+		return player.getCommandTags().contains(TAG);
+	}
+
+	/** Les tentacules en mode déplacement (touche J) creusent aussi : on plonge en s'accroupissant sur le sol. */
+	private static boolean tentacleDigger(ServerPlayerEntity player) {
+		return player.getCommandTags().contains(Tentacles.MOVE_TAG) && Tentacles.hasTentacles(player);
+	}
+
+	/** Vitesse sous terre : celle des tentacules si elles creusent, sinon celle des bottes. */
+	private static float speed(ServerPlayerEntity player) {
+		return tentacleDigger(player) ? Tentacles.DIG_SPEED : SPEED;
 	}
 
 	public static boolean hasBoots(PlayerEntity player) {
@@ -127,17 +138,13 @@ public final class Burrow {
 	}
 
 	private static boolean canUse(ServerPlayerEntity player) {
-		return hasBoots(player) && !player.isCreative() && !player.isSpectator() && player.isAlive() && !player.hasVehicle();
+		return (hasBoots(player) && !player.isCreative() || tentacleDigger(player))
+				&& !player.isSpectator() && player.isAlive() && !player.hasVehicle();
 	}
 
 	/** Un tick de plongée pour ce joueur (public pour l'auto-test, qui utilise un faux joueur). */
 	public static void tick(ServerPlayerEntity player, int tick) {
 		UUID id = player.getUuid();
-		if (player.getCommandTags().contains(Tentacles.MOVE_TAG)) {
-			// les tentacules font déjà traverser la terre : la plongée des bottes attend
-			SNEAK.remove(id);
-			return;
-		}
 		if (isBurrowing(player)) {
 			if (canUse(player)) {
 				underground(player, tick);
@@ -154,7 +161,7 @@ public final class Burrow {
 			int held = SNEAK.merge(id, 1, Integer::sum);
 			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(ground)),
 					player.getX(), player.getY() + 0.1, player.getZ(), 6, 0.3, 0.05, 0.3, 0.1);
-			if (held >= DIVE_TICKS) {
+			if (held >= (tentacleDigger(player) ? TENTACLE_DIVE_TICKS : DIVE_TICKS)) {
 				SNEAK.remove(id);
 				start(player);
 			}
@@ -179,7 +186,7 @@ public final class Burrow {
 		PlayerAbilities abilities = player.getAbilities();
 		abilities.allowFlying = true;
 		abilities.flying = true;
-		abilities.setFlySpeed(SPEED);
+		abilities.setFlySpeed(speed(player));
 		player.sendAbilitiesUpdate();
 
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
@@ -210,10 +217,11 @@ public final class Burrow {
 			state = STATES.get(player.getUuid());
 		}
 		PlayerAbilities abilities = player.getAbilities();
-		if (!abilities.allowFlying || abilities.getFlySpeed() != SPEED) {
+		float speed = speed(player);
+		if (!abilities.allowFlying || abilities.getFlySpeed() != speed) {
 			abilities.allowFlying = true;
 			abilities.flying = true;
-			abilities.setFlySpeed(SPEED);
+			abilities.setFlySpeed(speed);
 			player.sendAbilitiesUpdate();
 		}
 
@@ -300,7 +308,8 @@ public final class Burrow {
 		STATES.remove(player.getUuid());
 		send(player, false);
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
-		if (!player.isCreative() && !player.isSpectator()) {
+		// en mode déplacement des tentacules, on retombe au sol même en créatif
+		if (!player.isSpectator() && (!player.isCreative() || player.getCommandTags().contains(Tentacles.MOVE_TAG))) {
 			player.getAbilities().flying = false;
 		}
 		InfinityWings.restoreAbilities(player);

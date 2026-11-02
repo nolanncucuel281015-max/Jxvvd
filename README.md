@@ -171,12 +171,16 @@ ton dos.
 - **Clic droit à main nue** : une tentacule **attrape** le monstre visé (jusqu'à 14 blocs) et le tient en l'air
   devant toi. **Clic droit** encore : elle le **projette** là où tu regardes, et il se fracasse sur le premier mur
   ou au sol (10 dégâts). Au bout de 5 s, elle le projette toute seule. Les boss ne se laissent pas attraper.
-- **Touche J** : **mode déplacement**. Les 4 tentacules filent loin devant toi, s'accrochent (« tchouf »), te
+- **Touche J** : **mode déplacement**. **Tu restes au sol** (plus de vol) mais tu cours **3,5 fois plus vite**
+  et tu montes les blocs sans sauter : les 4 tentacules se plantent dans le sol loin devant (« tchouf »), te
   **tirent d'un coup** puis se détachent quand tu les dépasses, chacune à son tour comme les pattes d'une araignée.
-  Tu les vois aussi **en vue à la première personne** (elles entrent par les bords de l'écran). Ça marche même
-  **sous l'eau** et **à travers la terre** (elles creusent devant toi, avec de l'encre et des « tchouf »). Tu
-  respires, tu vois dans le noir, et ni la lave, ni la noyade, ni l'étouffement ne te touchent. La bedrock reste
-  infranchissable. **J** à nouveau pour les ranger (si tu es dans la roche, tu remontes à la surface).
+  Tu les vois aussi **en vue à la première personne**.
+  - **Accroupi sur le sol** : elles **creusent** et tu plonges **sous terre** ; tu traverses la roche dans toutes
+    les directions (espace pour monter, accroupi pour descendre) et tu ressors en remontant à travers le sol.
+  - **Sous l'eau** : elles nagent comme une pieuvre (grâce du dauphin) et tirent dans toutes les directions.
+  - Tu respires, tu vois dans le noir, et ni la lave, ni la noyade, ni l'étouffement, ni les chutes ne te
+    touchent. La bedrock reste infranchissable. **J** à nouveau pour les ranger (si tu es dans la roche, tu remontes
+    à la surface).
 - `/upgrade armure 150` donne directement l'ensemble abyssal niveau 150.
 
 **Look de chevalier qui change tous les 5 niveaux** (21 formes) : nouvelles couleurs **et** un nouveau détail

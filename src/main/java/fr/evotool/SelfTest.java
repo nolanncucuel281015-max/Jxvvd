@@ -674,15 +674,29 @@ final class SelfTest {
 			}
 			grabTarget.discard();
 		}
+		// touche J : on reste au sol, plus rapide ; accroupi sur le sol, les tentacules creusent
 		fr.evotool.armor.Tentacles.toggle(player);
+		net.minecraft.entity.attribute.EntityAttributeInstance moveSpeed = player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
 		checks++;
-		if (!player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || !fr.evotool.upgrade.Burrow.phases(player)
-				|| player.getAbilities().getFlySpeed() != fr.evotool.armor.Tentacles.MOVE_SPEED) {
-			failures.add("tentacules : le mode déplacement (J) ne s'allume pas");
+		if (!player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || fr.evotool.upgrade.Burrow.phases(player)
+				|| player.getAbilities().flying || moveSpeed == null || moveSpeed.getModifier(fr.evotool.armor.Tentacles.SPEED_ID) == null) {
+			failures.add("tentacules : le mode déplacement (J) ne s'allume pas au sol (vol=" + player.getAbilities().flying + ")");
+		}
+		player.setSneaking(true);
+		player.setOnGround(true);
+		for (int i = 0; i < 10 && !Burrow.isBurrowing(player); i++) {
+			Burrow.tick(player, tick + i);
+		}
+		player.setSneaking(false);
+		checks++;
+		if (!Burrow.isBurrowing(player) || !Burrow.phases(player)
+				|| player.getAbilities().getFlySpeed() != fr.evotool.armor.Tentacles.DIG_SPEED) {
+			failures.add("tentacules : accroupi en mode J, elles ne creusent pas sous terre");
 		}
 		fr.evotool.armor.Tentacles.toggle(player);
 		checks++;
-		if (player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || fr.evotool.upgrade.Burrow.phases(player)) {
+		if (player.getCommandTags().contains(fr.evotool.armor.Tentacles.MOVE_TAG) || fr.evotool.upgrade.Burrow.phases(player)
+				|| moveSpeed != null && moveSpeed.getModifier(fr.evotool.armor.Tentacles.SPEED_ID) != null) {
 			failures.add("tentacules : le mode déplacement (J) ne s'éteint pas");
 		}
 		for (EquipmentSlot slot : slots) {

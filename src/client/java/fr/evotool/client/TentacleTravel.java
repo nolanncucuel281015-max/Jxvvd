@@ -32,9 +32,10 @@ import org.joml.Quaternionf;
  * Notre joueur et ses tentacules (armure abyssale niveau 150), côté client :
  * <ul>
  *   <li>clic droit à main nue : demande au serveur d'attraper le monstre visé (ou de projeter celui qu'on tient) ;</li>
- *   <li>mode déplacement (touche J) : 4 tentacules sortent du dos, filent loin devant, s'accrochent (« tchouf ») et
- *   tirent le joueur d'un coup, chacune à son tour, puis se détachent quand on les a dépassées. Elles sont dessinées
- *   dans le monde : on les voit aussi en vue à la première personne, qui ne dessine pas le corps du joueur.</li>
+ *   <li>mode déplacement (touche J) : on reste au sol. 4 tentacules sortent du dos, se plantent dans le sol loin
+ *   devant (« tchouf ») et tirent le joueur d'un coup, chacune à son tour comme les pattes d'une araignée, puis se
+ *   détachent quand on les a dépassées. Sous terre (accroupi) et sous l'eau, elles tirent dans toutes les directions.
+ *   Elles sont dessinées dans le monde : on les voit aussi en vue à la première personne.</li>
  * </ul>
  */
 public final class TentacleTravel {
@@ -47,7 +48,9 @@ public final class TentacleTravel {
 	private static final int LAUNCH_EVERY = 3;
 	/** Élan donné par une tentacule qui s'accroche, et vitesse au-delà de laquelle elle n'accélère plus (blocs/tick). */
 	private static final double PULL = 0.6;
-	private static final double MAX_SPEED = 3.2;
+	private static final double DIG_MAX_SPEED = 3.2;
+	private static final double WATER_MAX_SPEED = 1.6;
+	private static final double GROUND_MAX_SPEED = 1.4;
 	private static final int SEGMENTS = 14;
 	private static final float MODEL_RADIUS = 3.0F / 16.0F;
 	private static final int FULL_BRIGHT = 0xF000F0;
@@ -65,6 +68,9 @@ public final class TentacleTravel {
 	private static int cooldown;
 	private static boolean wasUsing;
 	private static boolean active;
+	/** Mode du joueur : au sol (par défaut), sous terre (il traverse la roche) ou dans l'eau. */
+	private static boolean digging;
+	private static boolean swimming;
 	private static long lastTick = System.nanoTime();
 
 	private static final ItemStack SEGMENT_STACK = stack("tentacle/segment");
@@ -129,8 +135,10 @@ public final class TentacleTravel {
 		wasUsing = using;
 
 		active = tentacles && TentacleFeature.isMoving(player.getId());
+		digging = fr.evotool.upgrade.Burrow.clientActive;
+		swimming = !digging && player.isTouchingWater();
 		Vec3d eye = player.getEyePos();
-		Vec3d look = player.getRotationVector();
+		Vec3d look = heading(player);
 		for (Arm arm : STATE) {
 			if (arm.age < 0) {
 				continue;
@@ -169,11 +177,22 @@ public final class TentacleTravel {
 		}
 	}
 
-	/** Là où le joueur veut aller : vers où il regarde (avancer / reculer), de côté, vers le haut ou le bas. */
+	/** Vers où regarde le joueur : à plat au sol (on reste par terre), dans toutes les directions sous terre ou sous l'eau. */
+	private static Vec3d heading(ClientPlayerEntity player) {
+		Vec3d look = player.getRotationVector();
+		if (digging || swimming) {
+			return look;
+		}
+		Vec3d flat = new Vec3d(look.x, 0, look.z);
+		return flat.lengthSquared() < 1.0E-6 ? new Vec3d(0, 0, 1) : flat.normalize();
+	}
+
+	/** Là où le joueur veut aller : avancer / reculer, de côté, et (sous terre, sous l'eau) monter ou descendre. */
 	private static Vec3d travelDirection(ClientPlayerEntity player, Vec3d look) {
 		Vec2f input = player.input.getMovementInput();
 		Vec3d right = right(look);
-		double vertical = (player.input.playerInput.jump() ? 1 : 0) - (player.input.playerInput.sneak() ? 1 : 0);
+		double vertical = digging || swimming
+				? (player.input.playerInput.jump() ? 1 : 0) - (player.input.playerInput.sneak() ? 1 : 0) : 0;
 		Vec3d direction = look.multiply(input.y).add(right.multiply(-input.x)).add(0, vertical, 0);
 		return direction.lengthSquared() < 0.01 ? null : direction.normalize();
 	}
@@ -183,20 +202,30 @@ public final class TentacleTravel {
 		return right.lengthSquared() < 1.0E-6 ? new Vec3d(-1, 0, 0) : right.normalize();
 	}
 
-	/** La tentacule file loin devant (plus loin quand on va vite) et vise un mur si elle en trouve un. */
+	/** La tentacule file loin devant (plus loin quand on va vite) : au sol elle se plante dans le sol. */
 	private static void launch(MinecraftClient client, ClientPlayerEntity player, Arm arm, int k, Vec3d direction) {
 		Vec3d eye = player.getEyePos();
 		double speed = player.getVelocity().length();
-		double reach = 6.0 + speed * 4.0;
 		Vec3d side = right(direction);
-		Vec3d up = side.crossProduct(direction).normalize();
 		double s = k % 2 == 0 ? 1 : -1;
-		double v = k < 2 ? 1 : -1;
-		Vec3d aim = eye.add(direction.multiply(reach)).add(side.multiply(s * 1.6)).add(up.multiply(v * 1.1));
-		BlockHitResult hit = client.world.raycast(new RaycastContext(eye, aim, RaycastContext.ShapeType.COLLIDER,
-				RaycastContext.FluidHandling.NONE, player));
-		// dans la roche (le joueur la traverse), elle s'enfonce droit devant : elle creuse
-		arm.anchor = hit.getType() == HitResult.Type.BLOCK && hit.getPos().squaredDistanceTo(eye) > 4 ? hit.getPos() : aim;
+		boolean upper = k < 2;
+		if (digging || swimming) {
+			double reach = 6.0 + speed * 4.0;
+			Vec3d up = side.crossProduct(direction).normalize();
+			Vec3d aim = eye.add(direction.multiply(reach)).add(side.multiply(s * 1.6)).add(up.multiply(upper ? 1.1 : -1.1));
+			BlockHitResult hit = client.world.raycast(new RaycastContext(eye, aim, RaycastContext.ShapeType.COLLIDER,
+					RaycastContext.FluidHandling.NONE, player));
+			// dans la roche (le joueur la traverse), elle s'enfonce droit devant : elle creuse
+			arm.anchor = hit.getType() == HitResult.Type.BLOCK && hit.getPos().squaredDistanceTo(eye) > 4 ? hit.getPos() : aim;
+		} else {
+			// au sol : les pattes de devant loin, celles de derrière plus près ; elles cherchent le sol
+			double reach = (upper ? 5.5 : 3.5) + speed * 4.0;
+			Vec3d feet = player.getEntityPos();
+			Vec3d aim = feet.add(direction.multiply(reach)).add(side.multiply(s * (upper ? 1.3 : 1.7)));
+			BlockHitResult hit = client.world.raycast(new RaycastContext(aim.add(0, 2.5, 0), aim.add(0, -4.0, 0),
+					RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, player));
+			arm.anchor = hit.getType() == HitResult.Type.BLOCK ? hit.getPos() : aim;
+		}
 		arm.age = 0;
 		arm.releaseAge = -1;
 		player.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.25F, 1.6F);
@@ -209,12 +238,27 @@ public final class TentacleTravel {
 			return;
 		}
 		Vec3d velocity = player.getVelocity();
-		Vec3d boosted = velocity.add(pull.normalize().multiply(PULL));
-		double limit = Math.max(velocity.length(), MAX_SPEED);
-		if (boosted.length() > limit) {
-			boosted = boosted.normalize().multiply(limit);
+		if (digging || swimming) {
+			Vec3d boosted = velocity.add(pull.normalize().multiply(PULL));
+			double limit = Math.max(velocity.length(), digging ? DIG_MAX_SPEED : WATER_MAX_SPEED);
+			if (boosted.length() > limit) {
+				boosted = boosted.normalize().multiply(limit);
+			}
+			player.setVelocity(boosted);
+		} else {
+			// au sol : elle tire à l'horizontale, on ne décolle pas (moins fort en plein saut)
+			Vec3d flat = new Vec3d(pull.x, 0, pull.z);
+			if (flat.lengthSquared() < 1.0E-4) {
+				return;
+			}
+			Vec3d horizontal = new Vec3d(velocity.x, 0, velocity.z)
+					.add(flat.normalize().multiply(player.isOnGround() ? PULL : PULL * 0.35));
+			double limit = Math.max(Math.hypot(velocity.x, velocity.z), GROUND_MAX_SPEED);
+			if (horizontal.length() > limit) {
+				horizontal = horizontal.normalize().multiply(limit);
+			}
+			player.setVelocity(horizontal.x, velocity.y, horizontal.z);
 		}
-		player.setVelocity(boosted);
 		player.playSound(SoundEvents.ENTITY_SQUID_SQUIRT, 0.45F, 0.7F + player.getRandom().nextFloat() * 0.4F);
 	}
 
@@ -242,6 +286,7 @@ public final class TentacleTravel {
 		Vec3d look = player.getRotationVector();
 		Vec3d right = right(look);
 		Vec3d up = right.crossProduct(look).normalize();
+		Vec3d flat = heading(player);
 		double time = player.age + delta;
 
 		models.clearAndUpdate(SEGMENT, SEGMENT_STACK, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, player.getId());
@@ -255,9 +300,11 @@ public final class TentacleTravel {
 			boolean upper = k < 2;
 			// elles sortent du dos, derrière les épaules : en vue à la première personne, elles entrent par les bords
 			Vec3d root = eye.add(right.multiply(s * 0.55)).add(up.multiply(upper ? -0.2 : -0.65)).subtract(look.multiply(0.35));
-			// au repos : courtes, pointées vers l'avant et l'extérieur, elles ondulent
-			Vec3d ready = root.add(look.multiply(1.0).add(right.multiply(s * 0.75)).add(up.multiply(upper ? 0.35 : -0.35))
-					.normalize().multiply(1.3 + 0.12 * Math.sin(time * 0.3 + k)));
+			// au repos : courtes et pointées vers l'avant et l'extérieur (au sol : vers le bas, comme des pattes)
+			Vec3d rest = digging || swimming
+					? look.add(right.multiply(s * 0.75)).add(up.multiply(upper ? 0.35 : -0.35))
+					: flat.multiply(upper ? 0.9 : 0.4).add(right.multiply(s * 0.8)).add(0, upper ? -0.8 : -1.1, 0);
+			Vec3d ready = root.add(rest.normalize().multiply(1.3 + 0.12 * Math.sin(time * 0.3 + k)));
 			Vec3d tip;
 			if (arm.age < 0) {
 				tip = ready;
