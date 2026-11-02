@@ -74,7 +74,8 @@ public final class TentacleTravel {
 	private static final Arm[] STATE = new Arm[ARMS];
 	private static int next;
 	private static int cooldown;
-	private static boolean wasUsing;
+	/** Le clic droit en cours a déjà attrapé / projeté (on ne recommence pas tant qu'il reste enfoncé). */
+	private static boolean useHandled;
 	private static boolean active;
 	/** Mode du joueur : au sol (par défaut), sous terre (il traverse la roche) ou dans l'eau. */
 	private static boolean digging;
@@ -117,7 +118,27 @@ public final class TentacleTravel {
 			arm.releaseAge = -1;
 		}
 		active = false;
-		wasUsing = false;
+		useHandled = false;
+	}
+
+	/**
+	 * Clic droit (appelé au début de l'action « utiliser » du jeu) : à main nue, avec les tentacules, sans viser de
+	 * bloc, une tentacule attrape le monstre ou le joueur visé, ou projette / pose celui qu'on tient. Vrai si le clic
+	 * est pris par les tentacules (l'action normale est alors annulée).
+	 */
+	public static boolean onUse(MinecraftClient client) {
+		ClientPlayerEntity player = client.player;
+		if (player == null || player.isSpectator() || client.currentScreen != null || !player.getMainHandStack().isEmpty()
+				|| !Tentacles.hasTentacles(player)
+				|| client.crosshairTarget instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
+			return false;
+		}
+		if (!useHandled) {
+			useHandled = true;
+			ClientPlayNetworking.send(TentacleGrabPayload.INSTANCE);
+			player.swingHand(net.minecraft.util.Hand.OFF_HAND);
+		}
+		return true;
 	}
 
 	/** Les tentacules de notre joueur sont-elles dessinées ici (mode déplacement) plutôt que sur son buste ? */
@@ -136,13 +157,10 @@ public final class TentacleTravel {
 		}
 		boolean tentacles = Tentacles.hasTentacles(player) && !player.isSpectator();
 
-		// clic droit à main nue : attraper / projeter
-		boolean using = client.options.useKey.isPressed();
-		if (using && !wasUsing && tentacles && client.currentScreen == null && player.getMainHandStack().isEmpty()
-				&& !(client.crosshairTarget instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK)) {
-			ClientPlayNetworking.send(TentacleGrabPayload.INSTANCE);
+		// clic droit relâché : le prochain attrapera de nouveau (voir onUse)
+		if (!client.options.useKey.isPressed()) {
+			useHandled = false;
 		}
-		wasUsing = using;
 
 		active = tentacles && TentacleFeature.isMoving(player.getId());
 		digging = fr.evotool.upgrade.Burrow.clientActive;

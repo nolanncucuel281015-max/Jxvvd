@@ -8,7 +8,7 @@
 	"license": "MIT",
 	"icon": "assets/evotool/icon.png",
 	"environment": "*",
-	"mixins": ["evotool.mixins.json"],
+	"mixins": ["evotool.mixins.json", {"config": "evotool.client.mixins.json", "environment": "client"}],
 	"entrypoints": {
 		"main": ["fr.evotool.EvoTool"],
 		"client": ["fr.evotool.client.EvoToolClient"]
