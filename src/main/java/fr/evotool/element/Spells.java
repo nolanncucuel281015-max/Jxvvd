@@ -62,9 +62,12 @@ public final class Spells {
 	public static void cast(ServerPlayerEntity player, Spell spell) {
 		ServerWorld world = (ServerWorld) player.getEntityWorld();
 		Vec3d look = player.getRotationVector();
-		Vec3d hand = player.getEyePos().add(look.multiply(0.6)).add(0, -0.2, 0);
+		Vec3d right = new Vec3d(-look.z, 0, look.x);
+		right = right.lengthSquared() < 1.0E-6 ? Vec3d.ZERO : right.normalize();
+		// le sort part un peu devant la main droite (pas collé à la caméra)
+		Vec3d hand = player.getEyePos().add(look.multiply(1.4)).add(right.multiply(0.3)).add(0, -0.25, 0);
 		Element element = spell.element();
-		world.spawnParticles(element.particle(), hand.x, hand.y, hand.z, 12, 0.15, 0.15, 0.15, 0.05);
+		world.spawnParticles(element.particle(), hand.x, hand.y, hand.z, 4, 0.1, 0.1, 0.1, 0.02);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.8F,
 				spell.bolt() ? 1.6F : 1.0F);
 		if (spell.bolt()) {
@@ -134,7 +137,7 @@ public final class Spells {
 				hit = target;
 			}
 		}
-		trail(world, bolt.spell, from, end);
+		trail(world, bolt.spell, from, end, bolt.caster.getEyePos());
 		if (hit != null) {
 			Vec3d at = hit.getBoundingBox().getCenter();
 			hit.damage(world, bolt.caster.getDamageSources().indirectMagic(bolt.caster, bolt.caster), bolt.spell.damage());
@@ -151,11 +154,14 @@ public final class Spells {
 	}
 
 	/** La traînée du trait : particules de l'élément le long du trajet de ce tick, avec un cœur lumineux. */
-	private static void trail(ServerWorld world, Spell spell, Vec3d from, Vec3d to) {
+	private static void trail(ServerWorld world, Spell spell, Vec3d from, Vec3d to, Vec3d eye) {
 		Vec3d step = to.subtract(from);
 		int count = Math.max(2, (int) (step.length() * 3));
 		for (int i = 0; i < count; i++) {
 			Vec3d p = from.add(step.multiply(i / (double) count));
+			if (p.squaredDistanceTo(eye) < 2.5 * 2.5) {
+				continue;   // pas de grosses particules collées à la caméra du lanceur
+			}
 			world.spawnParticles(spell.element().particle(), p.x, p.y, p.z, 1, 0.05, 0.05, 0.05, 0.0);
 			if (i % 2 == 0) {
 				world.spawnParticles(ParticleTypes.END_ROD, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02, 0.0);

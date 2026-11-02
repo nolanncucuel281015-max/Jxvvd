@@ -187,7 +187,7 @@ public class ElementalCombinerScreen extends HandledScreen<ElementalCombinerScre
 		context.getMatrices().pushMatrix();
 		context.getMatrices().translate(8, 43);
 		context.getMatrices().scale(0.75F, 0.75F);
-		java.util.List<net.minecraft.text.OrderedText> wrapped = textRenderer.wrapLines(line, (int) ((backgroundWidth - 16) / 0.75F));
+		java.util.List<net.minecraft.text.OrderedText> wrapped = textRenderer.wrapLines(line, (int) ((MAIN_WIDTH - 16) / 0.75F));
 		for (int i = 0; i < Math.min(2, wrapped.size()); i++) {
 			context.drawText(textRenderer, wrapped.get(i), 0, i * 9, color, false);
 		}

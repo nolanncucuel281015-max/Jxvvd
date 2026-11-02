@@ -137,8 +137,11 @@ public class VisualGameTest implements FabricClientGameTest {
 		context.waitTicks(3);
 		context.takeScreenshot("evotool_12_spell_bolt");
 		context.waitTicks(30);
+		// accroupi (déjà quelques ticks, comme en jeu) + clic droit : sort suivant
 		context.getInput().holdKey(options -> options.sneakKey);
+		context.waitTicks(4);
 		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(3);
 		context.getInput().releaseKey(options -> options.sneakKey);
 		context.waitTicks(5);
 		context.getInput().pressKey(options -> options.useKey);
