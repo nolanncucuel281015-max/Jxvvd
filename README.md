@@ -166,9 +166,14 @@ quand tu tues des monstres. Avec un plastron abyssal, les **ailes de l'infini de
 
 **Tentacules** (ensemble abyssal complet au niveau 150) : 4 tentacules noires (vrais modèles 3D) ondulent dans
 ton dos.
-- **Clic gauche à main nue** : une tentacule jaillit (« tchouf ») jusqu'à 14 blocs, droit sur ce que tu vises,
-  et frappe fort tout ce qu'elle traverse.
-- **Touche J** : **mode déplacement**. Les tentacules se tendent vers l'avant et te tirent à toute vitesse, même
+- **Clic gauche à main nue** : une tentacule part du dos et file (on la voit partir, en un tiers de seconde)
+  jusqu'à 14 blocs, droit sur ce que tu vises, frappe fort tout ce qu'elle traverse (« tchouf ») puis se rétracte.
+- **Clic droit à main nue** : une tentacule **attrape** le monstre visé (jusqu'à 14 blocs) et le tient en l'air
+  devant toi. **Clic droit** encore : elle le **projette** là où tu regardes, et il se fracasse sur le premier mur
+  ou au sol (10 dégâts). Au bout de 5 s, elle le projette toute seule. Les boss ne se laissent pas attraper.
+- **Touche J** : **mode déplacement**. Les 4 tentacules filent loin devant toi, s'accrochent (« tchouf »), te
+  **tirent d'un coup** puis se détachent quand tu les dépasses, chacune à son tour comme les pattes d'une araignée.
+  Tu les vois aussi **en vue à la première personne** (elles entrent par les bords de l'écran). Ça marche même
   **sous l'eau** et **à travers la terre** (elles creusent devant toi, avec de l'encre et des « tchouf »). Tu
   respires, tu vois dans le noir, et ni la lave, ni la noyade, ni l'étouffement ne te touchent. La bedrock reste
   infranchissable. **J** à nouveau pour les ranger (si tu es dans la roche, tu remontes à la surface).

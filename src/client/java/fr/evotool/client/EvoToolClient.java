@@ -67,6 +67,8 @@ public class EvoToolClient implements ClientModInitializer {
 		InfinityWingsFeature.register();
 		// Tentacules noires de l'armure abyssale niveau 150.
 		TentacleFeature.register();
+		// … et, en mode déplacement, celles qui s'accrochent devant nous et nous tirent (+ clic droit : attraper).
+		TentacleTravel.register();
 		// Générateur de bouclier : son menu.
 		HandledScreens.register(ShieldGeneratorScreenHandler.TYPE, ShieldGeneratorScreen::new);
 		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.

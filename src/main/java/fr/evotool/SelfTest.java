@@ -632,7 +632,7 @@ final class SelfTest {
 		checks++;
 		boolean struck = fr.evotool.armor.Tentacles.strike(player);
 		int strikes = fr.evotool.armor.Tentacles.activeStrikes();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 			fr.evotool.armor.Tentacles.tickForTest();
 		}
 		EvoTool.LOGGER.info("EVOTOOL tentacles: strike={} active={} zombie {} -> {} left={}", struck, strikes, targetHealth,
@@ -643,6 +643,36 @@ final class SelfTest {
 		}
 		if (target != null) {
 			target.discard();
+		}
+		// clic droit : la tentacule attrape le zombie, le tient devant le joueur, puis le projette
+		ZombieEntity grabTarget = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+		checks++;
+		if (grabTarget == null) {
+			failures.add("tentacules : impossible de créer le zombie à attraper");
+		} else {
+			grabTarget.refreshPositionAndAngles(x, y, z + 5.0, 180.0F, 0.0F);
+			grabTarget.setAiDisabled(true);
+			world.spawnEntity(grabTarget);
+			boolean grabbed = fr.evotool.armor.Tentacles.grabOrThrow(player);
+			for (int i = 0; i < 14; i++) {
+				fr.evotool.armor.Tentacles.tickForTest();
+			}
+			Vec3d holdPoint = player.getEyePos().add(player.getRotationVector().multiply(3.0));
+			double holdDistance = grabTarget.getBoundingBox().getCenter().distanceTo(holdPoint);
+			boolean held = fr.evotool.armor.Tentacles.grabbed(player) == grabTarget;
+			fr.evotool.armor.Tentacles.grabOrThrow(player);
+			Vec3d thrown = grabTarget.getVelocity();
+			for (int i = 0; i < 8; i++) {
+				fr.evotool.armor.Tentacles.tickForTest();
+			}
+			EvoTool.LOGGER.info("EVOTOOL tentacle grab: grabbed={} held={} distance={} thrown={} left={}", grabbed, held,
+					holdDistance, thrown, fr.evotool.armor.Tentacles.activeStrikes());
+			if (!grabbed || !held || holdDistance > 1.5 || thrown.z < 1.5 || fr.evotool.armor.Tentacles.grabbed(player) != null
+					|| fr.evotool.armor.Tentacles.activeStrikes() != 0) {
+				failures.add("tentacules : le clic droit n'attrape pas / ne projette pas le zombie (tenu=" + held
+						+ ", distance=" + holdDistance + ", vitesse=" + thrown + ")");
+			}
+			grabTarget.discard();
 		}
 		fr.evotool.armor.Tentacles.toggle(player);
 		checks++;

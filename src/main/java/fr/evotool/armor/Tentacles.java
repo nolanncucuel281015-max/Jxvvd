@@ -67,40 +67,58 @@ public final class Tentacles {
 	/** Tag posé sur le joueur tant que le mode déplacement est allumé (sauvegardé avec lui). */
 	public static final String MOVE_TAG = "evotool_tentacle_move";
 	/** Vitesse de vol en mode déplacement (créatif : 0,05). */
-	public static final float MOVE_SPEED = 0.2F;
+	public static final float MOVE_SPEED = 0.1F;
 	private static final double STRIKE_RANGE = 14.0;
-	private static final int STRIKE_COOLDOWN = 12;
-	/** Durée d'un coup : la tentacule jaillit en 3 ticks, frappe, puis se rétracte. */
-	private static final float[] EXTENSION = {0.35F, 0.7F, 1.0F, 1.0F, 0.75F, 0.5F, 0.25F, 0.05F};
-	private static final int HIT_TICK = 2;
+	private static final int STRIKE_COOLDOWN = 20;
+	/** Un coup : la tentacule jaillit en 6 ticks (on la voit partir), frappe, reste tendue puis se rétracte. */
+	private static final float[] EXTENSION = {0.12F, 0.26F, 0.42F, 0.58F, 0.74F, 0.88F, 1.0F, 1.0F, 1.0F,
+			0.88F, 0.74F, 0.58F, 0.42F, 0.26F, 0.12F};
+	private static final int HIT_TICK = 6;
+	/** Attraper : la tentacule met 6 ticks à atteindre le monstre, puis le tient (au plus 5 s) avant de le projeter. */
+	private static final int GRAB_REACH = 6;
+	private static final int GRAB_HOLD = 100;
+	private static final int RELEASE_TICKS = 5;
+	private static final double HOLD_DISTANCE = 3.0;
 	private static final float SEGMENT = 0.5F;
 	/** Rayon du modèle de segment (3 pixels) : sert à calculer l'épaisseur voulue. */
 	private static final float MODEL_RADIUS = 3.0F / 16.0F;
 	private static final Quaternionf FLIP = new Quaternionf().rotationY((float) Math.PI);
 
+	/** Une tentacule faite d'objets d'affichage : un coup (clic gauche) ou une prise (clic droit). */
 	private static final class Strike {
 		final ServerPlayerEntity player;
 		final ServerWorld world;
-		final Vec3d origin;
-		final Vec3d control;
-		final Vec3d end;
+		/** Position des entités d'affichage (fixe) : les segments sont placés par rapport à elle. */
+		final Vec3d anchor;
+		Vec3d origin;
+		Vec3d control;
+		Vec3d end;
 		final List<DisplayEntity.ItemDisplayEntity> segments;
-		final float height;
 		int age;
+		/** Monstre attrapé (clic droit), sinon null. */
+		LivingEntity grabbed;
+		/** Après le lancer : la tentacule se rétracte pendant quelques ticks. */
+		int releasing = -1;
 
 		Strike(ServerPlayerEntity player, ServerWorld world, Vec3d origin, Vec3d control, Vec3d end,
-				List<DisplayEntity.ItemDisplayEntity> segments, float height) {
+				List<DisplayEntity.ItemDisplayEntity> segments, Vec3d anchor) {
 			this.player = player;
 			this.world = world;
 			this.origin = origin;
 			this.control = control;
 			this.end = end;
 			this.segments = segments;
-			this.height = height;
+			this.anchor = anchor;
 		}
 	}
 
+	/** Un monstre projeté : il se fracasse sur ce qu'il touche. */
+	private record Thrown(ServerPlayerEntity player, LivingEntity target, int start) {
+	}
+
 	private static final List<Strike> STRIKES = new ArrayList<>();
+	private static final List<Thrown> THROWN = new ArrayList<>();
+	private static final Map<UUID, Strike> GRABS = new HashMap<>();
 	private static final Map<UUID, Integer> COOLDOWN = new HashMap<>();
 	private static final Map<UUID, Vec3d> LAST_POS = new HashMap<>();
 	private static final Map<UUID, Vec3d> SAFE_POS = new HashMap<>();
@@ -140,6 +158,8 @@ public final class Tentacles {
 				strike.segments.forEach(GiantItem::discard);
 			}
 			STRIKES.clear();
+			GRABS.clear();
+			THROWN.clear();
 		});
 	}
 
@@ -170,12 +190,7 @@ public final class Tentacles {
 
 		Vec3d look = player.getRotationVector();
 		Vec3d eye = player.getEyePos();
-		Vec3d right = new Vec3d(-look.z, 0, look.x).normalize();
-		if (!Double.isFinite(right.x)) {
-			right = new Vec3d(1, 0, 0);
-		}
-		// elle part du dos, à droite de la tête : on la voit jaillir même en vue à la première personne
-		Vec3d origin = eye.add(right.multiply(0.4)).add(0, -0.45, 0).subtract(look.multiply(0.25));
+		Vec3d origin = shoulder(player);
 		Vec3d far = eye.add(look.multiply(STRIKE_RANGE));
 		BlockHitResult block = world.raycast(new RaycastContext(eye, far, RaycastContext.ShapeType.COLLIDER,
 				RaycastContext.FluidHandling.NONE, player));
@@ -186,30 +201,49 @@ public final class Tentacles {
 		if (aimed != null) {
 			end = aimed.getEntity().getBoundingBox().getCenter();
 		}
-		double length = origin.distanceTo(end);
-		Vec3d mid = origin.add(end).multiply(0.5);
-		Vec3d control = mid.add(0, 0.15 + length * 0.04, 0).add(right.multiply(length * 0.03));
+		STRIKES.add(chain(player, world, origin, end));
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SQUID_SQUIRT, SoundCategory.PLAYERS, 1.2F, 0.6F);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0F, 0.5F);
+		return true;
+	}
 
-		int count = Math.max(3, (int) Math.ceil(length / SEGMENT));
-		float height = (float) (length * 2 + 4);
+	/** D'où part la tentacule : du dos, à droite de la tête (on la voit jaillir même en vue à la première personne). */
+	private static Vec3d shoulder(ServerPlayerEntity player) {
+		Vec3d look = player.getRotationVector();
+		Vec3d right = new Vec3d(-look.z, 0, look.x);
+		right = right.lengthSquared() < 1.0E-6 ? new Vec3d(1, 0, 0) : right.normalize();
+		return player.getEyePos().add(right.multiply(0.4)).add(0, -0.45, 0).subtract(look.multiply(0.25));
+	}
+
+	private static Vec3d curve(Vec3d origin, Vec3d end, double wobble) {
+		Vec3d look = end.subtract(origin);
+		Vec3d right = new Vec3d(-look.z, 0, look.x);
+		right = right.lengthSquared() < 1.0E-6 ? new Vec3d(1, 0, 0) : right.normalize();
+		double length = look.length();
+		return origin.add(end).multiply(0.5).add(0, 0.15 + length * 0.04, 0).add(right.multiply(length * 0.03 + wobble));
+	}
+
+	/** Crée une tentacule repliée (ses segments sont des objets d'affichage) d'{@code origin} vers {@code end}. */
+	private static Strike chain(ServerPlayerEntity player, ServerWorld world, Vec3d origin, Vec3d end) {
+		double length = origin.distanceTo(end);
+		int count = Math.max(4, (int) Math.ceil(length / SEGMENT));
+		float box = 48.0F;
+		Vec3d anchor = origin.add(0, -box / 2, 0);
 		List<DisplayEntity.ItemDisplayEntity> segments = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			ItemStack stack = new ItemStack(Items.INK_SAC);
 			stack.set(DataComponentTypes.ITEM_MODEL, EvoTool.id(i == count - 1 ? "tentacle/tip" : "tentacle/segment"));
 			DisplayEntity.ItemDisplayEntity segment = GiantItem.create(world, stack, ItemDisplayContext.NONE,
-					origin.add(0, -height / 2, 0), 0.0F, new Quaternionf(), 0.0F, 1);
+					anchor, 0.0F, new Quaternionf(), 0.0F, 1);
 			segment.setBrightness(null);
 			segment.setTeleportDuration(0);
-			segment.setDisplayWidth(height);
-			segment.setDisplayHeight(height);
+			segment.setDisplayWidth(box);
+			segment.setDisplayHeight(box);
 			segments.add(segment);
 		}
-		Strike strike = new Strike(player, world, origin, control, end, segments, height);
+		Strike strike = new Strike(player, world, origin, curve(origin, end, 0), end, segments, anchor);
 		pose(strike, 0.0F);
-		STRIKES.add(strike);
-		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SQUID_SQUIRT, SoundCategory.PLAYERS, 1.2F, 0.6F);
-		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0F, 0.5F);
-		return true;
+		return strike;
 	}
 
 	private static Vec3d bezier(Strike strike, double t) {
@@ -220,7 +254,7 @@ public final class Tentacles {
 	/** Place les segments jusqu'à la fraction {@code extension} du trajet (les autres sont repliés à zéro). */
 	private static void pose(Strike strike, float extension) {
 		int count = strike.segments.size();
-		Vec3d base = strike.origin.add(0, -strike.height / 2, 0);
+		Vec3d base = strike.anchor;
 		for (int i = 0; i < count; i++) {
 			float t0 = (float) i / count;
 			float t1 = (float) (i + 1) / count;
@@ -249,16 +283,153 @@ public final class Tentacles {
 		for (Iterator<Strike> it = STRIKES.iterator(); it.hasNext(); ) {
 			Strike strike = it.next();
 			strike.age++;
-			if (strike.age >= EXTENSION.length || strike.player.isRemoved()) {
+			boolean done = strike.grabbed != null ? !tickGrab(strike) : strike.age >= EXTENSION.length;
+			if (done || strike.player.isRemoved()) {
 				strike.segments.forEach(GiantItem::discard);
+				if (GRABS.get(strike.player.getUuid()) == strike) {
+					GRABS.remove(strike.player.getUuid());
+				}
 				it.remove();
 				continue;
 			}
-			pose(strike, EXTENSION[strike.age]);
-			if (strike.age == HIT_TICK) {
-				hit(strike);
+			if (strike.grabbed == null) {
+				pose(strike, EXTENSION[strike.age]);
+				if (strike.age == HIT_TICK) {
+					hit(strike);
+				}
 			}
 		}
+		tickThrown();
+	}
+
+	// ------------------------------------------------------------------ attraper et projeter (clic droit à main nue)
+
+	/**
+	 * Clic droit à main nue : une tentacule attrape le monstre visé et le tient devant le joueur ;
+	 * un deuxième clic droit le projette là où il regarde (sinon il est projeté tout seul au bout de 5 s).
+	 */
+	public static boolean grabOrThrow(ServerPlayerEntity player) {
+		if (player.isSpectator() || !hasTentacles(player)) {
+			return false;
+		}
+		Strike held = GRABS.get(player.getUuid());
+		if (held != null) {
+			if (held.releasing < 0 && held.age > GRAB_REACH) {
+				throwGrabbed(held);
+			}
+			return true;
+		}
+		ServerWorld world = (ServerWorld) player.getEntityWorld();
+		Vec3d eye = player.getEyePos();
+		Vec3d far = eye.add(player.getRotationVector().multiply(STRIKE_RANGE));
+		BlockHitResult block = world.raycast(new RaycastContext(eye, far, RaycastContext.ShapeType.COLLIDER,
+				RaycastContext.FluidHandling.NONE, player));
+		Vec3d end = block.getType() == HitResult.Type.MISS ? far : block.getPos();
+		EntityHitResult aimed = ProjectileUtil.raycast(player, eye, end, new Box(eye, end).expand(1.0),
+				e -> e instanceof LivingEntity living && !(e instanceof PlayerEntity) && e.isAlive()
+						&& !fr.evotool.evo.EvoProgression.isBoss(living), eye.squaredDistanceTo(end));
+		if (aimed == null) {
+			return false;
+		}
+		LivingEntity target = (LivingEntity) aimed.getEntity();
+		Strike strike = chain(player, world, shoulder(player), target.getBoundingBox().getCenter());
+		strike.grabbed = target;
+		STRIKES.add(strike);
+		GRABS.put(player.getUuid(), strike);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SQUID_SQUIRT, SoundCategory.PLAYERS, 1.2F, 0.5F);
+		return true;
+	}
+
+	/** Un tick d'une prise ; faux quand elle est finie. */
+	private static boolean tickGrab(Strike strike) {
+		ServerPlayerEntity player = strike.player;
+		LivingEntity target = strike.grabbed;
+		if (strike.releasing >= 0) {
+			strike.releasing--;
+			pose(strike, Math.max(0.0F, strike.releasing / (float) RELEASE_TICKS));
+			return strike.releasing > 0;
+		}
+		if (!target.isAlive() || target.isRemoved() || !player.isAlive() || target.getEntityWorld() != player.getEntityWorld()
+				|| target.squaredDistanceTo(player) > 24 * 24) {
+			return false;
+		}
+		strike.origin = shoulder(player);
+		if (strike.age < GRAB_REACH) {
+			// elle file vers le monstre
+			strike.end = target.getBoundingBox().getCenter();
+			strike.control = curve(strike.origin, strike.end, 0);
+			pose(strike, strike.age / (float) GRAB_REACH);
+			return true;
+		}
+		ServerWorld world = strike.world;
+		if (strike.age == GRAB_REACH) {
+			Vec3d c = target.getBoundingBox().getCenter();
+			world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 25, 0.3, 0.4, 0.3, 0.1);
+			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.2F, 0.6F);
+			target.damage(world, player.getDamageSources().playerAttack(player), 2.0F);
+		}
+		// elle le ramène devant le joueur et le tient là, en l'air
+		Vec3d hold = player.getEyePos().add(player.getRotationVector().multiply(HOLD_DISTANCE)).add(0, -0.3 - target.getHeight() / 2, 0);
+		Vec3d now = target.getEntityPos();
+		Vec3d next = strike.age < GRAB_REACH + 6 ? now.lerp(hold, 0.45) : hold;
+		// pas dans un mur : s'il n'y a pas la place, il reste où il est
+		if (world.isSpaceEmpty(target, target.getBoundingBox().offset(next.subtract(now)))) {
+			target.setPosition(next.x, next.y, next.z);
+		}
+		target.setVelocity(Vec3d.ZERO);
+		target.onLanding();
+		strike.end = target.getBoundingBox().getCenter();
+		strike.control = curve(strike.origin, strike.end, 0.25 * Math.sin(strike.age * 0.4));
+		pose(strike, 1.0F);
+		// au bout de 5 s (ou si le joueur s'est trop éloigné de l'endroit de la prise), il est projeté tout seul
+		if (strike.age > GRAB_REACH + GRAB_HOLD || strike.origin.squaredDistanceTo(strike.anchor.add(0, 24, 0)) > 16 * 16) {
+			throwGrabbed(strike);
+		}
+		return true;
+	}
+
+	/** « Tchouf » : le monstre est projeté là où le joueur regarde. */
+	private static void throwGrabbed(Strike strike) {
+		ServerPlayerEntity player = strike.player;
+		LivingEntity target = strike.grabbed;
+		Vec3d push = player.getRotationVector().multiply(2.6).add(0, 0.45, 0);
+		target.setVelocity(Vec3d.ZERO);
+		target.addVelocity(push.x, push.y, push.z);
+		THROWN.add(new Thrown(player, target, strike.world.getServer().getTicks()));
+		Vec3d c = target.getBoundingBox().getCenter();
+		strike.world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 30, 0.3, 0.3, 0.3, 0.2);
+		strike.world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SQUID_SQUIRT, SoundCategory.PLAYERS, 1.5F, 0.4F);
+		strike.world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1.2F, 0.6F);
+		strike.releasing = RELEASE_TICKS;
+		GRABS.remove(player.getUuid());
+	}
+
+	/** Les monstres projetés se fracassent sur le premier obstacle (ou le sol). */
+	private static void tickThrown() {
+		for (Iterator<Thrown> it = THROWN.iterator(); it.hasNext(); ) {
+			Thrown thrown = it.next();
+			LivingEntity target = thrown.target();
+			ServerWorld world = (ServerWorld) target.getEntityWorld();
+			int age = world.getServer().getTicks() - thrown.start();
+			if (!target.isAlive() || age > 60) {
+				it.remove();
+				continue;
+			}
+			if (age > 3 && (target.horizontalCollision || target.isOnGround())) {
+				Vec3d c = target.getBoundingBox().getCenter();
+				target.damage(world, thrown.player().getDamageSources().playerAttack(thrown.player()), 10.0F);
+				world.spawnParticles(ParticleTypes.EXPLOSION, c.x, c.y, c.z, 1, 0, 0, 0, 0);
+				world.spawnParticles(ParticleTypes.SQUID_INK, c.x, c.y, c.z, 20, 0.4, 0.4, 0.4, 0.1);
+				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.2F, 0.6F);
+				it.remove();
+			}
+		}
+	}
+
+	/** Le monstre que ce joueur tient avec une tentacule (auto-test). */
+	public static LivingEntity grabbed(ServerPlayerEntity player) {
+		Strike strike = GRABS.get(player.getUuid());
+		return strike == null ? null : strike.grabbed;
 	}
 
 	/** Au bout de sa course, la tentacule frappe tout ce qu'elle traverse. */

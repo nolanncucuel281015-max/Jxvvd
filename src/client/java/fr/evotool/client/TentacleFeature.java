@@ -57,6 +57,12 @@ public class TentacleFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 	public TentacleFeature(FeatureRendererContext<PlayerEntityRenderState, PlayerEntityModel> context, ItemModelManager itemModelManager) {
 		super(context);
 		this.itemModelManager = itemModelManager;
+		TentacleTravel.models = itemModelManager;
+	}
+
+	/** Les tentacules de ce joueur (id d'entité) sont-elles en mode déplacement ? */
+	public static boolean isMoving(int entityId) {
+		return MOVING.getOrDefault(entityId, false);
 	}
 
 	public static void register() {
@@ -98,6 +104,9 @@ public class TentacleFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			return;
 		}
 		MinecraftClient client = MinecraftClient.getInstance();
+		if (TentacleTravel.drawsLocalPlayer() && client.player != null && client.player.getId() == state.id) {
+			return;   // en mode déplacement, ses tentacules sont dessinées dans le monde (TentacleTravel)
+		}
 		itemModelManager.clearAndUpdate(segment, segmentStack, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, state.id);
 		itemModelManager.clearAndUpdate(tip, tipStack, ItemDisplayContext.NONE, client.world, (HeldItemContext) null, state.id);
 		float move = reach(state.id);

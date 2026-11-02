@@ -24,6 +24,12 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(TentacleTogglePayload.ID, TentacleTogglePayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(TentacleStatePayload.ID, TentacleStatePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(TentacleTogglePayload.ID, (payload, context) -> Tentacles.toggle(context.player()));
+		PayloadTypeRegistry.playC2S().register(TentacleGrabPayload.ID, TentacleGrabPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(TentacleGrabPayload.ID, (payload, context) -> {
+			if (context.player().getMainHandStack().isEmpty()) {
+				Tentacles.grabOrThrow(context.player());
+			}
+		});
 		ServerPlayNetworking.registerGlobalReceiver(EvolvePayload.ID, (payload, context) -> Evolution.start(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(EvoSettingsPayload.ID, (payload, context) -> {
 			ItemStack stack = context.player().getMainHandStack();
