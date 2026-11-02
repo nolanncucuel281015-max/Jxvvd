@@ -9,7 +9,10 @@ import fr.evotool.evo.EvoProgression;
 import fr.evotool.item.ModItems;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestClientWorldContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -31,15 +34,21 @@ public class VisualGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		// rendu logiciel dans la CI : petit monde à charger
-		// (le rendu logiciel de l'écran de chargement prendrait tout le processeur au serveur)
+		// rendu logiciel dans la CI : petit monde à charger. Serveur dédié à part (un serveur intégré avancerait
+		// au rythme du client, beaucoup trop lent ici pour préparer le monde à temps).
 		context.runOnClient(client -> {
 			client.options.getViewDistance().setValue(3);
 			client.options.getSimulationDistance().setValue(5);
-			client.options.getMaxFps().setValue(10);
-			client.options.getEnableVsync().setValue(false);
 		});
-		try (TestSingleplayerContext game = context.worldBuilder().create()) {
+		try (TestDedicatedServerContext server = context.worldBuilder().createServer();
+				TestServerConnection connection = server.connect()) {
+			run(context, server, connection.getClientWorld());
+		}
+	}
+
+	private static void run(ClientGameTestContext context, TestServerContext gameServer, TestClientWorldContext clientWorld) {
+		Game game = new Game(gameServer, clientWorld);
+		{
 			game.getClientWorld().waitForChunksRender();
 			game.getServer().runCommand("time set noon");
 			game.getServer().runCommand("weather clear");
@@ -82,6 +91,17 @@ public class VisualGameTest implements FabricClientGameTest {
 			context.takeScreenshot("evotool_06_travel_third");
 			game.getServer().runOnServer(server -> Tentacles.toggle(player(server)));
 			context.waitTicks(10);
+		}
+	}
+
+	/** Le serveur et le monde du client du test. */
+	private record Game(TestServerContext server, TestClientWorldContext clientWorld) {
+		TestServerContext getServer() {
+			return server;
+		}
+
+		TestClientWorldContext getClientWorld() {
+			return clientWorld;
 		}
 	}
 
