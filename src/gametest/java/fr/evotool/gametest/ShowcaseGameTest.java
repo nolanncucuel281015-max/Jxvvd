@@ -73,10 +73,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		context.runOnClient(client -> {
 			client.options.getViewDistance().setValue(8);
 			client.options.getSimulationDistance().setValue(6);
-			// la fenêtre elle-même en 1920 x 1080 : les menus (le manuel) sont cadrés pour cette taille
-			client.getWindow().setWindowedSize(WIDTH, HEIGHT);
 		});
-		context.waitTicks(10);
 		Properties properties = new Properties();
 		properties.setProperty("view-distance", "8");
 		properties.setProperty("simulation-distance", "6");
@@ -408,6 +405,10 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 
 	/** Le manuel illustré, ouvert sur une page avec une image. */
 	private static void manualShot(ClientGameTestContext context) {
+		// la fenêtre elle-même en 1920 x 1080 : le menu est cadré pour cette taille (seulement ici : le rendu
+		// logiciel de la CI serait trop lent pour charger le monde dans une si grande fenêtre)
+		context.runOnClient(client -> client.getWindow().setWindowedSize(WIDTH, HEIGHT));
+		context.waitTicks(20);
 		context.runOnClient(client -> {
 			fr.evotool.client.ManualScreen manual = new fr.evotool.client.ManualScreen();
 			client.setScreen(manual);
