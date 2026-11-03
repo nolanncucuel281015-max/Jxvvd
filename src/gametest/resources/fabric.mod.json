@@ -6,7 +6,7 @@
   "description": "Captures d'écran du vrai client pour vérifier les rendus (CI, commit contenant [visual]).",
   "environment": "*",
   "entrypoints": {
-    "fabric-client-gametest": ["fr.evotool.gametest.VisualGameTest"]
+    "fabric-client-gametest": ["fr.evotool.gametest.VisualGameTest", "fr.evotool.gametest.ShowcaseGameTest"]
   },
   "depends": {
     "evotool": "*",

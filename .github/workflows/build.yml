@@ -73,3 +73,47 @@ jobs:
       - name: Inspect vanilla Minecraft
         if: always() && contains(github.event.head_commit.message, '[inspect]')
         run: bash tools/inspect.sh
+
+  # Images de présentation du mod (commit contenant [showcase]) : un vrai monde, sans interface, en 1920 x 1080.
+  # Les PNG sont dans l'artefact « evotool-images » ; des JPEG sont aussi imprimés dans le journal.
+  showcase:
+    if: contains(github.event.head_commit.message, '[showcase]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Showcase screenshots
+        continue-on-error: true
+        env:
+          EVOTOOL_SHOWCASE: "1"
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils imagemagick > /dev/null 2>&1 || true
+          timeout 3000 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClientGameTest --stacktrace > showcase.log 2>&1 || echo "client gametest exit $?"
+          grep -vE "^\s+at |^\s+\.\.\. |ALSA lib|flite|Suppressed:|Realms" showcase.log | grep -E "SHOWCASE|Exception|Error|Caused" | head -120 || true
+          mkdir -p showcase-images
+          for f in $(find . -path ./.gradle -prune -o -name '*showcase_*.png' -print | sort); do
+            cp "$f" showcase-images/
+          done
+          ls -la showcase-images
+
+      - name: Upload images
+        uses: actions/upload-artifact@v4
+        with:
+          name: evotool-images
+          path: showcase-images/*.png
+
+      - name: Print images
+        run: |
+          for f in $(ls showcase-images/*.png | sort); do
+            convert "$f" -quality 86 /tmp/shot.jpg
+            echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg)"
+            base64 -w 3000 /tmp/shot.jpg
+            echo "=== END"
+          done

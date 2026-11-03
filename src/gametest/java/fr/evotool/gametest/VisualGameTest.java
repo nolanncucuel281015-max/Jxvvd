@@ -36,6 +36,9 @@ public class VisualGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (System.getenv("EVOTOOL_SHOWCASE") != null) {
+			return;   // images de présentation seulement (ShowcaseGameTest)
+		}
 		// rendu logiciel dans la CI : petit monde à charger. Serveur dédié à part (un serveur intégré avancerait
 		// au rythme du client, beaucoup trop lent ici pour préparer le monde à temps).
 		context.runOnClient(client -> {
