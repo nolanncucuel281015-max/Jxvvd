@@ -136,14 +136,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	/** L'armure abyssale niveau 150, ses ailes et ses tentacules : de face, puis portée par les tentacules (J). */
 	private static void heroShots(ClientGameTestContext context, TestServerContext server) {
 		server.runCommand(TIME);
-		context.runOnClient(client -> client.options.getFov().setValue(55));
+		fov(context, 40);
 		stand(server, spot.add(0, 1.2, 0), vista + 180.0F, -8.0F);
 		fly(server, true);   // en vol, les ailes de l'infini s'ouvrent
 		perspective(context, Perspective.THIRD_PERSON_FRONT);
 		context.waitTicks(40);
 		shot(context, "01_abyssal_armor");
 		fly(server, false);
-		context.runOnClient(client -> client.options.getFov().setValue(70));
+		fov(context, 70);
 
 		stand(server, spot, vista, 12.0F);
 		context.waitTicks(10);
@@ -201,7 +201,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	private static void bombAndBreath(ClientGameTestContext context, TestServerContext server) {
 		server.runOnServer(s -> {
 			ServerWorld world = s.getOverworld();
-			Vec3d center = ahead(vista, 8.0);
+			Vec3d center = ahead(vista, 6.0);
 			Vec3d side = Vec3d.fromPolar(0.0F, vista + 90.0F);
 			for (int i = -1; i <= 1; i++) {
 				Vec3d p = center.add(side.multiply(i * 1.8)).add(Vec3d.fromPolar(0.0F, vista).multiply(Math.abs(i) * 0.8));
@@ -218,7 +218,8 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		server.runOnServer(s -> fr.evotool.spider.SpiderGlove.webBomb(player(s)));
 		float bombYaw = aimYaw;
 		float bombPitch = aimPitch;
-		stand(server, spot, bombYaw + 32.0F, bombPitch);
+		stand(server, spot, bombYaw + 30.0F, bombPitch);
+		fov(context, 50);
 		context.waitTicks(14);
 		perspective(context, Perspective.THIRD_PERSON_BACK);
 		server.runCommand(TIME);
@@ -237,6 +238,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		stand(server, spot, bombYaw + 30.0F, bombPitch - 4.0F);
 		perspective(context, Perspective.THIRD_PERSON_BACK);
 		shot(context, "06_grimoire_dragon_breath");
+		fov(context, 70);
 		context.waitTicks(40);
 		server.runCommand("kill @e[type=minecraft:pillager]");
 		server.runCommand("kill @e[type=minecraft:vindicator]");
@@ -312,19 +314,24 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 						EvoKind.SOLAR_CHAKRAM, EvoKind.SPIRIT_LANTERN, EvoKind.EVOLIUM_BLASTER}};
 		String[] names = {"09_evolved_tools", "10_modded_weapons", "11_magic_weapons"};
 		Vec3d above = spot.add(0, 13.0, 0);
-		stand(server, above, vista, 2.0F);
+		stand(server, above, vista, -2.0F);
 		fly(server, true);
+		fov(context, 50);
 		context.waitTicks(20);
 		for (int r = 0; r < rows.length; r++) {
 			EvoKind[] row = rows[r];
 			server.runOnServer(s -> {
 				ServerWorld world = s.getOverworld();
 				Vec3d eye = above.add(0, 1.62, 0);
+				// deux rangées (4 + 4, ou 4 + 3) en arc de cercle, chacune tournée vers nous
+				int perRow = (row.length + 1) / 2;
 				for (int i = 0; i < row.length; i++) {
-					float yaw = vista + (i - (row.length - 1) / 2.0F) * 11.0F;
-					Vec3d pos = eye.add(Vec3d.fromPolar(0.0F, yaw).multiply(4.6)).add(0, -0.25, 0);
+					int line = i / perRow;
+					int count = line == 0 ? perRow : row.length - perRow;
+					float yaw = vista + (i % perRow - (count - 1) / 2.0F) * 17.0F;
+					Vec3d pos = eye.add(Vec3d.fromPolar(0.0F, yaw).multiply(4.0)).add(0, line == 0 ? 0.62 : -0.78, 0);
 					GALLERY.add(GiantItem.create(world, evolved(s, row[i], 100), ItemDisplayContext.FIXED, pos, yaw,
-							new Quaternionf(), 1.25F, 1));
+							new Quaternionf(), 1.05F, 1));
 				}
 			});
 			context.waitTicks(25);
@@ -337,6 +344,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			context.waitTicks(5);
 		}
 		fly(server, false);
+		fov(context, 70);
 	}
 
 	/** Le portail en blocs de rubis, allumé. */
@@ -347,16 +355,20 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			BlockPos base = fr.evotool.dimension.RubyPortal.build(world, MathHelper.floor(at.x), MathHelper.floor(at.z));
 			// face au portail (il s'étend sur l'axe X) : 7 blocs devant lui
 			Vec3d center = new Vec3d(base.getX() + 1.0, base.getY() + 1.6, base.getZ() + 0.5);
-			double side = spot.z < center.z ? -7.0 : 7.0;
+			double side = spot.z < center.z ? -9.0 : 9.0;
 			Vec3d feet = new Vec3d(center.x, 0, center.z + side);
-			feet = new Vec3d(feet.x, Math.max(ground(world, feet.x, feet.z), base.getY()), feet.z);
+			feet = new Vec3d(feet.x, Math.max(ground(world, feet.x, feet.z), base.getY()) + 1.5, feet.z);
 			aimSpot = feet;
 			look(feet.add(0, 1.62, 0), center);
 		});
 		stand(server, aimSpot, aimYaw, aimPitch);
+		fly(server, true);
+		fov(context, 50);
 		context.waitTicks(40);
 		server.runCommand(TIME);
 		shot(context, "12_ruby_portal");
+		fly(server, false);
+		fov(context, 70);
 	}
 
 	/** Le sanctuaire et la Cloche Divine (forme finale du boss) : de loin, puis de près. */
@@ -585,6 +597,10 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		context.runOnClient(client -> client.getToastManager().clear());
 		context.waitTicks(2);
 		context.takeScreenshot(TestScreenshotOptions.of("showcase_" + name).withSize(WIDTH, HEIGHT));
+	}
+
+	private static void fov(ClientGameTestContext context, int degrees) {
+		context.runOnClient(client -> client.options.getFov().setValue(degrees));
 	}
 
 	/** Le joueur (en créatif) vole ou non. */

@@ -110,9 +110,23 @@ jobs:
           name: evotool-images
           path: showcase-images/*.png
 
+  # Les images en JPEG dans le journal (en 3 parties : un journal trop gros est coupé).
+  showcase-print:
+    needs: showcase
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        part: [0, 1, 2]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: evotool-images
+          path: imgs
+
       - name: Print images
         run: |
-          for f in $(ls showcase-images/*.png | sort); do
+          command -v convert > /dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick > /dev/null 2>&1)
+          for f in $(ls imgs/*.png | sort | awk -v p=${{ matrix.part }} '(NR - 1) % 3 == p'); do
             convert "$f" -quality 85 /tmp/shot.jpg
             echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg) $(md5sum < /tmp/shot.jpg | cut -c1-32)"
             base64 -w 1000 /tmp/shot.jpg
