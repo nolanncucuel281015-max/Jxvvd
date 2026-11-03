@@ -59,9 +59,9 @@ public final class ModItems {
 	public static final Item BOSS_HEART = register("boss_heart", Item::new,
 			new Item.Settings().rarity(Rarity.EPIC).fireproof()
 					.component(net.minecraft.component.DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true));
-	/** Gant de Spider-Man (rituel : cœur du boss, 4 ficelles, 4 lingots de netherite) : toile, tir de toile, murs. */
+	/** Gant de Spider-Man (rituel : cœur du boss, 4 ficelles, 4 lingots de netherite) : toile, pouvoirs de toile, murs. */
 	public static final Item SPIDER_GLOVE = register("spider_glove", SpiderGloveItem::new,
-			new Item.Settings().maxCount(1).rarity(Rarity.EPIC).fireproof());
+			new Item.Settings().maxCount(1).rarity(Rarity.EPIC).fireproof().attributeModifiers(SpiderGloveItem.attributes()));
 	/** Manuel d'Evo Tool : tout le mod en images, volume par volume. */
 	public static final Item MANUAL = register("evotool_manual", ManualItem::new,
 			new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON));

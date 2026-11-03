@@ -81,6 +81,13 @@ public final class ModComponents {
 			ComponentType.<Unit>builder().codec(Unit.CODEC).packetCodec(PacketCodec.unit(Unit.INSTANCE)).build()
 	);
 
+	/** Pouvoir de toile choisi sur le gant de Spider-Man (touche G), voir {@link fr.evotool.spider.WebPower}. */
+	public static final ComponentType<Integer> WEB_POWER = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("web_power"),
+			ComponentType.<Integer>builder().codec(Codec.INT).packetCodec(PacketCodecs.VAR_INT).build()
+	);
+
 	private ModComponents() {
 	}
 

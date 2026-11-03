@@ -186,6 +186,28 @@ public class VisualGameTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		perspective(context, Perspective.FIRST_PERSON);
 
+		// les pouvoirs de toile (accroupi + clic droit) : le mur, la bombe, puis la traction vers un pilier
+		webPower(context, game, fr.evotool.spider.WebPower.WALL, "execute as @a at @s run tp @s ~ ~ ~ 0 10");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.takeScreenshot("evotool_16_web_wall");
+		webPower(context, game, fr.evotool.spider.WebPower.BOMB, "execute as @a at @s run tp @s ~ ~ ~ 90 15");
+		context.waitTicks(3);
+		context.takeScreenshot("evotool_17_web_bomb");
+		perspective(context, Perspective.FIRST_PERSON);
+		game.getServer().runCommand("execute as @a at @s run fill ~-20 ~-4 ~-20 ~20 ~10 ~20 minecraft:air replace minecraft:cobweb");
+		game.getServer().runCommand("execute as @a at @s run fill ~18 ~ ~-1 ~19 ~12 ~1 minecraft:stone");
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL zip from x={}", player(server).getX()));
+		webPower(context, game, fr.evotool.spider.WebPower.PULL, "execute as @a at @s run tp @s ~ ~ ~ -90 -8");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.takeScreenshot("evotool_18_web_zip");
+		context.waitTicks(15);
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL zip to x={} y={}", player(server).getX(),
+				player(server).getY()));
+		context.takeScreenshot("evotool_18b_web_zip_end");
+		perspective(context, Perspective.FIRST_PERSON);
+		game.getServer().runCommand("execute as @a at @s run fill ~-20 ~-8 ~-5 ~20 ~14 ~5 minecraft:air replace minecraft:stone");
+		context.waitTicks(40);
+
 		// le coup de tentacule (clic gauche), image par image : il ne doit pas clignoter
 		game.getServer().runOnServer(server -> player(server).setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY));
 		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 5");
@@ -240,6 +262,21 @@ public class VisualGameTest implements FabricClientGameTest {
 
 	private static fr.evotool.combiner.ElementalCombinerBlockEntity combiner(MinecraftServer server) {
 		return (fr.evotool.combiner.ElementalCombinerBlockEntity) player(server).getEntityWorld().getBlockEntity(combinerPos);
+	}
+
+	/** Choisit un pouvoir de toile sur le gant tenu, tourne le joueur, puis accroupi + clic droit. */
+	private static void webPower(ClientGameTestContext context, Game game,
+			fr.evotool.spider.WebPower power, String turn) {
+		game.getServer().runOnServer(server -> player(server).getMainHandStack().set(fr.evotool.component.ModComponents.WEB_POWER,
+				power.ordinal()));
+		game.getServer().runCommand(turn);
+		context.waitTicks(10);
+		context.getInput().holdKey(options -> options.sneakKey);
+		context.waitTicks(4);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(2);
+		context.getInput().releaseKey(options -> options.sneakKey);
+		context.waitTicks(3);
 	}
 
 	private static void perspective(ClientGameTestContext context, Perspective perspective) {

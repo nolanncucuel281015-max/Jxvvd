@@ -1106,8 +1106,103 @@ final class SelfTest {
 		if (!attached || fr.evotool.spider.SpiderGlove.anchor(player) != null || hurt || player.getHealth() < health) {
 			failures.add("gant : la toile ou l'absence de dégâts de chute ne marchent pas");
 		}
+		checks += checkSpiderPowers(world, player, glove, x, y, z, failures);
 		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
+		player.clearStatusEffects();
 		return checks;
+	}
+
+	/** Gant de Spider-Man : touche G, traction, sens d'araignée, bombe, mur, esquive, agilité, force. */
+	private static int checkSpiderPowers(ServerWorld world, FakePlayer player, ItemStack glove, double x, double y, double z,
+			List<String> failures) {
+		int checks = 0;
+		player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+		// touche G : tir de toile -> traction
+		fr.evotool.spider.WebPower first = fr.evotool.spider.WebPower.of(glove);
+		fr.evotool.spider.WebPower next = fr.evotool.spider.SpiderGlove.cyclePower(player);
+		checks++;
+		if (first != fr.evotool.spider.WebPower.SHOT || next != fr.evotool.spider.WebPower.PULL
+				|| fr.evotool.spider.WebPower.of(glove) != fr.evotool.spider.WebPower.PULL) {
+			failures.add("gant : la touche G ne change pas de pouvoir (" + first + " -> " + next + ")");
+		}
+		ZombieEntity target = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+		if (target != null) {
+			target.refreshPositionAndAngles(x, y, z + 8.0, 180.0F, 0.0F);
+			target.setAiDisabled(true);
+			world.spawnEntity(target);
+			// traction : le zombie s'envole vers le joueur
+			boolean pulled = fr.evotool.spider.SpiderGlove.pull(player);
+			Vec3d v = target.getVelocity();
+			EvoTool.LOGGER.info("EVOTOOL spider powers: pull={} velocity={}", pulled, v);
+			checks++;
+			if (!pulled || v.z >= -0.1 || v.y <= 0.1) {
+				failures.add("gant : la traction ne tire pas le zombie vers le joueur (" + v + ")");
+			}
+			target.setVelocity(Vec3d.ZERO);
+			// sens d'araignée : le zombie qui nous vise brille
+			target.setTarget(player);
+			int threats = fr.evotool.spider.SpiderGlove.spiderSense(player);
+			checks++;
+			if (threats < 1 || !target.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.GLOWING)) {
+				failures.add("gant : le sens d'araignée ne repère pas le zombie (" + threats + ")");
+			}
+			target.setTarget(null);
+			// bombe de toile sur le zombie : toiles autour, il est englué
+			int bomb = fr.evotool.spider.SpiderGlove.webBomb(player);
+			boolean stuck = target.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS);
+			EvoTool.LOGGER.info("EVOTOOL spider powers: bomb={} stuck={}", bomb, stuck);
+			checks++;
+			if (bomb < 5 || !stuck) {
+				failures.add("gant : la bombe de toile n'englue pas (" + bomb + ", " + stuck + ")");
+			}
+			clearWebs(world, target.getBlockPos(), 3);
+			target.discard();
+		}
+		// mur de toile (par le pouvoir choisi, avec sa recharge) : 5 x 3 toiles à 3 blocs devant
+		boolean wall = fr.evotool.spider.SpiderGlove.usePower(player, fr.evotool.spider.WebPower.WALL);
+		BlockPos front = BlockPos.ofFloored(x, y, z + 3.0);
+		int webs = 0;
+		for (BlockPos pos : BlockPos.iterate(front.add(-2, 0, 0), front.add(2, 2, 0))) {
+			if (world.getBlockState(pos).isOf(net.minecraft.block.Blocks.COBWEB)) {
+				webs++;
+			}
+		}
+		boolean again = fr.evotool.spider.SpiderGlove.usePower(player, fr.evotool.spider.WebPower.WALL);
+		EvoTool.LOGGER.info("EVOTOOL spider powers: wall={} webs={} again={}", wall, webs, again);
+		checks++;
+		if (!wall || webs < 10 || again) {
+			failures.add("gant : le mur de toile ne se dresse pas (" + webs + " toiles, recharge : " + !again + ")");
+		}
+		clearWebs(world, front, 3);
+		// esquive : un projectile est esquivé, puis le sens d'araignée recharge
+		boolean allowed = net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.invoker()
+				.allowDamage(player, world.getDamageSources().thrown(player, null), 4.0F);
+		boolean ready = fr.evotool.spider.SpiderGlove.dodge(player);
+		checks++;
+		if (allowed || ready) {
+			failures.add("gant : le sens d'araignée n'esquive pas le projectile");
+		}
+		// agilité (saut, vitesse) et force (coups de poing qui repoussent)
+		fr.evotool.spider.SpiderGlove.agility(player);
+		AttributeModifiersComponent modifiers = glove.getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+		boolean strong = modifiers.modifiers().stream().anyMatch(entry -> entry.attribute().equals(EntityAttributes.ATTACK_KNOCKBACK))
+				&& modifiers.modifiers().stream().anyMatch(entry -> entry.attribute().equals(EntityAttributes.ATTACK_DAMAGE)
+						&& entry.modifier().value() >= 6.0);
+		checks++;
+		if (!player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.JUMP_BOOST)
+				|| !player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SPEED) || !strong) {
+			failures.add("gant : l'agilité ou la force d'araignée manquent");
+		}
+		return checks;
+	}
+
+	/** Enlève les toiles autour d'un point (après un test). */
+	private static void clearWebs(ServerWorld world, BlockPos center, int radius) {
+		for (BlockPos pos : BlockPos.iterate(center.add(-radius, -radius, -radius), center.add(radius, radius, radius))) {
+			if (world.getBlockState(pos).isOf(net.minecraft.block.Blocks.COBWEB)) {
+				world.removeBlock(pos, false);
+			}
+		}
 	}
 
 	private static int checkWeapons(MinecraftServer server, List<String> failures) {

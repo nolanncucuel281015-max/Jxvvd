@@ -54,6 +54,10 @@ public class EvoToolClient implements ClientModInitializer {
 	public static final KeyBinding EVOLVE = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.evotool.evolve", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
 
+	/** Gant de Spider-Man : passe au pouvoir de toile suivant (tir, traction, bombe, mur). */
+	public static final KeyBinding GLOVE_POWER = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.evotool.glove_power", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY));
+
 	@Override
 	public void onInitializeClient() {
 		// Le boss est dessiné par ses objets d'affichage animés (côté serveur) : l'entité elle-même est invisible.
@@ -84,6 +88,11 @@ public class EvoToolClient implements ClientModInitializer {
 			while (TENTACLES.wasPressed()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(TentacleTogglePayload.INSTANCE);
+				}
+			}
+			while (GLOVE_POWER.wasPressed()) {
+				if (client.player != null && fr.evotool.spider.SpiderGlove.holds(client.player)) {
+					ClientPlayNetworking.send(fr.evotool.network.GlovePowerPayload.INSTANCE);
 				}
 			}
 			while (EVOLVE.wasPressed()) {
@@ -141,8 +150,20 @@ public class EvoToolClient implements ClientModInitializer {
 			}
 			if (stack.isOf(fr.evotool.item.ModItems.SPIDER_GLOVE)) {
 				lines.add(Text.translatable("tooltip.evotool.spider_glove.web").formatted(Formatting.RED));
-				lines.add(Text.translatable("tooltip.evotool.spider_glove.shot").formatted(Formatting.RED));
+				fr.evotool.spider.WebPower selected = fr.evotool.spider.WebPower.of(stack);
+				for (fr.evotool.spider.WebPower power : fr.evotool.spider.WebPower.values()) {
+					boolean chosen = power == selected;
+					net.minecraft.text.MutableText line = Text.literal(chosen ? "▶ " : "   ")
+							.append(Text.translatable(power.translationKey()))
+							.append(Text.literal(" : "))
+							.append(Text.translatable(power.translationKey() + ".desc"))
+							.formatted(Formatting.RED);
+					lines.add(chosen ? line.formatted(Formatting.BOLD) : line);
+				}
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.power").formatted(Formatting.GRAY));
 				lines.add(Text.translatable("tooltip.evotool.spider_glove.climb").formatted(Formatting.BLUE));
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.sense").formatted(Formatting.BLUE));
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.agility").formatted(Formatting.BLUE));
 				return;
 			}
 			if (stack.isOf(fr.evotool.item.ModItems.BOSS_HEART)) {

@@ -39,6 +39,9 @@ public final class WebClient {
 	/** Portée de la toile (blocs). */
 	private static final double RANGE = 48.0;
 	private static final double MAX_SPEED = 2.4;
+	/** Traction vers un bloc : vitesse max (blocs/tick) et durée max. */
+	private static final double ZIP_SPEED = 1.8;
+	private static final int ZIP_TICKS = 40;
 	private static final int FULL_BRIGHT = 0xF000F0;
 
 	/** Toiles des autres joueurs (id d'entité -> point d'accroche), envoyées par le serveur. */
@@ -48,6 +51,10 @@ public final class WebClient {
 	private static double rope;
 	private static int groundTicks;
 	private static boolean wasJumping;
+	/** Notre toile nous tire vers son bout (pouvoir « traction » sur un bloc) au lieu d'un balancement. */
+	private static boolean zipping;
+	private static int zipTicks;
+	private static long nextZip;
 	private static long lastTick = System.nanoTime();
 
 	private static final ItemStack STRAND_STACK = strand();
@@ -64,6 +71,7 @@ public final class WebClient {
 
 	public static void register() {
 		fr.evotool.ClientHooks.toggleWeb = WebClient::toggle;
+		fr.evotool.ClientHooks.zipWeb = WebClient::zip;
 		ClientTickEvents.END_CLIENT_TICK.register(WebClient::tick);
 		WorldRenderEvents.BEFORE_ENTITIES.register(WebClient::render);
 		ClientPlayNetworking.registerGlobalReceiver(WebStatePayload.ID, (payload, context) -> {
@@ -76,6 +84,7 @@ public final class WebClient {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			OTHERS.clear();
 			anchor = null;
+			zipping = false;
 		});
 	}
 
@@ -93,19 +102,38 @@ public final class WebClient {
 		BlockHitResult hit = player.getEntityWorld().raycast(new RaycastContext(eye, eye.add(player.getRotationVector().multiply(RANGE)),
 				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
 		if (hit.getType() != HitResult.Type.BLOCK) {
-			EvoTool.LOGGER.info("EVOTOOL web: nothing to attach to");
 			return;
 		}
 		anchor = hit.getPos();
-		EvoTool.LOGGER.info("EVOTOOL web: attached at {}", anchor);
+		zipping = false;
 		rope = Math.max(2.0, chest(player).distanceTo(anchor) * 0.85);
 		groundTicks = 0;
 		player.playSound(SoundEvents.ENTITY_ARROW_SHOOT, 0.8F, 1.7F);
 		ClientPlayNetworking.send(new WebPayload(true, anchor.x, anchor.y, anchor.z));
 	}
 
+	/** Traction vers le bloc visé : la toile s'y colle et nous tire tout droit vers lui (un monstre visé : le serveur le tire). */
+	public static void zip(PlayerEntity player) {
+		long now = player.getEntityWorld().getTime();
+		if (now < nextZip) {
+			return;
+		}
+		SpiderGlove.Aim aim = SpiderGlove.aim(player, SpiderGlove.PULL_RANGE);
+		if (!aim.onBlock()) {
+			return;
+		}
+		nextZip = now + fr.evotool.spider.WebPower.PULL.cooldown();
+		anchor = aim.end();
+		zipping = true;
+		zipTicks = 0;
+		groundTicks = 0;
+		player.setVelocity(player.getVelocity().add(0, 0.3, 0));
+		ClientPlayNetworking.send(new WebPayload(true, anchor.x, anchor.y, anchor.z));
+	}
+
 	private static void release(PlayerEntity player, boolean leap) {
 		anchor = null;
+		zipping = false;
 		if (leap) {
 			// on lâche en plein élan : un petit bond en plus
 			Vec3d v = player.getVelocity();
@@ -139,11 +167,26 @@ public final class WebClient {
 				release(player, false);
 			} else if (jump && !wasJumping && !player.isOnGround()) {
 				release(player, true);
+			} else if (zipping) {
+				zipTick(player);
 			} else {
 				swing(player);
 			}
 		}
 		wasJumping = jump;
+	}
+
+	/** La traction : on file tout droit vers le bout de la toile ; arrivé, on lâche avec un petit bond (on se colle au mur). */
+	private static void zipTick(ClientPlayerEntity player) {
+		Vec3d toAnchor = anchor.subtract(chest(player));
+		double distance = toAnchor.length();
+		if (distance < 1.6 || ++zipTicks > ZIP_TICKS) {
+			Vec3d v = player.getVelocity();
+			release(player, false);
+			player.setVelocity(v.x * 0.4, 0.55, v.z * 0.4);
+			return;
+		}
+		player.setVelocity(toAnchor.multiply(Math.min(ZIP_SPEED, 0.5 + distance * 0.35) / distance));
 	}
 
 	/** Le pendule : la toile retient le joueur à sa longueur, et il prend de l'élan en avançant. */

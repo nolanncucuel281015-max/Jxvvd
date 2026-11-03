@@ -322,12 +322,29 @@
      }
     },
     {
-     "title": "Les pouvoirs du gant",
-     "text": "§eClic droit§r : une toile s'accroche là où tu vises (48 blocs) et tu t'y balances. Avance pour prendre de l'élan, §eaccroupi§r pour remonter la toile, §esaut§r ou clic droit pour lâcher.\n§eAccroupi + clic droit§r : tir de toile, qui englue ce qu'il touche.\nEn main : tu §egrimpes aux murs§r et tu ne prends plus de dégâts de chute.",
+     "title": "Se balancer",
+     "text": "§eClic droit§r : une toile s'accroche là où tu vises (48 blocs) et tu t'y balances. Avance pour prendre de l'élan, §eaccroupi§r pour remonter la toile, §esaut§r ou clic droit pour lâcher.\nEn main : tu §egrimpes aux murs§r et tu ne prends plus de dégâts de chute.",
      "items": [
       "evotool:spider_glove",
-      "minecraft:cobweb",
       "minecraft:string"
+     ]
+    },
+    {
+     "title": "Les pouvoirs de toile",
+     "text": "§eG§r choisit le pouvoir, §eaccroupi + clic droit§r le lance.\n§cTir de toile§r : englue ce qu'il touche.\n§cTraction§r : tire un monstre vers toi, ou te fait filer vers un mur.\n§cBombe de toile§r : éclate en toiles, tout autour est englué.\n§cMur de toile§r : un mur de toiles devant toi (10 s).",
+     "items": [
+      "minecraft:cobweb",
+      "minecraft:string",
+      "minecraft:slime_ball"
+     ]
+    },
+    {
+     "title": "Sens d'araignée",
+     "text": "Gant en main, les ennemis qui te visent §dbrillent à travers les murs§r et une alerte sonne. Tu §desquives un projectile toutes les 2 s§r.\nTu sautes plus haut, tu cours plus vite, et tes coups de poing (§c7 dégâts§r) envoient voler.",
+     "items": [
+      "minecraft:spider_eye",
+      "minecraft:arrow",
+      "minecraft:feather"
      ]
     }
    ]

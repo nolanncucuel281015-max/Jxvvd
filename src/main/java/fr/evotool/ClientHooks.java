@@ -14,6 +14,9 @@ public final class ClientHooks {
 	/** Lancer (ou lâcher) la toile du gant de Spider-Man pour notre joueur. */
 	public static Consumer<PlayerEntity> toggleWeb = player -> {
 	};
+	/** Pouvoir « traction » du gant visant un bloc : notre joueur file vers lui au bout de sa toile. */
+	public static Consumer<PlayerEntity> zipWeb = player -> {
+	};
 
 	private ClientHooks() {
 	}

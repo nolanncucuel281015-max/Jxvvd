@@ -439,10 +439,27 @@ Dès que tu prends le gant, **la foudre tombe** sur toi : le rituel est accompli
 - **Clic droit** : une toile s'accroche là où tu vises (jusqu'à 48 blocs) et tu t'y **balances** comme un pendule.
   Avance pour prendre de l'élan, **accroupis-toi** pour remonter le long de la toile, **saute** (ou clic droit)
   pour lâcher en plein élan. Les autres joueurs voient ta toile.
-- **Accroupi + clic droit** : **tir de toile** (24 blocs). Une créature touchée est engluée (toile à ses pieds,
-  Lenteur V, Faiblesse) ; sur un bloc, une toile se pose. Les toiles disparaissent au bout de 10 s.
 - **En main** : tu **grimpes aux murs** (avance contre un mur ; accroupi, tu y restes collé) et tu ne prends plus
   de dégâts de chute.
+
+### Pouvoirs de toile — touche **G** pour choisir, **accroupi + clic droit** pour lancer
+
+| Pouvoir | Effet | Recharge |
+|---|---|---|
+| **Tir de toile** | 24 blocs. Une créature touchée est engluée (toile à ses pieds, Lenteur V, Faiblesse, 2 dégâts) ; sur un bloc, une toile se pose. | 1 s |
+| **Traction** | 32 blocs. Un monstre (ou un joueur) visé est arraché du sol et vole vers toi ; un bloc visé, c'est **toi qui files** vers lui au bout de ta toile (grappin), avec un petit bond à l'arrivée pour te coller au mur. | 0,75 s |
+| **Bombe de toile** | Éclate là où tu vises : une boule de toiles, et tout ce qui est à 4,5 blocs est englué (Lenteur V, Faiblesse, 4 dégâts). | 3 s |
+| **Mur de toile** | Un mur de toiles de 5 × 3 se dresse à 3 blocs devant toi : les monstres ne passent plus. | 5 s |
+
+Toutes les toiles posées disparaissent au bout de 10 s. Le pouvoir choisi s'affiche quand tu changes et dans
+l'infobulle du gant (▶).
+
+### Pouvoirs passifs (gant en main)
+
+- **Sens d'araignée** : les créatures qui te visent (jusqu'à 32 blocs) **brillent à travers les murs**, et une alerte
+  sonne quand une nouvelle te prend pour cible. Tu **esquives un projectile** (flèche, boule de feu…) toutes les 2 s.
+- **Agilité** : Saut amélioré II et Vitesse I.
+- **Force** : coups de poing à **7 dégâts** qui envoient voler (recul +1,5), 2 coups par seconde.
 
 ## Manuel d'Evo Tool
 
