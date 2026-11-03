@@ -196,8 +196,13 @@ public final class MoveSpells {
 		double z = player.getZ();
 		switch (spell) {
 			case FIRE_FLIGHT -> {
-				world.spawnParticles(ParticleTypes.FLAME, x, y + 0.3, z, 4, 0.2, 0.2, 0.2, 0.02);
-				world.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y + 0.2, z, 1, 0.1, 0.1, 0.1, 0.0);
+				// une vraie traînée de feu : flammes, braises et fumée
+				world.spawnParticles(ParticleTypes.FLAME, x, y + 0.4, z, 12, 0.3, 0.4, 0.3, 0.04);
+				world.spawnParticles(ParticleTypes.LAVA, x, y + 0.2, z, 1, 0.2, 0.1, 0.2, 0.0);
+				world.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y + 0.2, z, 2, 0.2, 0.2, 0.2, 0.01);
+				if (t % 6 == 0) {
+					world.playSound(null, player.getBlockPos(), SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.4F, 1.4F);
+				}
 			}
 			case FROST_DASH -> {
 				world.spawnParticles(ParticleTypes.SNOWFLAKE, x, y + 0.5, z, 6, 0.3, 0.3, 0.3, 0.02);
