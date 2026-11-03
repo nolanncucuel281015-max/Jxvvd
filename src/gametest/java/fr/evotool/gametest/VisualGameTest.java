@@ -176,6 +176,8 @@ public class VisualGameTest implements FabricClientGameTest {
 		context.getInput().pressKey(options -> options.useKey);
 		context.waitTicks(6);
 		context.takeScreenshot("evotool_15_spider_web");
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL web anchor on server: {}, glove in hand: {}",
+				fr.evotool.spider.SpiderGlove.anchor(player(server)), player(server).getMainHandStack()));
 		context.getInput().pressKey(options -> options.useKey);
 		context.waitTicks(10);
 		perspective(context, Perspective.FIRST_PERSON);

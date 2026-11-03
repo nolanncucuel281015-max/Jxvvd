@@ -93,9 +93,11 @@ public final class WebClient {
 		BlockHitResult hit = player.getEntityWorld().raycast(new RaycastContext(eye, eye.add(player.getRotationVector().multiply(RANGE)),
 				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
 		if (hit.getType() != HitResult.Type.BLOCK) {
+			EvoTool.LOGGER.info("EVOTOOL web: nothing to attach to");
 			return;
 		}
 		anchor = hit.getPos();
+		EvoTool.LOGGER.info("EVOTOOL web: attached at {}", anchor);
 		rope = Math.max(2.0, chest(player).distanceTo(anchor) * 0.85);
 		groundTicks = 0;
 		player.playSound(SoundEvents.ENTITY_ARROW_SHOOT, 0.8F, 1.7F);
