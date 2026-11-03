@@ -71,11 +71,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			return;
 		}
 		context.runOnClient(client -> {
-			client.options.getViewDistance().setValue(10);
+			client.options.getViewDistance().setValue(8);
 			client.options.getSimulationDistance().setValue(6);
+			// la fenêtre elle-même en 1920 x 1080 : les menus (le manuel) sont cadrés pour cette taille
+			client.getWindow().setWindowedSize(WIDTH, HEIGHT);
 		});
+		context.waitTicks(10);
 		Properties properties = new Properties();
-		properties.setProperty("view-distance", "10");
+		properties.setProperty("view-distance", "8");
 		properties.setProperty("simulation-distance", "6");
 		properties.setProperty("spawn-protection", "0");
 		properties.setProperty("difficulty", "normal");
@@ -115,6 +118,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	/** Une scène ; si elle rate, on le note et on passe à la suivante (les autres images restent). */
 	private static void scene(ClientGameTestContext context, String name, Runnable scene) {
 		EvoTool.LOGGER.info("EVOTOOL SHOWCASE scene: {}", name);
+		// si le joueur est mort (chute…), il réapparaît avant la scène suivante
+		context.runOnClient(client -> {
+			if (client.player != null && client.player.isDead()) {
+				client.player.requestRespawn();
+				client.setScreen(null);
+			}
+		});
+		context.waitTicks(5);
 		try {
 			scene.run();
 		} catch (Throwable t) {
@@ -382,7 +393,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			if (evo == null) {
 				return;
 			}
-			int y = evo.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, 8, 8);
+			int y = (int) ground(evo, 8, 8);
 			player(s).teleport(evo, 8.5, y, 8.5, Set.of(), 30.0F, 8.0F, true);
 		});
 		context.waitTicks(200);
@@ -422,6 +433,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			for (int dz = -32; dz <= 32; dz += 16) {
 				int x = center.getX() + dx;
 				int z = center.getZ() + dz;
+				world.getChunk(x >> 4, z >> 4);   // généré pour de vrai (sinon la hauteur lue est celle du fond du monde)
 				int ground = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
 				int top = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
 				BlockPos below = new BlockPos(x, ground - 1, z);
@@ -433,8 +445,10 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 				}
 			}
 		}
-		if (best == null) {
-			best = new BlockPos(center.getX(), world.getTopY(Heightmap.Type.MOTION_BLOCKING, center.getX(), center.getZ()), center.getZ());
+		if (best == null || best.getY() <= world.getBottomY() + 4) {
+			world.getChunk(center.getX() >> 4, center.getZ() >> 4);
+			best = new BlockPos(center.getX(), Math.max(world.getTopY(Heightmap.Type.MOTION_BLOCKING, center.getX(), center.getZ()), 80),
+					center.getZ());
 		}
 		spot = Vec3d.ofBottomCenter(best);
 		double lowest = Double.MAX_VALUE;
@@ -443,7 +457,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			Vec3d dir = Vec3d.fromPolar(0.0F, yaw);
 			double sum = 0;
 			for (int d = 16; d <= 48; d += 16) {
-				sum += world.getTopY(Heightmap.Type.MOTION_BLOCKING, MathHelper.floor(spot.x + dir.x * d), MathHelper.floor(spot.z + dir.z * d));
+				sum += ground(world, spot.x + dir.x * d, spot.z + dir.z * d);
 			}
 			if (sum < lowest) {
 				lowest = sum;
@@ -538,7 +552,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	/** Attend que les tronçons autour soient reçus et dessinés (2 minutes au plus ; sinon on continue quand même). */
 	private static void chunks(TestClientWorldContext world) {
 		try {
-			world.waitForChunksRender(true, 20 * 120);
+			world.waitForChunksRender(true, 20 * 90);
 		} catch (AssertionError e) {
 			EvoTool.LOGGER.warn("EVOTOOL SHOWCASE chunks still loading, going on");
 		}
@@ -573,7 +587,10 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	}
 
 	private static double ground(ServerWorld world, double x, double z) {
-		return world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, MathHelper.floor(x), MathHelper.floor(z));
+		int bx = MathHelper.floor(x);
+		int bz = MathHelper.floor(z);
+		world.getChunk(bx >> 4, bz >> 4);
+		return world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, bx, bz);
 	}
 
 	private static ServerPlayerEntity player(MinecraftServer server) {
