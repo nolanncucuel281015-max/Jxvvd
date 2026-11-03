@@ -172,10 +172,14 @@ public class VisualGameTest implements FabricClientGameTest {
 				new ItemStack(fr.evotool.item.ModItems.SPIDER_GLOVE)));
 		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 12");
 		context.waitTicks(30);
-		perspective(context, Perspective.THIRD_PERSON_BACK);
 		context.getInput().pressKey(options -> options.useKey);
-		context.waitTicks(6);
+		context.waitTicks(4);
 		context.takeScreenshot("evotool_15_spider_web");
+		// de côté : on tourne le joueur, la toile reste accrochée
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ ~70 ~");
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.waitTicks(2);
+		context.takeScreenshot("evotool_15b_spider_web_side");
 		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL web anchor on server: {}, glove in hand: {}",
 				fr.evotool.spider.SpiderGlove.anchor(player(server)), player(server).getMainHandStack()));
 		context.getInput().pressKey(options -> options.useKey);

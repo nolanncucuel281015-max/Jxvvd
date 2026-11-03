@@ -5008,7 +5008,7 @@ def gen_ritual_and_manual():
     save_png(strand, "item", "web", "strand")
     write_json(os.path.join(ASSETS, "models", "item", "web", "strand.json"), {
         "textures": {"particle": f"{MOD}:item/web/strand", "silk": f"{MOD}:item/web/strand"},
-        "elements": [{"from": [7.4, 0, 7.4], "to": [8.6, 16, 8.6], "light_emission": 12, "shade": False,
+        "elements": [{"from": [7.1, 0, 7.1], "to": [8.9, 16, 8.9], "light_emission": 12, "shade": False,
                       "faces": {f: {"uv": [0, 0, 2, 16], "texture": "#silk"} for f in ("north", "south", "east", "west")}}]})
     write_json(os.path.join(ASSETS, "items", "web", "strand.json"),
                {"model": {"type": "minecraft:model", "model": f"{MOD}:item/web/strand"}})
