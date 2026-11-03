@@ -112,8 +112,9 @@ jobs:
       - name: Print images
         run: |
           for f in $(ls showcase-images/*.png | sort); do
-            convert "$f" -quality 86 /tmp/shot.jpg
-            echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg)"
-            base64 -w 3000 /tmp/shot.jpg
+            convert "$f" -quality 85 /tmp/shot.jpg
+            echo "=== SHOT $(basename "$f") $(stat -c %s /tmp/shot.jpg) $(md5sum < /tmp/shot.jpg | cut -c1-32)"
+            base64 -w 1000 /tmp/shot.jpg
             echo "=== END"
+            sleep 2
           done

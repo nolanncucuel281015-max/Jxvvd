@@ -136,10 +136,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	/** L'armure abyssale niveau 150, ses ailes et ses tentacules : de face, puis portée par les tentacules (J). */
 	private static void heroShots(ClientGameTestContext context, TestServerContext server) {
 		server.runCommand(TIME);
-		stand(server, spot, vista + 180.0F, -8.0F);
+		context.runOnClient(client -> client.options.getFov().setValue(55));
+		stand(server, spot.add(0, 1.2, 0), vista + 180.0F, -8.0F);
+		fly(server, true);   // en vol, les ailes de l'infini s'ouvrent
 		perspective(context, Perspective.THIRD_PERSON_FRONT);
-		context.waitTicks(30);
+		context.waitTicks(40);
 		shot(context, "01_abyssal_armor");
+		fly(server, false);
+		context.runOnClient(client -> client.options.getFov().setValue(70));
 
 		stand(server, spot, vista, 12.0F);
 		context.waitTicks(10);
@@ -167,9 +171,8 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		context.getInput().pressKey(options -> options.useKey);
 		context.waitTicks(35);
-		stand(server, spot, vista, 4.0F);
-		perspective(context, Perspective.THIRD_PERSON_BACK);
-		context.waitTicks(10);
+		stand(server, spot, vista + 15.0F, -6.0F);
+		context.waitTicks(15);
 		server.runCommand(TIME);
 		shot(context, "03_tentacle_grab");
 		context.getInput().pressKey(options -> options.useKey);
@@ -213,10 +216,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		stand(server, spot, aimYaw, aimPitch);
 		context.waitTicks(10);
 		server.runOnServer(s -> fr.evotool.spider.SpiderGlove.webBomb(player(s)));
+		float bombYaw = aimYaw;
+		float bombPitch = aimPitch;
+		stand(server, spot, bombYaw + 32.0F, bombPitch);
 		context.waitTicks(14);
 		perspective(context, Perspective.THIRD_PERSON_BACK);
 		server.runCommand(TIME);
 		shot(context, "05_spider_web_bomb");
+		stand(server, spot, bombYaw, bombPitch);
 
 		perspective(context, Perspective.FIRST_PERSON);
 		server.runOnServer(s -> {
@@ -226,7 +233,8 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		});
 		context.waitTicks(10);
 		context.getInput().pressKey(options -> options.useKey);
-		context.waitTicks(3);
+		context.waitTicks(2);
+		stand(server, spot, bombYaw + 30.0F, bombPitch - 4.0F);
 		perspective(context, Perspective.THIRD_PERSON_BACK);
 		shot(context, "06_grimoire_dragon_breath");
 		context.waitTicks(40);
@@ -303,17 +311,20 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 				{EvoKind.ARCANE_WAND, EvoKind.THUNDER_GAUNTLET, EvoKind.CELESTIAL_ORB, EvoKind.VOID_GRIMOIRE,
 						EvoKind.SOLAR_CHAKRAM, EvoKind.SPIRIT_LANTERN, EvoKind.EVOLIUM_BLASTER}};
 		String[] names = {"09_evolved_tools", "10_modded_weapons", "11_magic_weapons"};
-		stand(server, spot, vista, 0.0F);
+		Vec3d above = spot.add(0, 13.0, 0);
+		stand(server, above, vista, 2.0F);
+		fly(server, true);
+		context.waitTicks(20);
 		for (int r = 0; r < rows.length; r++) {
 			EvoKind[] row = rows[r];
 			server.runOnServer(s -> {
 				ServerWorld world = s.getOverworld();
-				Vec3d eye = spot.add(0, 1.62, 0);
+				Vec3d eye = above.add(0, 1.62, 0);
 				for (int i = 0; i < row.length; i++) {
-					float yaw = vista + (i - (row.length - 1) / 2.0F) * 12.0F;
-					Vec3d pos = eye.add(Vec3d.fromPolar(0.0F, yaw).multiply(6.5)).add(0, -0.1, 0);
+					float yaw = vista + (i - (row.length - 1) / 2.0F) * 11.0F;
+					Vec3d pos = eye.add(Vec3d.fromPolar(0.0F, yaw).multiply(4.6)).add(0, -0.25, 0);
 					GALLERY.add(GiantItem.create(world, evolved(s, row[i], 100), ItemDisplayContext.FIXED, pos, yaw,
-							new Quaternionf(), 1.6F, 1));
+							new Quaternionf(), 1.25F, 1));
 				}
 			});
 			context.waitTicks(25);
@@ -325,6 +336,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			});
 			context.waitTicks(5);
 		}
+		fly(server, false);
 	}
 
 	/** Le portail en blocs de rubis, allumé. */
@@ -354,12 +366,8 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			Vec3d at = ahead(vista + 180.0F, 26.0);
 			BlockPos altar = fr.evotool.dimension.Sanctuary.build(overworld, MathHelper.floor(at.x), MathHelper.floor(at.z),
 					Heightmap.Type.MOTION_BLOCKING_NO_LEAVES);
-			fr.evotool.boss.BellBossEntity boss = fr.evotool.dimension.EvoDimension.spawnBoss(overworld, altar.up(3),
-					fr.evotool.boss.BellBossEntity.FORMS - 1);
-			if (boss != null) {
-				boss.setAiDisabled(true);
-				boss.setNoGravity(true);
-			}
+			// son IA anime aussi son modèle : on la garde (il ne s'en prend pas à un joueur en créatif)
+			boss = fr.evotool.dimension.EvoDimension.spawnBoss(overworld, altar.up(1), fr.evotool.boss.BellBossEntity.FORMS - 1);
 			bossCenter = Vec3d.ofCenter(altar).add(0, 5.0, 0);
 			Vec3d toSpot = spot.subtract(Vec3d.ofCenter(altar));
 			toSpot = new Vec3d(toSpot.x, 0, toSpot.z).normalize();
@@ -370,9 +378,12 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		stand(server, spot, aimYaw, aimPitch);
 		context.waitTicks(60);
 		chunks(world);
+		server.runOnServer(s -> look(spot.add(0, 1.62, 0), bossCenter()));
+		stand(server, spot, aimYaw, aimPitch);
+		context.waitTicks(5);
 		server.runCommand(TIME);
 		shot(context, "13_sanctuary_divine_bell");
-		server.runOnServer(s -> look(aimSpot.add(0, 1.62, 0), bossCenter));
+		server.runOnServer(s -> look(aimSpot.add(0, 1.62, 0), bossCenter()));
 		stand(server, aimSpot, aimYaw, aimPitch);
 		context.waitTicks(30);
 		server.runCommand(TIME);
@@ -382,6 +393,12 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	}
 
 	private static Vec3d bossCenter;
+	private static fr.evotool.boss.BellBossEntity boss;
+
+	/** Le centre du boss là où il est maintenant (il bouge un peu), sinon au-dessus de l'autel. */
+	private static Vec3d bossCenter() {
+		return boss != null && boss.isAlive() ? boss.getBoundingBox().getCenter() : bossCenter;
+	}
 
 	/** La dimension évolutive à sa dernière phase. */
 	private static void dimensionShot(ClientGameTestContext context, TestServerContext server, TestClientWorldContext world) {
@@ -391,15 +408,20 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 				return;
 			}
 			int y = (int) ground(evo, 8, 8);
-			player(s).teleport(evo, 8.5, y, 8.5, Set.of(), 30.0F, 8.0F, true);
+			player(s).teleport(evo, 8.5, y + 10.0, 8.5, Set.of(), 30.0F, 22.0F, true);
+			player(s).getAbilities().flying = true;
+			player(s).sendAbilitiesUpdate();
 		});
 		context.waitTicks(200);
 		chunks(world);
 		server.runOnServer(s -> fr.evotool.dimension.EvoDimension.setPhase(player(s), fr.evotool.dimension.EvoDimension.MAX_PHASE));
 		context.waitTicks(80);
 		chunks(world);
+		server.runCommand("time set 6000");
+		context.waitTicks(5);
 		shot(context, "15_evolving_dimension");
 		server.runOnServer(s -> player(s).teleport(s.getOverworld(), spot.x, spot.y, spot.z, Set.of(), vista, 10.0F, true));
+		fly(server, false);
 		context.waitTicks(100);
 	}
 
@@ -563,6 +585,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		context.runOnClient(client -> client.getToastManager().clear());
 		context.waitTicks(2);
 		context.takeScreenshot(TestScreenshotOptions.of("showcase_" + name).withSize(WIDTH, HEIGHT));
+	}
+
+	/** Le joueur (en créatif) vole ou non. */
+	private static void fly(TestServerContext server, boolean flying) {
+		server.runOnServer(s -> {
+			player(s).getAbilities().flying = flying;
+			player(s).sendAbilitiesUpdate();
+		});
 	}
 
 	private static void stand(TestServerContext server, Vec3d pos, float yaw, float pitch) {
