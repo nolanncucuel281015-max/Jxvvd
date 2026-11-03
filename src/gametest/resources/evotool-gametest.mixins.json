@@ -4,7 +4,8 @@
 	"package": "fr.evotool.gametest.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"DedicatedServerImplUtilMixin"
+		"DedicatedServerImplUtilMixin",
+		"ClientGameTestImplMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
