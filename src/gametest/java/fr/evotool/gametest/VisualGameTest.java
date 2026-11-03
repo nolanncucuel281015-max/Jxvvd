@@ -186,6 +186,17 @@ public class VisualGameTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		perspective(context, Perspective.FIRST_PERSON);
 
+		// le coup de tentacule (clic gauche), image par image : il ne doit pas clignoter
+		game.getServer().runOnServer(server -> player(server).setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY));
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 5");
+		context.waitTicks(30);
+		context.getInput().pressKey(options -> options.attackKey);
+		for (int i = 1; i <= 12; i++) {
+			context.takeScreenshot("evotool_20_strike_frame_" + (i < 10 ? "0" : "") + i);
+			context.waitTick();
+		}
+		context.waitTicks(10);
+
 		// le manuel : la page du rituel (recette dessinée) et une page avec une image
 		context.runOnClient(client -> {
 			fr.evotool.client.ManualScreen manual = new fr.evotool.client.ManualScreen();
