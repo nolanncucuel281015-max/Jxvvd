@@ -26,6 +26,8 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(TentacleTogglePayload.ID, (payload, context) -> Tentacles.toggle(context.player()));
 		PayloadTypeRegistry.playC2S().register(TentacleGrabPayload.ID, TentacleGrabPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(WindJumpPayload.ID, WindJumpPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(WebPayload.ID, WebPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(WebStatePayload.ID, WebStatePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(WindJumpPayload.ID,
 				(payload, context) -> fr.evotool.element.ElementalPowers.windJump(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(TentacleGrabPayload.ID, (payload, context) -> {

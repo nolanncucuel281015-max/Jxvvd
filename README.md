@@ -423,6 +423,35 @@ Pas de dégâts de chute pendant un déplacement (ni dans les 4 s qui suivent). 
 les souffles en 1,5 à 2 s, les explosions en 3 à 4 s, les déplacements en 2 à 10 s. En créatif, l'onglet du mod
 donne un grimoire qui connaît déjà les 9 éléments.
 
+## Gant de Spider-Man — le rituel
+
+Bats le boss (il lâche toujours son **cœur**), réunis **4 lingots de netherite** et **4 ficelles**, et fais le
+rituel à la table de craft (la recette est dans le livre de recettes) :
+
+```
+[Netherite] [ Ficelle ] [Netherite]
+[ Ficelle ] [Cœur du boss] [ Ficelle ]
+[Netherite] [ Ficelle ] [Netherite]
+```
+
+Dès que tu prends le gant, **la foudre tombe** sur toi : le rituel est accompli, le gant s'éveille.
+
+- **Clic droit** : une toile s'accroche là où tu vises (jusqu'à 48 blocs) et tu t'y **balances** comme un pendule.
+  Avance pour prendre de l'élan, **accroupis-toi** pour remonter le long de la toile, **saute** (ou clic droit)
+  pour lâcher en plein élan. Les autres joueurs voient ta toile.
+- **Accroupi + clic droit** : **tir de toile** (24 blocs). Une créature touchée est engluée (toile à ses pieds,
+  Lenteur V, Faiblesse) ; sur un bloc, une toile se pose. Les toiles disparaissent au bout de 10 s.
+- **En main** : tu **grimpes aux murs** (avance contre un mur ; accroupi, tu y restes collé) et tu ne prends plus
+  de dégâts de chute.
+
+## Manuel d'Evo Tool
+
+Offert à la première connexion (et craftable : livre + évolium). **Clic droit** pour l'ouvrir : un sommaire de
+**11 volumes** à gauche (Bienvenue, Outils, Armures, Minerais, Dimension, Boss, Machines, Éléments, Grimoire,
+Rituel, Commandes), et des pages avec de **vraies captures du jeu**, les objets (survole-les pour leur nom), les
+**recettes dessinées** et **où trouver** chaque chose (couches des minerais, coffres du briquet, sanctuaires…).
+Le contenu est dans `assets/evotool/manual/fr_fr.json`.
+
 ## Modèle 3D — 21 formes
 
 Chaque outil a un vrai modèle 3D (pas une simple texture). **Tous les 5 niveaux il change de forme** :

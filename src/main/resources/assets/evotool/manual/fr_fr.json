@@ -1,0 +1,346 @@
+{
+ "chapters": [
+  {
+   "title": "I. Bienvenue",
+   "icon": "evotool:evotool_manual",
+   "pages": [
+    {
+     "title": "Bienvenue dans Evo Tool",
+     "text": "Ce manuel t'explique tout le mod, volume par volume. Choisis un volume à gauche, puis tourne les pages avec ◀ et ▶.\n\nTes outils, tes armes et ton armure §devoluent§r quand tu t'en sers, une dimension entière évolue autour de toi, et un boss t'attend au fond d'un sanctuaire…",
+     "image": "evotool:textures/gui/manual/tentacle_legs.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    },
+    {
+     "title": "Les touches",
+     "text": "§eR§r : faire évoluer l'objet prêt (avec une animation)\n§eY§r : menu de l'outil en main (modes, pouvoirs)\n§eJ§r : mode déplacement des tentacules\n§eClic droit à main nue§r : une tentacule attrape\n§eAccroupi + clic droit§r : changer de sort (grimoire) ou tirer une toile (gant)\n\nSurvole un objet de ce manuel pour voir son nom.",
+     "items": [
+      "evotool:evolving_pickaxe",
+      "evotool:evolving_chestplate",
+      "evotool:elemental_grimoire",
+      "evotool:spider_glove",
+      "evotool:elemental_combiner"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "II. Outils",
+   "icon": "evotool:evolving_pickaxe",
+   "pages": [
+    {
+     "title": "Des outils qui évoluent",
+     "text": "Chaque outil gagne de l'expérience en servant : la §bpioche§r et la §bpelle§r en cassant, la §bhache§r en coupant du bois et en tuant, la §bhoue§r en labourant, l'§bépée§r, la §blance§r, la §bmasse§r et l'§barc§r en tuant des monstres.\n\nNiveau maximum : 100. Tous les 5 niveaux, une nouvelle forme : appuie sur §eR§r quand l'objet est prêt.",
+     "items": [
+      "evotool:evolving_pickaxe",
+      "evotool:evolving_shovel",
+      "evotool:evolving_axe",
+      "evotool:evolving_hoe",
+      "evotool:evolving_sword",
+      "evotool:evolving_spear",
+      "evotool:evolium_mace",
+      "evotool:evolving_bow"
+     ]
+    },
+    {
+     "title": "Leurs pouvoirs",
+     "text": "Modes de minage (3x3, 3x3x3, 5x5, 5x5x5), fusion automatique, Fortune, abattage d'arbres, vol de vie, onde de choc, foudre…\n\nAu §6niveau 100§r, la pioche, la pelle et la hache cassent §6tout en un seul coup§r (pierre, ardoise, minerais, obsidienne).\n\nUn §blingot d'évolite§r à l'enclume ajoute une amélioration spéciale.",
+     "items": [
+      "evotool:evolite_ingot",
+      "minecraft:anvil"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "III. Armures",
+   "icon": "evotool:evolving_chestplate",
+   "pages": [
+    {
+     "title": "L'armure évolutive",
+     "text": "Elle monte de niveau quand tu encaisses des coups : Résistance, Force, Vitesse, Régénération, cœurs en plus…\n\nAméliorée à l'évolite : le §bplastron§r donne les §bailes de l'infini§r (vol plus rapide qu'en créatif), les §bbottes§r la §bplongée souterraine§r (reste accroupi sur le sol).",
+     "items": [
+      "evotool:evolving_helmet",
+      "evotool:evolving_chestplate",
+      "evotool:evolving_leggings",
+      "evotool:evolving_boots"
+     ]
+    },
+    {
+     "title": "L'armure abyssale",
+     "text": "Une pièce §5niveau 100§r + de l'§5abyssite§r à l'enclume : elle devient noire et monte jusqu'au §5niveau 150§r (une nouvelle forme tous les 5 niveaux, Résistance V…).\n\nAvec l'ensemble complet au niveau 150 : les §5tentacules§r.",
+     "image": "evotool:textures/gui/manual/tentacles.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    },
+    {
+     "title": "Les tentacules",
+     "text": "§eClic gauche§r à main nue : une tentacule frappe.\n§eClic droit§r : elle attrape le monstre ou le joueur visé et le tient à 6 blocs ; clic droit encore pour le projeter (ou le poser en regardant par terre).\n§eJ§r : mode déplacement, surélevé sur de longues pattes ; accroupi pour creuser.",
+     "image": "evotool:textures/gui/manual/tentacle_grab.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    }
+   ]
+  },
+  {
+   "title": "IV. Minerais",
+   "icon": "evotool:evolium",
+   "pages": [
+    {
+     "title": "Dans le monde normal",
+     "text": "§dÉvolium§r : tout en bas, des couches -64 à -16 (le plus souvent vers -40), dans l'ardoise des profondeurs.\n\n§cRubis§r : des couches -48 à 48 (surtout vers 0). Ses blocs construisent le portail de la dimension.\n\n§9Saphir§r : des couches -32 à 64.",
+     "items": [
+      "evotool:deepslate_evolium_ore",
+      "evotool:evolium",
+      "evotool:ruby_ore",
+      "evotool:ruby",
+      "evotool:sapphire_ore",
+      "evotool:sapphire"
+     ]
+    },
+    {
+     "title": "Ailleurs",
+     "text": "§bÉvolite§r : dans §bl'End§r, des couches 10 à 90. Ses lingots améliorent les objets à l'enclume.\n\n§5Abyssite§r : dans la §5dimension évolutive§r, des couches -60 à 50.\n\n§aMinerai évolutif§r : partout dans la dimension ; plus il a évolué, plus il donne d'évolium.",
+     "items": [
+      "evotool:evolite_ore",
+      "evotool:evolite_ingot",
+      "evotool:abyssite_ore",
+      "evotool:abyssite",
+      "evotool:evolving_ore"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "V. Dimension",
+   "icon": "evotool:ruby_block",
+   "pages": [
+    {
+     "title": "Y aller",
+     "text": "Construis un cadre de §cblocs de rubis§r comme un portail du Nether (intérieur de 2x3 à 21x21) et allume-le avec le §6briquet d'évolium§r. Un portail de retour se crée à l'arrivée.",
+     "items": [
+      "evotool:ruby_block",
+      "evotool:evolium_lighter"
+     ]
+    },
+    {
+     "title": "Le briquet secret",
+     "text": "Sa recette est §osecrète§r : le livre de recettes ne la montre jamais. À toi de la trouver…\n\nOn en trouve aussi dans les coffres : §6portails en ruine§r (30 %), §6cités antiques§r (12 %), §6temples de la jungle§r (10 %), §6pyramides du désert§r (8 %), §6forteresses§r (8 %).",
+     "items": [
+      "evotool:evolium_lighter",
+      "minecraft:chest"
+     ]
+    },
+    {
+     "title": "Là-bas",
+     "text": "Toutes les 5 minutes passées dans la dimension, tout autour de toi §dévolue§r et brille un peu plus (6 niveaux).\n\nLes §6sanctuaires§r (un par zone de 320 x 320 blocs) sont des temples ronds en quartz et or : il faut explorer pour les trouver.",
+     "items": [
+      "evotool:evolving_stone",
+      "evotool:evolving_grass",
+      "evotool:evolving_log",
+      "evotool:evolving_leaves",
+      "evotool:evolving_crystal",
+      "evotool:sanctuary_altar"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "VI. Le boss",
+   "icon": "evotool:boss_heart",
+   "pages": [
+    {
+     "title": "Le Slime Cloche",
+     "text": "Au centre d'un sanctuaire, un §eclic droit sur l'autel§r le réveille. Il §dévolue toutes les 5 minutes§r, du Slime Évolutif à la Cloche Divine, et se bat en 3 phases.",
+     "items": [
+      "minecraft:bell",
+      "evotool:sanctuary_altar"
+     ]
+    },
+    {
+     "title": "L'autel, n'importe où",
+     "text": "L'autel se fabrique aussi, pour réveiller le boss où tu veux.",
+     "recipe": {
+      "grid": [
+       "",
+       "minecraft:bell",
+       "",
+       "minecraft:gold_ingot",
+       "evotool:evolium_block",
+       "minecraft:gold_ingot",
+       "minecraft:quartz_block",
+       "minecraft:quartz_block",
+       "minecraft:quartz_block"
+      ],
+      "result": "evotool:sanctuary_altar"
+     }
+    },
+    {
+     "title": "Son butin",
+     "text": "Évolium, blocs de rubis, cloche, lingots d'évolite, blocs d'évolium… et toujours son §6cœur§r : la clé du §crituel du gant de Spider-Man§r (volume X).",
+     "items": [
+      "evotool:boss_heart",
+      "evotool:evolium",
+      "evotool:evolite_ingot",
+      "evotool:evolium_block"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "VII. Machines",
+   "icon": "evotool:elemental_combiner",
+   "pages": [
+    {
+     "title": "Générateur de bouclier",
+     "text": "Un dôme de 3 à 64 blocs qui repousse les monstres et détruit leurs projectiles. Il brûle 1 évolium toutes les 10 minutes (sa case en avale jusqu'à 1 milliard).",
+     "recipe": {
+      "grid": [
+       "minecraft:diamond",
+       "minecraft:diamond",
+       "minecraft:diamond",
+       "evotool:evolium_block",
+       "minecraft:shield",
+       "evotool:evolium_block",
+       "evotool:evolium_block",
+       "evotool:evolium_block",
+       "evotool:evolium_block"
+      ],
+      "result": "evotool:shield_generator"
+     }
+    },
+    {
+     "title": "Combineur élémentaire",
+     "text": "Pose une armure, une arme, un outil ou un livre, puis un élément : ils fusionnent au-dessus de l'autel.",
+     "recipe": {
+      "grid": [
+       "minecraft:diamond",
+       "minecraft:amethyst_shard",
+       "minecraft:diamond",
+       "evotool:evolium",
+       "minecraft:blaze_rod",
+       "evotool:evolium",
+       "minecraft:crying_obsidian",
+       "minecraft:crying_obsidian",
+       "minecraft:crying_obsidian"
+      ],
+      "result": "evotool:elemental_combiner"
+     }
+    },
+    {
+     "title": "La fusion",
+     "text": "Les deux objets tournent l'un autour de l'autre, entourés des particules de l'élément, puis fusionnent dans un éclair.",
+     "image": "evotool:textures/gui/manual/combiner_fusion.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    }
+   ]
+  },
+  {
+   "title": "VIII. Éléments",
+   "icon": "minecraft:blue_ice",
+   "pages": [
+    {
+     "title": "Les 9 ingrédients",
+     "text": "§bGlace§r (glace), §6Feu§r (briquet), §eÉlectricité§r (poudre à canon), §9Eau§r (seau d'eau), §fVent§r (charge de vent), §2Terre§r (terre), §5Ombre§r (poche d'encre), §eLumière§r (poudre lumineuse), §aPoison§r (œil d'araignée).",
+     "items": [
+      "minecraft:ice",
+      "minecraft:flint_and_steel",
+      "minecraft:gunpowder",
+      "minecraft:water_bucket",
+      "minecraft:wind_charge",
+      "minecraft:dirt",
+      "minecraft:ink_sac",
+      "minecraft:glowstone_dust",
+      "minecraft:spider_eye"
+     ]
+    },
+    {
+     "title": "Sur une arme",
+     "text": "Glace : gèle. Feu : enflamme. Électricité : arcs sur 3 monstres. Eau : vague et soin. Vent : projette en l'air. Terre : séisme. Ombre : aveugle et flétrit. Lumière : fait briller, brûle les morts-vivants. Poison : Poison II."
+    },
+    {
+     "title": "Sur l'armure",
+     "text": "Bottes de §bglace§r : glissement. Plastron de §6feu§r : vol de feu. Jambières §eélectriques§r : Vitesse II. Bottes d'§9eau§r : marche sur l'eau. Bottes de §fvent§r : double saut. Bottes de §2terre§r : atterrissage sismique. Plastron d'§5ombre§r : invisible accroupi. Casque de §elumière§r : révèle les monstres. Plastron de §apoison§r : aura toxique."
+    },
+    {
+     "title": "Le panneau des ingrédients",
+     "text": "Dans le combineur, le panneau de droite montre l'ingrédient de chaque élément : un clic le pose.",
+     "image": "evotool:textures/gui/manual/combiner_menu.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    }
+   ]
+  },
+  {
+   "title": "IX. Grimoire",
+   "icon": "evotool:elemental_grimoire",
+   "pages": [
+    {
+     "title": "Le grimoire élémentaire",
+     "text": "Un §elivre§r + un élément dans le combineur : un grimoire qui connaît les §e4 sorts§r de l'élément. Repasse-le pour lui en apprendre d'autres.\n§eClic droit§r : lancer. §eAccroupi + clic droit§r : sort suivant.",
+     "image": "evotool:textures/gui/manual/grimoire_inferno.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    },
+    {
+     "title": "Les 4 sorts",
+     "text": "§6Trait§r : un projectile droit devant.\n§6Explosion§r : une zone là où tu vises (24 blocs).\n§6Souffle§r : un cône devant toi.\n§6Déplacement§r : vol de feu, saut éclair, bond du vent, glissade de givre, chevauchée de vague, bond sismique, pas de l'ombre, ailes de lumière, brume toxique.",
+     "image": "evotool:textures/gui/manual/grimoire_fireball.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    },
+    {
+     "title": "Le vol de feu",
+     "text": "Choisis « Vol de feu », clic droit… et pfff, tu t'envoles là où tu regardes, dans une traînée de flammes !",
+     "image": "evotool:textures/gui/manual/fire_flight.png",
+     "imageWidth": 256,
+     "imageHeight": 144
+    }
+   ]
+  },
+  {
+   "title": "X. Le rituel",
+   "icon": "evotool:spider_glove",
+   "pages": [
+    {
+     "title": "Le rituel du gant",
+     "text": "Bats le boss pour son §6cœur§r, réunis §84 lingots de netherite§r et §f4 ficelles§r : le cœur au milieu, les ficelles sur les côtés, la netherite aux coins. Quand tu prends le gant, la foudre tombe : il s'éveille.",
+     "recipe": {
+      "grid": [
+       "minecraft:netherite_ingot",
+       "minecraft:string",
+       "minecraft:netherite_ingot",
+       "minecraft:string",
+       "evotool:boss_heart",
+       "minecraft:string",
+       "minecraft:netherite_ingot",
+       "minecraft:string",
+       "minecraft:netherite_ingot"
+      ],
+      "result": "evotool:spider_glove"
+     }
+    },
+    {
+     "title": "Les pouvoirs du gant",
+     "text": "§eClic droit§r : une toile s'accroche là où tu vises (48 blocs) et tu t'y balances. Avance pour prendre de l'élan, §eaccroupi§r pour remonter la toile, §esaut§r ou clic droit pour lâcher.\n§eAccroupi + clic droit§r : tir de toile, qui englue ce qu'il touche.\nEn main : tu §egrimpes aux murs§r et tu ne prends plus de dégâts de chute.",
+     "items": [
+      "evotool:spider_glove",
+      "minecraft:cobweb",
+      "minecraft:string"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "XI. Commandes",
+   "icon": "minecraft:command_block",
+   "pages": [
+    {
+     "title": "Pour les opérateurs",
+     "text": "§e/upgrade§r : donne des objets évolués (par exemple §7/upgrade armure 150§r pour l'ensemble abyssal).\n\n§e/dimension tp§r : aller dans la dimension (ou en revenir).\n§e/dimension locate§r : le sanctuaire le plus proche.\n§e/dimension spawn§r : faire apparaître le boss.\n§e/dimension speed§r : vitesse d'évolution."
+    }
+   ]
+  }
+ ]
+}

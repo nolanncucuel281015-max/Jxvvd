@@ -67,6 +67,8 @@ public class EvoTool implements ModInitializer {
 		Tentacles.init();
 		fr.evotool.element.ElementalPowers.init();
 		fr.evotool.element.Spells.init();
+		fr.evotool.spider.SpiderGlove.init();
+		fr.evotool.item.ManualGift.init();
 		GiantItem.init();
 		CelestialBow.init();
 		PickaxeSlam.init();

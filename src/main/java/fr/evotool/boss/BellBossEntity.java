@@ -690,6 +690,8 @@ public class BellBossEntity extends HostileEntity {
 		super.dropLoot(world, source, causedByPlayer);
 		int form = getForm();
 		dropStack(world, new ItemStack(ModItems.EVOLIUM, 3 + form * 3));
+		// son cœur : pour le rituel du gant de Spider-Man
+		dropStack(world, new ItemStack(ModItems.BOSS_HEART));
 		dropStack(world, new ItemStack(ModBlocks.RUBY_BLOCK, 2));
 		if (form >= 1) {
 			dropStack(world, new ItemStack(Items.BELL));

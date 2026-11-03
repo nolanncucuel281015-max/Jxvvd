@@ -4908,6 +4908,124 @@ def grimoire_sprite():
     return img
 
 
+def heart_sprite():
+    """Cœur du boss : cœur d'or et de gelée violette, une petite cloche dorée au centre."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    shape = ["................",
+             "...xxx....xxx...",
+             "..xoooxx.xooox..",
+             ".xoolooxxooooox.",
+             ".xoloooooooooox.",
+             ".xooooooooooooх.".replace("х", "x"),
+             ".xooooobbooooox.",
+             "..xoooobbbooox..",
+             "...xoooobbooox..",
+             "....xooobbbox...",
+             ".....xooooox....",
+             "......xooox.....",
+             ".......xox......",
+             "........x.......",
+             "................",
+             "................"]
+    colors = {"x": hexc("ffd23a"), "o": hexc("8a2be2"), "l": hexc("e6c3ff"), "b": hexc("ffe9a0")}
+    for y, row in enumerate(shape):
+        for x, ch in enumerate(row):
+            if ch in colors:
+                c = colors[ch]
+                if ch == "o":
+                    c = lerp(c, hexc("ff4fa3"), max(0.0, (y - 4) / 12.0))
+                img.putpixel((x, y), c)
+    return img
+
+
+def glove_sprite():
+    """Gant de Spider-Man : main rouge aux doigts écartés, motif de toile noir, araignée au centre, manchette bleue."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    shape = ["................",
+             "...r.r.r.r......",
+             "...r.r.r.r......",
+             "...r.r.r.r......",
+             "...rrrrrrr......",
+             "...rrrrrrr.rr...",
+             "...rrrrrrrrrr...",
+             "...rrrrrrrrr....",
+             "....rrrrrrr.....",
+             "....rrrrrrr.....",
+             "....bbbbbbb.....",
+             "....bbbbbbb.....",
+             "................",
+             "................",
+             "................",
+             "................"]
+    red, blue, web = hexc("e0202c"), hexc("2156e0"), hexc("1a0606")
+    for y, row in enumerate(shape):
+        for x, ch in enumerate(row):
+            if ch == "r":
+                c = shade(red, 1.1 if y < 4 else 1.0)
+                if y >= 4 and (x == 5 or x == 8 or y == 6 or y == 9):
+                    c = shade(red, 0.55)        # le motif de toile
+                img.putpixel((x, y), c)
+            elif ch == "b":
+                img.putpixel((x, y), shade(blue, 0.8 if y == 11 else 1.0))
+    for (x, y) in ((6, 6), (7, 6), (6, 7), (7, 7), (5, 5), (8, 5), (5, 8), (8, 8)):
+        img.putpixel((x, y), web)               # l'araignée
+    return img
+
+
+def manual_sprite():
+    """Manuel d'Evo Tool : livre bleu nuit cerclé d'or, un « E » doré et une gemme d'évolium."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    cover, dark, gold, page = hexc("1f2f6a"), hexc("0f173a"), hexc("ffd23a"), hexc("efe3c2")
+    for y in range(1, 15):
+        for x in range(2, 14):
+            img.putpixel((x, y), cover)
+        img.putpixel((2, y), dark)
+        img.putpixel((3, y), gold)
+        img.putpixel((13, y), page)
+    for x in range(2, 14):
+        img.putpixel((x, 1), gold)
+        img.putpixel((x, 14), gold)
+    for (x, y) in ((6, 4), (7, 4), (8, 4), (9, 4), (6, 5), (6, 6), (7, 6), (8, 6), (6, 7), (6, 8), (7, 8), (8, 8), (9, 8)):
+        img.putpixel((x, y), gold)              # le « E »
+    for (x, y), c in (((8, 10), "c77dff"), ((7, 11), "c77dff"), ((8, 11), "ffffff"), ((9, 11), "c77dff"), ((8, 12), "8a2be2")):
+        img.putpixel((x, y), hexc(c))
+    return img
+
+
+def gen_ritual_and_manual():
+    """Cœur du boss, gant de Spider-Man (et son fil de toile), manuel : textures, modèles, recettes."""
+    for name, sprite in (("boss_heart", heart_sprite()), ("spider_glove", glove_sprite()), ("evotool_manual", manual_sprite())):
+        save_png(sprite, "item", name)
+        write_json(os.path.join(ASSETS, "models", "item", f"{name}.json"),
+                   {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{name}"}})
+        write_json(os.path.join(ASSETS, "items", f"{name}.json"),
+                   {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{name}"}})
+    # le fil de toile : un brin blanc lumineux (dessiné étiré entre la main et le point d'accroche)
+    strand = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            strand.putpixel((x, y), shade(hexc("f4f4ff"), 0.85 if (x + y) % 4 == 0 else 1.0))
+    save_png(strand, "item", "web", "strand")
+    write_json(os.path.join(ASSETS, "models", "item", "web", "strand.json"), {
+        "textures": {"particle": f"{MOD}:item/web/strand", "silk": f"{MOD}:item/web/strand"},
+        "elements": [{"from": [7.4, 0, 7.4], "to": [8.6, 16, 8.6], "light_emission": 12, "shade": False,
+                      "faces": {f: {"uv": [0, 0, 2, 16], "texture": "#silk"} for f in ("north", "south", "east", "west")}}]})
+    write_json(os.path.join(ASSETS, "items", "web", "strand.json"),
+               {"model": {"type": "minecraft:model", "model": f"{MOD}:item/web/strand"}})
+    # le rituel : le cœur du boss au milieu, les ficelles sur les côtés, la netherite aux coins
+    write_json(os.path.join(DATA, "recipe", "spider_glove.json"), {
+        "type": "minecraft:crafting_shaped", "category": "equipment",
+        "pattern": ["NSN", "SHS", "NSN"],
+        "key": {"N": "minecraft:netherite_ingot", "S": "minecraft:string", "H": f"{MOD}:boss_heart"},
+        "result": {"id": f"{MOD}:spider_glove", "count": 1},
+    })
+    write_json(os.path.join(DATA, "recipe", "evotool_manual.json"), {
+        "type": "minecraft:crafting_shapeless", "category": "misc",
+        "ingredients": ["minecraft:book", f"{MOD}:evolium"],
+        "result": {"id": f"{MOD}:evotool_manual", "count": 1},
+    })
+
+
 def gen_combiner():
     """Combineur élémentaire : bloc 3D (textures dans textures/block/elemental_combiner/), recette et butin."""
     out = ("block", "elemental_combiner")
@@ -4961,7 +5079,7 @@ def gen_combiner():
 
 
 # Recettes visibles dans le livre de recettes dès la connexion, sans avoir à ramasser un ingrédient.
-ALWAYS_VISIBLE_RECIPES = {"shield_generator", "elemental_combiner"}
+ALWAYS_VISIBLE_RECIPES = {"shield_generator", "elemental_combiner", "spider_glove", "evotool_manual"}
 # Recettes secrètes : elles marchent à la table de craft, mais le livre de recettes ne les montre jamais.
 HIDDEN_RECIPES = {"evolium_lighter"}
 
@@ -5355,5 +5473,6 @@ if __name__ == "__main__":
     gen_shield()
     gen_abyss()
     gen_combiner()
+    gen_ritual_and_manual()
     recipe_unlocks()
     print("Ressources générées dans", os.path.normpath(ROOT))

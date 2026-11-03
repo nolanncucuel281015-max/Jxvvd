@@ -74,6 +74,13 @@ public final class ModComponents {
 					.packetCodec(fr.evotool.element.Grimoire.PACKET_CODEC).build()
 	);
 
+	/** Gant de Spider-Man éveillé par le rituel (la foudre tombe la première fois qu'on le tient). */
+	public static final ComponentType<Unit> AWAKENED = Registry.register(
+			Registries.DATA_COMPONENT_TYPE,
+			EvoTool.id("awakened"),
+			ComponentType.<Unit>builder().codec(Unit.CODEC).packetCodec(PacketCodec.unit(Unit.INSTANCE)).build()
+	);
+
 	private ModComponents() {
 	}
 

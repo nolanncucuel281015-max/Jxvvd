@@ -1,0 +1,47 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "evotool:spider_glove"
+      }
+    },
+    "has_boss_heart": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "evotool:boss_heart"
+          }
+        ]
+      }
+    },
+    "has_netherite_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:netherite_ingot"
+          }
+        ]
+      }
+    },
+    "from_the_start": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_boss_heart",
+      "has_netherite_ingot",
+      "from_the_start"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "evotool:spider_glove"
+    ]
+  }
+}

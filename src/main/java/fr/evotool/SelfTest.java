@@ -1064,6 +1064,49 @@ final class SelfTest {
 		}
 		player.clearStatusEffects();
 		InfinityWings.restoreAbilities(player);
+		checks += checkSpiderGlove(world, player, x, y, z, failures);
+		return checks;
+	}
+
+	/** Gant de Spider-Man : l'éveil du rituel, le tir de toile, la toile, pas de dégâts de chute. */
+	private static int checkSpiderGlove(ServerWorld world, FakePlayer player, double x, double y, double z, List<String> failures) {
+		int checks = 0;
+		player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+		ItemStack glove = new ItemStack(fr.evotool.item.ModItems.SPIDER_GLOVE);
+		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, glove);
+		fr.evotool.spider.SpiderGlove.awaken(player, glove);
+		checks++;
+		if (!glove.contains(fr.evotool.component.ModComponents.AWAKENED)) {
+			failures.add("gant : le rituel ne l'éveille pas");
+		}
+		// tir de toile sur un zombie : englué (toile + lenteur)
+		ZombieEntity zombie = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+		if (zombie != null) {
+			zombie.refreshPositionAndAngles(x, y, z + 6.0, 180.0F, 0.0F);
+			zombie.setAiDisabled(true);
+			world.spawnEntity(zombie);
+			boolean shot = fr.evotool.spider.SpiderGlove.webShot(player);
+			boolean web = world.getBlockState(zombie.getBlockPos()).isOf(net.minecraft.block.Blocks.COBWEB);
+			EvoTool.LOGGER.info("EVOTOOL spider glove: shot={} web={} slowness={}", shot, web,
+					zombie.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS));
+			checks++;
+			if (!shot || !web || !zombie.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS)) {
+				failures.add("gant : le tir de toile n'englue pas le zombie");
+			}
+			world.removeBlock(zombie.getBlockPos(), false);
+			zombie.discard();
+		}
+		// la toile accrochée est retenue (et montrée aux autres), puis lâchée
+		fr.evotool.spider.SpiderGlove.setWeb(player, new Vec3d(x, y + 10, z + 10));
+		boolean attached = fr.evotool.spider.SpiderGlove.anchor(player) != null;
+		fr.evotool.spider.SpiderGlove.setWeb(player, null);
+		float health = player.getHealth();
+		boolean hurt = player.damage(world, world.getDamageSources().fall(), 8.0F);
+		checks++;
+		if (!attached || fr.evotool.spider.SpiderGlove.anchor(player) != null || hurt || player.getHealth() < health) {
+			failures.add("gant : la toile ou l'absence de dégâts de chute ne marchent pas");
+		}
+		player.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, ItemStack.EMPTY);
 		return checks;
 	}
 

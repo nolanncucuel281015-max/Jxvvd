@@ -166,6 +166,44 @@ public class VisualGameTest implements FabricClientGameTest {
 		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL fire flight: y={} ", player(server).getY()));
 		context.waitTicks(60);
 		perspective(context, Perspective.FIRST_PERSON);
+
+		// le gant de Spider-Man : la toile accrochée au sol, loin devant (vue de derrière)
+		game.getServer().runOnServer(server -> player(server).setStackInHand(net.minecraft.util.Hand.MAIN_HAND,
+				new ItemStack(fr.evotool.item.ModItems.SPIDER_GLOVE)));
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 12");
+		context.waitTicks(30);
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(6);
+		context.takeScreenshot("evotool_15_spider_web");
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(10);
+		perspective(context, Perspective.FIRST_PERSON);
+
+		// le manuel : la page du rituel (recette dessinée) et une page avec une image
+		context.runOnClient(client -> {
+			fr.evotool.client.ManualScreen manual = new fr.evotool.client.ManualScreen();
+			client.setScreen(manual);
+			manual.open(9, 0);
+		});
+		context.waitTicks(5);
+		context.takeScreenshot("evotool_16_manual_ritual");
+		context.runOnClient(client -> {
+			if (client.currentScreen instanceof fr.evotool.client.ManualScreen manual) {
+				manual.open(2, 1);
+			}
+		});
+		context.waitTicks(5);
+		context.takeScreenshot("evotool_17_manual_image");
+		context.runOnClient(client -> {
+			if (client.currentScreen instanceof fr.evotool.client.ManualScreen manual) {
+				manual.open(3, 0);
+			}
+		});
+		context.waitTicks(5);
+		context.takeScreenshot("evotool_18_manual_ores");
+		context.runOnClient(client -> client.setScreen(null));
+		context.waitTicks(5);
 	}
 
 	private static net.minecraft.util.math.BlockPos combinerPos;

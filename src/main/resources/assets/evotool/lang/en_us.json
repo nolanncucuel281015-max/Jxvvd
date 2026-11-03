@@ -373,5 +373,17 @@
   "spell.evotool.blinding_flash": "Blinding Flash",
   "spell.evotool.light_wings": "Wings of Light",
   "spell.evotool.putrid_breath": "Putrid Breath",
-  "spell.evotool.toxic_mist": "Toxic Mist"
+  "spell.evotool.toxic_mist": "Toxic Mist",
+  "item.evotool.boss_heart": "Boss Heart",
+  "item.evotool.spider_glove": "Spider-Man Glove",
+  "item.evotool.evotool_manual": "Evo Tool Manual",
+  "message.evotool.spider_glove_awakened": "✦ The ritual is complete: the Spider-Man Glove awakens!",
+  "message.evotool.manual_given": "You received the Evo Tool Manual: right click to read it!",
+  "gui.evotool.manual.contents": "Volumes",
+  "gui.evotool.manual.page": "Page %s / %s",
+  "tooltip.evotool.boss_heart": "The beating heart of the Bell Slime: the key to the Spider-Man glove ritual",
+  "tooltip.evotool.spider_glove.web": "Right click: web to swing (sneak: climb up, jump: let go)",
+  "tooltip.evotool.spider_glove.shot": "Sneak + right click: sticky web shot",
+  "tooltip.evotool.spider_glove.climb": "In hand: climb walls, no more fall damage",
+  "tooltip.evotool.manual": "Right click: read (11 volumes, with pictures)"
 }

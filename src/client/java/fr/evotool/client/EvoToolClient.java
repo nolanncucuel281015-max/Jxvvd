@@ -74,6 +74,9 @@ public class EvoToolClient implements ClientModInitializer {
 		// Combineur élémentaire : son menu, et les pouvoirs qui dépendent des déplacements (glissement, double saut).
 		HandledScreens.register(fr.evotool.combiner.ElementalCombinerScreenHandler.TYPE, ElementalCombinerScreen::new);
 		ElementalClient.register();
+		// Manuel illustré, et gant de Spider-Man (toile, murs).
+		ManualScreen.register();
+		WebClient.register();
 		// Évolution : la nouvelle forme jaillit à l'écran, comme un totem d'immortalité.
 		ClientPlayNetworking.registerGlobalReceiver(EvolvedPayload.ID,
 				(payload, context) -> context.client().gameRenderer.showFloatingItem(payload.stack()));
@@ -134,6 +137,20 @@ public class EvoToolClient implements ClientModInitializer {
 				lines.add(at++, Text.translatable("tooltip.evotool.grimoire.cast").formatted(Formatting.GRAY));
 				lines.add(at++, Text.translatable("tooltip.evotool.grimoire.switch").formatted(Formatting.GRAY));
 				lines.add(at, Text.translatable("tooltip.evotool.grimoire.more").formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
+				return;
+			}
+			if (stack.isOf(fr.evotool.item.ModItems.SPIDER_GLOVE)) {
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.web").formatted(Formatting.RED));
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.shot").formatted(Formatting.RED));
+				lines.add(Text.translatable("tooltip.evotool.spider_glove.climb").formatted(Formatting.BLUE));
+				return;
+			}
+			if (stack.isOf(fr.evotool.item.ModItems.BOSS_HEART)) {
+				lines.add(Text.translatable("tooltip.evotool.boss_heart").formatted(Formatting.LIGHT_PURPLE));
+				return;
+			}
+			if (stack.isOf(fr.evotool.item.ModItems.MANUAL)) {
+				lines.add(Text.translatable("tooltip.evotool.manual").formatted(Formatting.GOLD));
 				return;
 			}
 			if (stack.isOf(ModBlocks.ELEMENTAL_COMBINER.asItem())) {

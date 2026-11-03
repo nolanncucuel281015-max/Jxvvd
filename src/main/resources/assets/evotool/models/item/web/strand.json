@@ -1,0 +1,60 @@
+{
+  "textures": {
+    "particle": "evotool:item/web/strand",
+    "silk": "evotool:item/web/strand"
+  },
+  "elements": [
+    {
+      "from": [
+        7.4,
+        0,
+        7.4
+      ],
+      "to": [
+        8.6,
+        16,
+        8.6
+      ],
+      "light_emission": 12,
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            16
+          ],
+          "texture": "#silk"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            16
+          ],
+          "texture": "#silk"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            16
+          ],
+          "texture": "#silk"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            16
+          ],
+          "texture": "#silk"
+        }
+      }
+    }
+  ]
+}

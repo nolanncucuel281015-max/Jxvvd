@@ -373,5 +373,17 @@
   "spell.evotool.blinding_flash": "Éclat aveuglant",
   "spell.evotool.light_wings": "Ailes de lumière",
   "spell.evotool.putrid_breath": "Souffle putride",
-  "spell.evotool.toxic_mist": "Brume toxique"
+  "spell.evotool.toxic_mist": "Brume toxique",
+  "item.evotool.boss_heart": "Cœur du boss",
+  "item.evotool.spider_glove": "Gant de Spider-Man",
+  "item.evotool.evotool_manual": "Manuel d'Evo Tool",
+  "message.evotool.spider_glove_awakened": "✦ Le rituel est accompli : le Gant de Spider-Man s'éveille !",
+  "message.evotool.manual_given": "Tu as reçu le Manuel d'Evo Tool : clic droit pour le lire !",
+  "gui.evotool.manual.contents": "Volumes",
+  "gui.evotool.manual.page": "Page %s / %s",
+  "tooltip.evotool.boss_heart": "Le cœur battant du Slime Cloche : la clé du rituel du gant de Spider-Man",
+  "tooltip.evotool.spider_glove.web": "Clic droit : toile pour se balancer (accroupi : remonter, saut : lâcher)",
+  "tooltip.evotool.spider_glove.shot": "Accroupi + clic droit : tir de toile qui englue",
+  "tooltip.evotool.spider_glove.climb": "En main : grimper aux murs, plus de dégâts de chute",
+  "tooltip.evotool.manual": "Clic droit : lire (11 volumes, avec images)"
 }

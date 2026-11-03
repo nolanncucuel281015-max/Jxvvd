@@ -21,6 +21,9 @@ public final class ModItemGroup {
 						entries.add(ModBlocks.SANCTUARY_ALTAR);
 						entries.add(ModBlocks.SHIELD_GENERATOR);
 						entries.add(ModBlocks.ELEMENTAL_COMBINER);
+						entries.add(ModItems.MANUAL);
+						entries.add(ModItems.BOSS_HEART);
+						entries.add(ModItems.SPIDER_GLOVE);
 						// un grimoire qui connaît déjà les 9 éléments (en survie, il se fait au combineur)
 						net.minecraft.item.ItemStack grimoire = new net.minecraft.item.ItemStack(ModItems.ELEMENTAL_GRIMOIRE);
 						grimoire.set(fr.evotool.component.ModComponents.GRIMOIRE,

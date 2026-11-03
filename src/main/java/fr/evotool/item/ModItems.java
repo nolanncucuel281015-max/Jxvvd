@@ -55,6 +55,16 @@ public final class ModItems {
 	/** Grimoire élémentaire : un livre passé au combineur avec des éléments ; il lance leurs sorts offensifs. */
 	public static final Item ELEMENTAL_GRIMOIRE = register("elemental_grimoire", GrimoireItem::new,
 			new Item.Settings().maxCount(1).rarity(Rarity.EPIC));
+	/** Cœur du boss : lâché par le Slime Cloche, il sert au rituel du gant de Spider-Man. */
+	public static final Item BOSS_HEART = register("boss_heart", Item::new,
+			new Item.Settings().rarity(Rarity.EPIC).fireproof()
+					.component(net.minecraft.component.DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true));
+	/** Gant de Spider-Man (rituel : cœur du boss, 4 ficelles, 4 lingots de netherite) : toile, tir de toile, murs. */
+	public static final Item SPIDER_GLOVE = register("spider_glove", SpiderGloveItem::new,
+			new Item.Settings().maxCount(1).rarity(Rarity.EPIC).fireproof());
+	/** Manuel d'Evo Tool : tout le mod en images, volume par volume. */
+	public static final Item MANUAL = register("evotool_manual", ManualItem::new,
+			new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON));
 	/** Morceaux du modèle du boss (objets d'affichage), pas dans l'inventaire créatif. */
 	public static final Item BELL_BOSS_PART = register("bell_boss_part", Item::new, new Item.Settings().maxCount(1));
 
