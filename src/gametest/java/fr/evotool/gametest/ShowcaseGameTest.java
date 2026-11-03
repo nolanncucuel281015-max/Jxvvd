@@ -89,14 +89,14 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	}
 
 	private static void run(ClientGameTestContext context, TestServerContext server, TestClientWorldContext world) {
-		world.waitForChunksRender();
+		chunks(world);
 		server.runCommand("gamemode creative @a");
 		server.runCommand("weather clear 1000000");
 		server.runOnServer(ShowcaseGameTest::findSpot);
 		server.runOnServer(ShowcaseGameTest::equip);
 		stand(server, spot, vista, 10.0F);
-		context.waitTicks(300);
-		world.waitForChunksRender();
+		context.waitTicks(200);
+		chunks(world);
 		context.runOnClient(client -> client.options.hudHidden = true);
 
 		scene(context, "armure abyssale", () -> heroShots(context, server));
@@ -361,7 +361,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		});
 		stand(server, spot, aimYaw, aimPitch);
 		context.waitTicks(60);
-		world.waitForChunksRender();
+		chunks(world);
 		server.runCommand(TIME);
 		shot(context, "13_sanctuary_divine_bell");
 		server.runOnServer(s -> look(aimSpot.add(0, 1.62, 0), bossCenter));
@@ -386,10 +386,10 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			player(s).teleport(evo, 8.5, y, 8.5, Set.of(), 30.0F, 8.0F, true);
 		});
 		context.waitTicks(200);
-		world.waitForChunksRender();
+		chunks(world);
 		server.runOnServer(s -> fr.evotool.dimension.EvoDimension.setPhase(player(s), fr.evotool.dimension.EvoDimension.MAX_PHASE));
 		context.waitTicks(80);
-		world.waitForChunksRender();
+		chunks(world);
 		shot(context, "15_evolving_dimension");
 		server.runOnServer(s -> player(s).teleport(s.getOverworld(), spot.x, spot.y, spot.z, Set.of(), vista, 10.0F, true));
 		context.waitTicks(100);
@@ -415,11 +415,11 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 		ServerWorld world = server.getOverworld();
 		BlockPos start = player(server).getBlockPos();
 		com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> found = world.locateBiome(
-				entry -> entry.matchesKey(BiomeKeys.CHERRY_GROVE), start, 6400, 32, 64);
+				entry -> entry.matchesKey(BiomeKeys.CHERRY_GROVE), start, 3200, 32, 64);
 		BlockPos center = found != null ? found.getFirst() : start;
 		BlockPos best = null;
-		for (int dx = -32; dx <= 32; dx += 8) {
-			for (int dz = -32; dz <= 32; dz += 8) {
+		for (int dx = -32; dx <= 32; dx += 16) {
+			for (int dz = -32; dz <= 32; dz += 16) {
 				int x = center.getX() + dx;
 				int z = center.getZ() + dz;
 				int ground = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
@@ -442,7 +442,7 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 			float yaw = i * 45.0F;
 			Vec3d dir = Vec3d.fromPolar(0.0F, yaw);
 			double sum = 0;
-			for (int d = 16; d <= 64; d += 16) {
+			for (int d = 16; d <= 48; d += 16) {
 				sum += world.getTopY(Heightmap.Type.MOTION_BLOCKING, MathHelper.floor(spot.x + dir.x * d), MathHelper.floor(spot.z + dir.z * d));
 			}
 			if (sum < lowest) {
@@ -534,6 +534,15 @@ public class ShowcaseGameTest implements FabricClientGameTest {
 	}
 
 	// ------------------------------------------------------------------ outils
+
+	/** Attend que les tronçons autour soient reçus et dessinés (2 minutes au plus ; sinon on continue quand même). */
+	private static void chunks(TestClientWorldContext world) {
+		try {
+			world.waitForChunksRender(true, 20 * 120);
+		} catch (AssertionError e) {
+			EvoTool.LOGGER.warn("EVOTOOL SHOWCASE chunks still loading, going on");
+		}
+	}
 
 	private static void shot(ClientGameTestContext context, String name) {
 		context.runOnClient(client -> client.getToastManager().clear());

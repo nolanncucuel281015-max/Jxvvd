@@ -96,7 +96,7 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils imagemagick > /dev/null 2>&1 || true
           timeout 3000 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClientGameTest --stacktrace > showcase.log 2>&1 || echo "client gametest exit $?"
-          grep -vE "^\s+at |^\s+\.\.\. |ALSA lib|flite|Suppressed:|Realms" showcase.log | grep -E "SHOWCASE|Exception|Error|Caused" | head -120 || true
+          grep -vE "ALSA lib|flite|Suppressed:|Realms" showcase.log | grep -E "SHOWCASE|Exception|Error|Caused|at fr\.evotool|at net\.fabricmc\.fabric\.impl\.client\.gametest" | head -150 || true
           mkdir -p showcase-images
           for f in $(find . -path ./.gradle -prune -o -name '*showcase_*.png' -print | sort); do
             cp "$f" showcase-images/
