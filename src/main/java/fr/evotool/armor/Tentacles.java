@@ -77,7 +77,8 @@ public final class Tentacles {
 	private static final double GROUND_SPEED_BONUS = 2.5;
 	private static final double STEP_BONUS = 0.9;
 	private static final double STRIKE_RANGE = 14.0;
-	private static final int STRIKE_COOLDOWN = 20;
+	/** Recharge du coup : un clic toutes les 0,5 s donne une tentacule (elles peuvent se chevaucher). */
+	private static final int STRIKE_COOLDOWN = 10;
 	/** Un coup : la tentacule jaillit en 6 ticks (on la voit partir), frappe, reste tendue puis se rétracte. */
 	private static final float[] EXTENSION = {0.12F, 0.26F, 0.42F, 0.58F, 0.74F, 0.88F, 1.0F, 1.0F, 1.0F,
 			0.88F, 0.74F, 0.58F, 0.42F, 0.26F, 0.12F};
@@ -233,7 +234,8 @@ public final class Tentacles {
 		Vec3d look = player.getRotationVector();
 		Vec3d right = new Vec3d(-look.z, 0, look.x);
 		right = right.lengthSquared() < 1.0E-6 ? new Vec3d(1, 0, 0) : right.normalize();
-		return player.getEyePos().add(right.multiply(0.55)).add(0, -0.55, 0).subtract(look.multiply(0.2));
+		// un peu à l'écart de la caméra (sinon, à la première personne, le bout collé à l'œil clignote quand on bouge)
+		return player.getEyePos().add(right.multiply(0.75)).add(0, -0.5, 0).add(look.multiply(0.35));
 	}
 
 	private static Vec3d curve(Vec3d origin, Vec3d end, double wobble) {
@@ -333,6 +335,10 @@ public final class Tentacles {
 				continue;
 			}
 			if (strike.grabbed == null) {
+				// la tentacule reste attachée à l'épaule du joueur, même s'il bouge pendant le coup
+				strike.origin = shoulder(strike.player);
+				strike.control = curve(strike.origin, strike.end, 0);
+				follow(strike);
 				pose(strike, EXTENSION[strike.age]);
 				if (strike.age == HIT_TICK) {
 					hit(strike);
