@@ -894,7 +894,7 @@ final class SelfTest {
 		checks++;
 		if (!book.isOf(fr.evotool.item.ModItems.ELEMENTAL_GRIMOIRE) || learned == null
 				|| !learned.elements().equals(java.util.List.of(fr.evotool.element.Element.LIGHTNING)) || !refusesKnown
-				|| grimoire == null || grimoire.spells().size() != 4 || !grimoire.elements().contains(fr.evotool.element.Element.FIRE)) {
+				|| grimoire == null || grimoire.spells().size() != 8 || !grimoire.elements().contains(fr.evotool.element.Element.FIRE)) {
 			failures.add("grimoire : livre + éléments ne donnent pas un grimoire aux bons sorts");
 		}
 		combiner.items().clear();
@@ -907,12 +907,13 @@ final class SelfTest {
 				failures.add("grimoire : accroupi + clic droit ne passe pas au sort suivant");
 			}
 			for (fr.evotool.element.Spell spell : new fr.evotool.element.Spell[] {fr.evotool.element.Spell.THUNDERBOLT,
-					fr.evotool.element.Spell.INFERNO}) {
+					fr.evotool.element.Spell.INFERNO, fr.evotool.element.Spell.DRAGON_BREATH}) {
 				ZombieEntity zombie = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
 				if (zombie == null) {
 					continue;
 				}
-				zombie.refreshPositionAndAngles(x, y, z + 6.0, 180.0F, 0.0F);
+				// le souffle porte à 8 blocs : le zombie est plus près
+				zombie.refreshPositionAndAngles(x, y, z + (spell.kind() == fr.evotool.element.Spell.Kind.BREATH ? 4.0 : 6.0), 180.0F, 0.0F);
 				zombie.setAiDisabled(true);
 				world.spawnEntity(zombie);
 				float before = zombie.getHealth();
@@ -927,6 +928,30 @@ final class SelfTest {
 				}
 				zombie.discard();
 			}
+			// déplacements : saut éclair (16 blocs droit devant), pas de l'ombre (contre le zombie visé), pas de chute
+			player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+			fr.evotool.element.Spells.cast(player, fr.evotool.element.Spell.LIGHTNING_BLINK);
+			double blinked = player.getZ() - z;
+			player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+			ZombieEntity mark = EntityType.ZOMBIE.create(world, SpawnReason.COMMAND);
+			double stepped = -1;
+			if (mark != null) {
+				mark.refreshPositionAndAngles(x, y, z + 7.0, 180.0F, 0.0F);
+				mark.setAiDisabled(true);
+				world.spawnEntity(mark);
+				fr.evotool.element.Spells.cast(player, fr.evotool.element.Spell.SHADOW_STEP);
+				stepped = player.getZ() - z;
+				mark.discard();
+			}
+			float health = player.getHealth();
+			boolean hurt = player.damage(world, world.getDamageSources().fall(), 8.0F);
+			EvoTool.LOGGER.info("EVOTOOL move spells: blink {} blocks, shadow step {} blocks, fall hurt={}", blinked, stepped, hurt);
+			checks++;
+			if (blinked < 6.0 || stepped < 4.0 || stepped > 7.0 || hurt || player.getHealth() < health) {
+				failures.add("grimoire : saut éclair / pas de l'ombre ne déplacent pas le joueur (" + blinked + ", " + stepped + ")");
+			}
+			player.refreshPositionAndAngles(x, y, z, 0.0F, 0.0F);
+			fr.evotool.element.MoveSpells.forget(player.getUuid());
 		}
 
 		// armes : la glace gèle, le feu enflamme, le vent projette

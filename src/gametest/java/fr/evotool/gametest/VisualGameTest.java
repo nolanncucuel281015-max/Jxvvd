@@ -150,6 +150,22 @@ public class VisualGameTest implements FabricClientGameTest {
 		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL grimoire: {}",
 				player(server).getMainHandStack().get(fr.evotool.component.ModComponents.GRIMOIRE)));
 		context.waitTicks(20);
+
+		// le vol de feu (4e sort du feu), vu de derrière
+		game.getServer().runOnServer(server -> {
+			ItemStack book = player(server).getMainHandStack();
+			book.set(fr.evotool.component.ModComponents.GRIMOIRE, new fr.evotool.element.Grimoire(
+					java.util.List.of(fr.evotool.element.Element.FIRE), 3));
+		});
+		game.getServer().runCommand("execute as @a at @s run tp @s ~ ~ ~ 0 -20");
+		context.waitTicks(80);
+		perspective(context, Perspective.THIRD_PERSON_BACK);
+		context.getInput().pressKey(options -> options.useKey);
+		context.waitTicks(15);
+		context.takeScreenshot("evotool_14_fire_flight");
+		game.getServer().runOnServer(server -> EvoTool.LOGGER.info("EVOTOOL VISUAL fire flight: y={} ", player(server).getY()));
+		context.waitTicks(60);
+		perspective(context, Perspective.FIRST_PERSON);
 	}
 
 	private static net.minecraft.util.math.BlockPos combinerPos;

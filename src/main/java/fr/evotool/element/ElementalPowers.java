@@ -96,7 +96,7 @@ public final class ElementalPowers {
 				return true;
 			}
 			if (source.isIn(DamageTypeTags.IS_FALL) && (hasPiece(player, Element.WIND)
-					|| Elements.wears(player, EquipmentSlot.FEET, Element.EARTH))) {
+					|| Elements.wears(player, EquipmentSlot.FEET, Element.EARTH) || MoveSpells.safe(player))) {
 				return false;   // le vent amortit les chutes ; la terre les encaisse (atterrissage sismique)
 			}
 			return !(source.isOf(DamageTypes.FREEZE) && hasPiece(player, Element.ICE));
@@ -209,7 +209,7 @@ public final class ElementalPowers {
 	 * Le sol tremble : les monstres autour de {@code at} (sauf {@code spared}) prennent des dégâts et décollent,
 	 * avec des éclats de terre.
 	 */
-	private static void quake(ServerWorld world, ServerPlayerEntity player, Vec3d at, double radius, float damage, LivingEntity spared) {
+	static void quake(ServerWorld world, ServerPlayerEntity player, Vec3d at, double radius, float damage, LivingEntity spared) {
 		BlockState ground = world.getBlockState(BlockPos.ofFloored(at.x, at.y - 0.5, at.z));
 		if (ground.isAir()) {
 			ground = Blocks.DIRT.getDefaultState();
@@ -225,7 +225,7 @@ public final class ElementalPowers {
 	}
 
 	/** Un arc électrique entre deux points. */
-	private static void arc(ServerWorld world, Vec3d from, Vec3d to) {
+	static void arc(ServerWorld world, Vec3d from, Vec3d to) {
 		Vec3d step = to.subtract(from);
 		int count = Math.max(3, (int) (step.length() * 3));
 		for (int i = 0; i <= count; i++) {
@@ -394,7 +394,7 @@ public final class ElementalPowers {
 	}
 
 	/** Comme Semelles givrantes : l'eau calme autour des pieds devient de la glace qui fond toute seule. */
-	private static void freezeWater(ServerWorld world, ServerPlayerEntity player) {
+	static void freezeWater(ServerWorld world, ServerPlayerEntity player) {
 		BlockPos feet = player.getBlockPos();
 		BlockState frosted = Blocks.FROSTED_ICE.getDefaultState();
 		for (BlockPos pos : BlockPos.iterate(feet.add(-2, -1, -2), feet.add(2, -1, 2))) {

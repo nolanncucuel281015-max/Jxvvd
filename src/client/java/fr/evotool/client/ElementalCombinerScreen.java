@@ -76,7 +76,8 @@ public class ElementalCombinerScreen extends HandledScreen<ElementalCombinerScre
 		text.append(Text.literal("\n"));
 		java.util.List<fr.evotool.element.Spell> spells = fr.evotool.element.Spell.of(element);
 		text.append(Text.translatable("gui.evotool.combiner.on_book", Text.translatable(spells.get(0).translationKey()),
-				Text.translatable(spells.get(1).translationKey())).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE));
+				Text.translatable(spells.get(1).translationKey()), Text.translatable(spells.get(2).translationKey()),
+				Text.translatable(spells.get(3).translationKey())).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE));
 		text.append(Text.literal("\n"));
 		text.append(Text.translatable("gui.evotool.combiner.click_to_put").formatted(net.minecraft.util.Formatting.DARK_GRAY,
 				net.minecraft.util.Formatting.ITALIC));
@@ -170,7 +171,8 @@ public class ElementalCombinerScreen extends HandledScreen<ElementalCombinerScre
 			java.util.List<fr.evotool.element.Spell> spells = fr.evotool.element.Spell.of(element);
 			line = Elements.canAccept(handler.equipment(), element) || handler.progress() >= 0
 					? Text.translatable("gui.evotool.combiner.preview_book", element.symbol(), Text.translatable(element.translationKey()),
-							Text.translatable(spells.get(0).translationKey()), Text.translatable(spells.get(1).translationKey()))
+							Text.translatable(spells.get(0).translationKey()), Text.translatable(spells.get(1).translationKey()),
+							Text.translatable(spells.get(2).translationKey()), Text.translatable(spells.get(3).translationKey()))
 					: Text.translatable("gui.evotool.combiner.already_known");
 			color = 0xFF000000 | element.rgb();
 		} else if (element != null && Elements.canCombine(handler.equipment())) {

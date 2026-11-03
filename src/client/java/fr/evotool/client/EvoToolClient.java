@@ -127,7 +127,7 @@ public class EvoToolClient implements ClientModInitializer {
 					boolean chosen = spell == selected;
 					net.minecraft.text.MutableText line = Text.literal((chosen ? "▶ " : "   ") + spell.element().symbol() + " ")
 							.append(Text.translatable(spell.translationKey()))
-							.append(Text.translatable(spell.bolt() ? "tooltip.evotool.spell.bolt" : "tooltip.evotool.spell.burst"))
+							.append(Text.translatable(spell.kind().translationKey()))
 							.formatted(spell.element().color());
 					lines.add(at++, chosen ? line.formatted(Formatting.BOLD) : line);
 				}

@@ -55,7 +55,14 @@ public final class Spells {
 	}
 
 	public static void init() {
-		ServerTickEvents.END_SERVER_TICK.register(server -> tickBolts());
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			tickBolts();
+			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+				MoveSpells.serverTick(player);
+			}
+		});
+		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+				(handler, server) -> MoveSpells.forget(handler.getPlayer().getUuid()));
 	}
 
 	/** Lance ce sort (public pour l'auto-test). */
@@ -69,11 +76,43 @@ public final class Spells {
 		Element element = spell.element();
 		world.spawnParticles(element.particle(), hand.x, hand.y, hand.z, 4, 0.1, 0.1, 0.1, 0.02);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.8F,
-				spell.bolt() ? 1.6F : 1.0F);
-		if (spell.bolt()) {
-			BOLTS.add(new Bolt(player, world, spell, hand, look.multiply(spell.speed())));
-		} else {
-			burst(world, player, spell, aim(world, player));
+				spell.kind() == Spell.Kind.BOLT ? 1.6F : 1.0F);
+		switch (spell.kind()) {
+			case BOLT -> BOLTS.add(new Bolt(player, world, spell, hand, look.multiply(spell.speed())));
+			case BURST -> burst(world, player, spell, aim(world, player));
+			case BREATH -> breath(world, player, spell);
+			case MOVE -> MoveSpells.start(player, spell);
+		}
+	}
+
+	// ------------------------------------------------------------------ souffles
+
+	/** Un cône de l'élément devant le joueur : tout ce qui s'y trouve (jusqu'à la portée du sort) est frappé. */
+	private static void breath(ServerWorld world, ServerPlayerEntity player, Spell spell) {
+		Vec3d eye = player.getEyePos();
+		Vec3d look = player.getRotationVector();
+		double range = spell.range();
+		double cone = Math.cos(Math.toRadians(35.0));
+		net.minecraft.util.math.random.Random random = player.getRandom();
+		for (int i = 0; i < 70; i++) {
+			Vec3d dir = look.add((random.nextDouble() - 0.5) * 0.9, (random.nextDouble() - 0.5) * 0.6,
+					(random.nextDouble() - 0.5) * 0.9).normalize();
+			double d = 1.5 + random.nextDouble() * (range - 1.5);
+			Vec3d p = eye.add(dir.multiply(d)).add(0, -0.3, 0);
+			world.spawnParticles(spell.element().particle(), p.x, p.y, p.z, 0, dir.x, dir.y, dir.z, 0.35);
+		}
+		if (spell.element() == Element.FIRE) {
+			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_BLAZE_SHOOT, SoundCategory.PLAYERS, 1.0F, 0.8F);
+		}
+		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(range),
+				e -> hittable(player, e))) {
+			Vec3d to = target.getBoundingBox().getCenter().subtract(eye);
+			double dist = to.length();
+			if (dist > range + 0.5 || dist < 1.0E-3 || to.multiply(1 / dist).dotProduct(look) < cone) {
+				continue;
+			}
+			target.damage(world, player.getDamageSources().indirectMagic(player, player), spell.damage());
+			ElementalPowers.hitEffect(world, player, target, spell.element());
 		}
 	}
 
@@ -89,7 +128,7 @@ public final class Spells {
 		return entity != null ? entity.getEntity().getEntityPos() : end;
 	}
 
-	private static boolean hittable(ServerPlayerEntity caster, LivingEntity target) {
+	static boolean hittable(ServerPlayerEntity caster, LivingEntity target) {
 		return target != caster && target.isAlive() && !target.isSpectator()
 				&& !(target instanceof TameableEntity tame && tame.isOwner(caster));
 	}

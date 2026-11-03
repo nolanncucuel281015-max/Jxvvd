@@ -53,6 +53,9 @@ public class GrimoireItem extends Item {
 		Spell spell = grimoire.selectedSpell();
 		if (user instanceof ServerPlayerEntity player) {
 			Spells.cast(player, spell);
+		} else if (world.isClient() && spell.kind() == Spell.Kind.MOVE) {
+			// déplacement : notre client fait le mouvement lui-même (fluide), le serveur ajoute effets et dégâts
+			fr.evotool.element.MoveSpells.start(user, spell);
 		}
 		user.getItemCooldownManager().set(stack, spell.cooldown());
 		return ActionResult.SUCCESS;

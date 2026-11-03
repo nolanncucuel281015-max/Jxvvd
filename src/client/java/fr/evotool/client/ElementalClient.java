@@ -37,6 +37,8 @@ public final class ElementalClient {
 		if (player == null) {
 			return;
 		}
+		// les sorts de déplacement du grimoire (vol de feu, glissade, bond sismique…)
+		fr.evotool.element.MoveSpells.clientTick(player);
 		Element boots = Elements.get(player.getEquippedStack(EquipmentSlot.FEET));
 		boolean flying = player.getAbilities().flying;
 
