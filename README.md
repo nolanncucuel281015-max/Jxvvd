@@ -148,8 +148,9 @@ les pièces portées qui sont prêtes).
 ### Armure abyssale — jusqu'au niveau 150
 
 Dans la **dimension évolutive** se cache un nouveau minerai noir, l'**abyssite** (sous terre, dans la pierre
-évolutive, pioche en diamant). À l'**enclume**, une pièce d'armure **niveau 100** + une abyssite (30 niveaux
-d'XP) = pièce **abyssale** : elle devient **noire** et continue d'évoluer **jusqu'au niveau 150**, avec
+évolutive, pioche en diamant). À l'**enclume**, une pièce d'armure **niveau 100** à gauche + une abyssite à droite
+(l'abyssite ou le bloc de minerai, au toucher de soie ; 30 niveaux d'XP) = pièce **abyssale** ; si ça ne peut pas
+marcher, un message dit pourquoi (niveau trop bas, objets inversés…). La pièce abyssale : elle devient **noire** et continue d'évoluer **jusqu'au niveau 150**, avec
 **11 nouvelles formes** (une tous les 5 niveaux, toujours avec **R**). Les pièces abyssales gagnent aussi de l'XP
 quand tu tues des monstres. Avec un plastron abyssal, les **ailes de l'infini deviennent noires**.
 

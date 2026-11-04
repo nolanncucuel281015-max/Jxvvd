@@ -13,4 +13,7 @@ public interface ForgingScreenHandlerAccessor {
 
 	@Accessor("output")
 	CraftingResultInventory evotool$getOutput();
+
+	@Accessor("player")
+	net.minecraft.entity.player.PlayerEntity evotool$getPlayer();
 }

@@ -68,7 +68,7 @@
     },
     {
      "title": "L'armure abyssale",
-     "text": "Une pièce §5niveau 100§r + de l'§5abyssite§r à l'enclume : elle devient noire et monte jusqu'au §5niveau 150§r (une nouvelle forme tous les 5 niveaux, Résistance V…).\n\nAvec l'ensemble complet au niveau 150 : les §5tentacules§r.",
+     "text": "À l'enclume, une pièce §5niveau 100§r à gauche + de l'§5abyssite§r à droite (ou son minerai), 30 niveaux d'XP : elle devient noire et monte jusqu'au §5niveau 150§r (une nouvelle forme tous les 5 niveaux, Résistance V…).\n\nAvec l'ensemble complet au niveau 150 : les §5tentacules§r.",
      "image": "evotool:textures/gui/manual/tentacles.png",
      "imageWidth": 256,
      "imageHeight": 144

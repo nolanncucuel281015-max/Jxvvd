@@ -608,6 +608,8 @@ final class SelfTest {
 			failures.add("armure abyssale : l'évolution ne passe pas à la forme 22");
 		}
 
+		checks += checkAbyssalAnvil(player, failures);
+
 		// tentacules : ensemble abyssal complet au niveau 150
 		EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 		EvoKind[] pieces = {EvoKind.HELMET, EvoKind.CHESTPLATE, EvoKind.LEGGINGS, EvoKind.BOOTS};
@@ -1203,6 +1205,45 @@ final class SelfTest {
 				world.removeBlock(pos, false);
 			}
 		}
+	}
+
+	/**
+	 * La vraie enclume : plastron niveau 100 + minerai d'abyssite (le bloc) ou abyssite = plastron abyssal, pour 30
+	 * niveaux, une seule abyssite consommée ; une pièce niveau 50 ne donne rien.
+	 */
+	private static int checkAbyssalAnvil(FakePlayer player, List<String> failures) {
+		int checks = 0;
+		for (ItemStack abyssite : new ItemStack[] {new ItemStack(ModBlocks.ABYSSITE_ORE, 3), new ItemStack(ModItems.ABYSSITE, 3)}) {
+			AnvilScreenHandler anvil = new AnvilScreenHandler(0, player.getInventory(), net.minecraft.screen.ScreenHandlerContext.EMPTY);
+			ItemStack chest = new ItemStack(ModItems.itemFor(EvoKind.CHESTPLATE));
+			chest.set(ModComponents.EVO_DATA, new EvoData(100, 0, 0, -1, 0L));
+			anvil.getSlot(0).setStack(chest);
+			anvil.getSlot(1).setStack(abyssite);
+			ItemStack out = anvil.getSlot(2).getStack();
+			checks++;
+			if (!EvoProgression.isAbyssal(out) || anvil.getLevelCost() != fr.evotool.armor.AbyssalArmor.LEVEL_COST) {
+				failures.add("enclume : plastron niveau 100 + " + abyssite.getItem() + " ne donne pas d'armure abyssale ("
+						+ out + ", coût " + anvil.getLevelCost() + ")");
+				continue;
+			}
+			anvil.getSlot(2).onTakeItem(player, out.copy());
+			checks++;
+			if (!anvil.getSlot(0).getStack().isEmpty() || anvil.getSlot(1).getStack().getCount() != 2) {
+				failures.add("enclume : l'abyssite n'est pas consommée une seule fois (" + anvil.getSlot(1).getStack() + ")");
+			}
+		}
+		// niveau 50 : rien ne sort
+		AnvilScreenHandler anvil = new AnvilScreenHandler(0, player.getInventory(), net.minecraft.screen.ScreenHandlerContext.EMPTY);
+		ItemStack young = new ItemStack(ModItems.itemFor(EvoKind.CHESTPLATE));
+		young.set(ModComponents.EVO_DATA, new EvoData(50, 0, 0, -1, 0L));
+		anvil.getSlot(0).setStack(young);
+		anvil.getSlot(1).setStack(new ItemStack(ModItems.ABYSSITE));
+		checks++;
+		if (EvoProgression.isAbyssal(anvil.getSlot(2).getStack())
+				|| fr.evotool.armor.AbyssalArmor.problem(young) == null) {
+			failures.add("enclume : une armure niveau 50 devient abyssale");
+		}
+		return checks;
 	}
 
 	private static int checkWeapons(MinecraftServer server, List<String> failures) {

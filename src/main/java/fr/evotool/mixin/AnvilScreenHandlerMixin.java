@@ -17,7 +17,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Enclume : objet évolutif + lingot d'évolite = version améliorée ; armure niveau 100 + abyssite = armure abyssale. */
+/**
+ * Enclume : objet évolutif + lingot d'évolite = version améliorée ; armure niveau 100 + abyssite (ou son minerai) =
+ * armure abyssale. Si ça ne peut pas marcher, le joueur voit pourquoi (niveau trop bas, objets inversés…).
+ */
 @Mixin(AnvilScreenHandler.class)
 public abstract class AnvilScreenHandlerMixin {
 	@Shadow
@@ -38,7 +41,7 @@ public abstract class AnvilScreenHandlerMixin {
 		ItemStack ingot = self.evotool$getInput().getStack(1);
 		ItemStack result;
 		int cost;
-		if (ingot.isOf(ModItems.ABYSSITE) && AbyssalArmor.canUpgrade(tool)) {
+		if (AbyssalArmor.isAbyssite(ingot) && AbyssalArmor.canUpgrade(tool)) {
 			// pièce d'armure niveau 100 + abyssite = armure abyssale (jusqu'au niveau 150, noire)
 			result = tool.copy();
 			AbyssalArmor.apply(result);
@@ -48,6 +51,7 @@ public abstract class AnvilScreenHandlerMixin {
 			EvoliteUpgrade.apply(result);
 			cost = EvoliteUpgrade.LEVEL_COST;
 		} else {
+			evotool$explain(self, tool, ingot);
 			return;
 		}
 		if (newItemName != null && !newItemName.isBlank()) {
@@ -59,5 +63,22 @@ public abstract class AnvilScreenHandlerMixin {
 		repairItemUsage = 1;
 		((ScreenHandler) (Object) this).sendContentUpdates();
 		ci.cancel();
+	}
+
+	/** Abyssite posée mais rien ne sort : on dit au joueur pourquoi (dans la barre d'action). */
+	@org.spongepowered.asm.mixin.Unique
+	private static void evotool$explain(ForgingScreenHandlerAccessor self, ItemStack left, ItemStack right) {
+		if (!(self.evotool$getPlayer() instanceof net.minecraft.server.network.ServerPlayerEntity player)) {
+			return;
+		}
+		Text problem = null;
+		if (AbyssalArmor.isAbyssite(left) && !right.isEmpty()) {
+			problem = Text.translatable("message.evotool.abyssite.swap");
+		} else if (AbyssalArmor.isAbyssite(right) && !left.isEmpty()) {
+			problem = AbyssalArmor.problem(left);
+		}
+		if (problem != null) {
+			player.sendMessage(problem.copy().formatted(net.minecraft.util.Formatting.RED), true);
+		}
 	}
 }

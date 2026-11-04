@@ -1,9 +1,12 @@
 package fr.evotool.armor;
 
+import fr.evotool.block.ModBlocks;
 import fr.evotool.component.ModComponents;
 import fr.evotool.evo.EvoKind;
 import fr.evotool.evo.EvoProgression;
+import fr.evotool.item.ModItems;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Unit;
 
 /**
@@ -16,6 +19,27 @@ public final class AbyssalArmor {
 	public static final int LEVEL_COST = 30;
 
 	private AbyssalArmor() {
+	}
+
+	/** L'abyssite ou son minerai (le bloc, au toucher de soie ou dans l'onglet créatif) : les deux marchent. */
+	public static boolean isAbyssite(ItemStack stack) {
+		return stack.isOf(ModItems.ABYSSITE) || stack.isOf(ModBlocks.ABYSSITE_ORE.asItem());
+	}
+
+	/** Pourquoi cet objet ne peut pas recevoir l'abyssite (null : il peut). */
+	public static Text problem(ItemStack stack) {
+		EvoKind kind = EvoProgression.kindOf(stack);
+		if (kind == null || !kind.profile().isArmor()) {
+			return Text.translatable("message.evotool.abyssite.armor_only");
+		}
+		if (EvoProgression.isAbyssal(stack)) {
+			return Text.translatable("message.evotool.abyssite.already");
+		}
+		int level = EvoProgression.get(stack).level();
+		if (level < EvoProgression.MAX_LEVEL) {
+			return Text.translatable("message.evotool.abyssite.level", EvoProgression.MAX_LEVEL, level);
+		}
+		return null;
 	}
 
 	public static boolean canUpgrade(ItemStack stack) {
