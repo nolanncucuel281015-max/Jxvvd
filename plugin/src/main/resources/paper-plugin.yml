@@ -1,0 +1,7 @@
+name: EvoTool
+version: '${version}'
+main: fr.evotool.plugin.EvoToolPlugin
+bootstrapper: fr.evotool.plugin.EvoToolBootstrap
+api-version: '1.21'
+description: "Evo Tool : outils, armures et armes qui évoluent, éléments, grimoire, gant de Spider-Man, dimension évolutive et boss (version plugin du mod)."
+authors: [Evo Tool]

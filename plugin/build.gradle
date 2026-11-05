@@ -1,0 +1,48 @@
+// Plugin Paper d'Evo Tool : le mod converti pour un serveur Paper 1.21.11 (les joueurs n'installent rien).
+// Compilation : ./gradlew -p plugin build  →  plugin/build/libs/EvoTool-plugin-<version>.jar
+plugins {
+	id 'java'
+}
+
+group = 'fr.evotool'
+version = '1.0.0'
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+	compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 21
+}
+
+processResources {
+	// Le pack de ressources que le plugin envoie aux joueurs : modèles, textures et traductions du mod.
+	from('../src/main/resources/assets') {
+		into 'pack/assets'
+	}
+	// La dimension évolutive du mod (relief, biomes, minerais) : le plugin la charge comme pack de données,
+	// ses blocs remplacés par des blocs musicaux (voir CustomBlock).
+	from('../src/main/resources/data/evotool') {
+		into 'datapack/data/evotool'
+		include 'dimension/**', 'dimension_type/**', 'worldgen/**'
+	}
+	filesMatching('paper-plugin.yml') {
+		expand(version: project.version)
+	}
+}
+
+jar {
+	archiveBaseName = 'EvoTool-plugin'
+}
