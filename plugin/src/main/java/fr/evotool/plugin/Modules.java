@@ -47,6 +47,8 @@ final class Modules {
 		EvoToolPlugin.listen(new InputListener());
 		fr.evotool.plugin.world.OrePopulator.enable();
 		fr.evotool.plugin.manual.Manual.enable();
+		fr.evotool.plugin.upgrade.InfinityWings.enable();
+		fr.evotool.plugin.upgrade.Burrow.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
@@ -59,6 +61,8 @@ final class Modules {
 	}
 
 	static void disable() {
+		fr.evotool.plugin.upgrade.Burrow.clear();
+		fr.evotool.plugin.upgrade.InfinityWings.clear();
 		ResourcePack.disable();
 		Recipes.unregister();
 		Evolution.clear();
