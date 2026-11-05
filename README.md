@@ -583,3 +583,36 @@ Sans rien installer : à chaque push, GitHub Actions compile le mod. Ouvre l'ong
 clique sur la dernière exécution « Build » réussie, puis télécharge **evotool-mod** dans la section *Artifacts*
 (un .zip qui contient le .jar). À mettre dans le dossier `mods/` avec Fabric Loader et Fabric API pour 1.21.11.
 Si une version de dépendance n'est plus disponible, mets à jour `gradle.properties` avec les versions de https://fabricmc.net/develop.
+
+## Version plugin (serveur Paper 1.21.11) — les joueurs n'installent rien
+
+Le dossier `plugin/` contient Evo Tool converti en **plugin Paper** : on le met sur le serveur, et les joueurs
+se connectent avec un Minecraft 1.21.11 normal. Le serveur leur envoie le **pack de ressources** (modèles 3D,
+textures et traductions du mod) à la connexion.
+
+**Installer**
+
+1. Un serveur [Paper](https://papermc.io/downloads/paper) 1.21.11.
+2. Mets `EvoTool-plugin-1.0.0.jar` dans `plugins/` et démarre le serveur.
+3. Le pack de ressources est servi par le plugin lui-même sur le port **8163** : ouvre ce port (comme le 25565),
+   ou mets l'adresse d'un `evotool-pack.zip` hébergé ailleurs dans `plugins/EvoTool/config.yml` (`resource-pack.url`).
+   Le fichier est créé à chaque démarrage dans `plugins/EvoTool/`.
+
+Les blocs du mod sont portés par des blocs musicaux : le plugin règle Paper pour qu'ils ne changent plus d'état
+(`block-updates.disable-noteblock-updates` dans `config/paper-global.yml`), tout de suite et pour la suite.
+
+**Touches (sans mod côté joueur)**
+
+| Mod | Plugin |
+|---|---|
+| **Y** : menu de l'objet | **F** (échanger de main) avec l'objet en main ; main vide : menu de l'armure |
+| **R** : évoluer | **Accroupi + F** |
+| Clic droit (pouvoirs, sorts, laser, tranchée, arc céleste…) | Clic droit, pareil |
+| Plongée des bottes | Accroupi sur le sol, comme dans le mod (sous terre, le joueur passe en spectateur limité au sous-sol) |
+
+**Commandes** : `/evotool` (aide), `/evotool pack` (renvoyer le pack), `/evotool manuel` ; opérateurs :
+`/evotool give <objet> [joueur] [nombre]`, `/evotool catalogue` (tous les objets dans un menu),
+`/upgrade <outil|armure> <niveau>`, `/evotool selftest`.
+
+**Compiler** : `./gradlew -p plugin build` → `plugin/build/libs/EvoTool-plugin-1.0.0.jar`. La CI le compile à chaque
+push (artefact **evotool-plugin**) et le teste sur un vrai serveur Paper 1.21.11 (auto-test, dont le minage instantané).

@@ -49,6 +49,7 @@ final class Modules {
 		fr.evotool.plugin.manual.Manual.enable();
 		fr.evotool.plugin.upgrade.InfinityWings.enable();
 		fr.evotool.plugin.upgrade.Burrow.enable();
+		fr.evotool.plugin.spider.SpiderGlove.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
@@ -62,6 +63,7 @@ final class Modules {
 
 	static void disable() {
 		fr.evotool.plugin.upgrade.Burrow.clear();
+		fr.evotool.plugin.spider.SpiderGlove.clear();
 		fr.evotool.plugin.upgrade.InfinityWings.clear();
 		ResourcePack.disable();
 		Recipes.unregister();
