@@ -53,6 +53,7 @@ public final class EvoToolPlugin extends JavaPlugin {
 				}
 			}
 		}
+		checkNoteBlocks();
 		Modules.enable(this);
 		Bukkit.getScheduler().runTaskTimer(this, () -> {
 			int tick = Bukkit.getCurrentTick();
@@ -65,7 +66,6 @@ public final class EvoToolPlugin extends JavaPlugin {
 			}
 		}, 1L, 1L);
 		getLogger().info("Evo Tool chargé : que l'évolution commence !");
-		checkNoteBlocks();
 		if (Boolean.getBoolean("evotool.selftest")) {
 			// CI : auto-test sur un vrai serveur, puis arrêt
 			later(40, () -> {
@@ -75,13 +75,13 @@ public final class EvoToolPlugin extends JavaPlugin {
 		}
 	}
 
-	/** Premier démarrage : le fichier de Paper vient d'être créé, on le règle pour le prochain démarrage. */
+	/** Les blocs musicaux qui portent les blocs du mod ne doivent pas changer d'état : réglage de Paper, tout de suite et pour la suite. */
 	private void checkNoteBlocks() {
 		java.nio.file.Path root = Bukkit.getPluginsFolder().toPath().toAbsolutePath().getParent();
 		try {
-			boolean changed = EvoToolBootstrap.NoteBlocks.enable(root);
-			Boolean running = EvoToolBootstrap.NoteBlocks.running();
-			if (changed || (running != null ? !running : !EvoToolBootstrap.NoteBlocks.active(root))) {
+			EvoToolBootstrap.NoteBlocks.enable(root);   // pour les prochains démarrages
+			EvoToolBootstrap.NoteBlocks.enableRunning();   // et tout de suite
+			if (!Boolean.TRUE.equals(EvoToolBootstrap.NoteBlocks.running())) {
 				needsRestart = true;
 				getLogger().warning("Evo Tool : redémarre le serveur une fois pour finir l'installation (blocs du mod).");
 			}

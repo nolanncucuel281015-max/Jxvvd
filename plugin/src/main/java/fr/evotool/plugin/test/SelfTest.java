@@ -62,6 +62,9 @@ public final class SelfTest {
 		test.recipes();
 		test.blocks();
 		test.evolution();
+		test.check(fr.evotool.plugin.manual.Manual.book().pages().size() > 20, "manuel : " + fr.evotool.plugin.manual.Manual.book().pages().size() + " pages");
+		test.check(Bukkit.getWorlds().get(0).getPopulators().stream().anyMatch(p -> p instanceof fr.evotool.plugin.world.OrePopulator),
+				"minerais dans le monde normal");
 		EvoToolPlugin plugin = EvoToolPlugin.instance();
 		String result = test.failures.isEmpty() ? "EVOTOOL SELFTEST PASSED (" + test.checks + " checks)"
 				: "EVOTOOL SELFTEST FAILED (" + test.failures.size() + "/" + test.checks + ")\n - " + String.join("\n - ", test.failures);
@@ -159,8 +162,8 @@ public final class SelfTest {
 				Blocks.place(block, custom, variant);
 				check(Blocks.at(block) == custom && Blocks.variant(block) == variant, "bloc " + custom + " forme " + variant);
 			}
-			check(!Blocks.drops(block, new ItemStack(Material.NETHERITE_PICKAXE)).isEmpty() || custom.name().contains("PORTAL"),
-					"butin du bloc " + custom);
+			ItemStack tool = new ItemStack(custom == CustomBlock.EVOLVING_LEAVES ? Material.SHEARS : Material.NETHERITE_PICKAXE);
+			check(!Blocks.drops(block, tool).isEmpty() || custom.name().contains("PORTAL"), "butin du bloc " + custom);
 		}
 		block.setType(before, false);
 	}

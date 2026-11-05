@@ -45,6 +45,22 @@ public final class EvoToolBootstrap implements PluginBootstrap {
 			}
 		}
 
+		/** Active le réglage dans le serveur qui tourne (sans attendre un redémarrage) ; vrai si c'est fait. */
+		public static boolean enableRunning() {
+			try {
+				Class<?> global = Class.forName("io.papermc.paper.configuration.GlobalConfiguration");
+				Object config = global.getMethod("get").invoke(null);
+				if (config == null) {
+					return false;
+				}
+				Object updates = global.getField("blockUpdates").get(config);
+				updates.getClass().getField("disableNoteblockUpdates").setBoolean(updates, true);
+				return true;
+			} catch (ReflectiveOperationException | RuntimeException e) {
+				return false;
+			}
+		}
+
 		/** Vrai si le réglage est actif dans le fichier. */
 		public static boolean active(Path root) throws IOException {
 			Path file = file(root);

@@ -45,6 +45,8 @@ final class Modules {
 		EvoToolPlugin.listen(new CombatListener());
 		EvoToolPlugin.listen(new MagicPowers());
 		EvoToolPlugin.listen(new InputListener());
+		fr.evotool.plugin.world.OrePopulator.enable();
+		fr.evotool.plugin.manual.Manual.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
