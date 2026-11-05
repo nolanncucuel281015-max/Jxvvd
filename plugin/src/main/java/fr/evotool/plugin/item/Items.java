@@ -40,6 +40,11 @@ public final class Items {
 			meta.setRarity(item.rarity());
 			if (!item.stackable()) {
 				meta.setMaxStackSize(1);
+				// recharge des pouvoirs propre à cet objet (voir input.Cooldowns), affichée sur l'objet
+				org.bukkit.inventory.meta.components.UseCooldownComponent cooldown = meta.getUseCooldown();
+				cooldown.setCooldownSeconds(0.05F);
+				cooldown.setCooldownGroup(Keys.key(item.id()));
+				meta.setUseCooldown(cooldown);
 			} else if (item.base().getMaxStackSize() < 64) {
 				meta.setMaxStackSize(64);
 			}

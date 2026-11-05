@@ -85,6 +85,61 @@ jobs:
 
   # Images de présentation du mod (commit contenant [showcase]) : un vrai monde, sans interface, en 1920 x 1080.
   # Les PNG sont dans l'artefact « evotool-images » ; des JPEG sont aussi imprimés dans le journal.
+  # Le plugin Paper (dossier plugin/) : compilé, puis testé sur un vrai serveur Paper 1.21.11.
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build plugin
+        run: ./gradlew -p plugin build --stacktrace
+
+      - name: Upload plugin jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: evotool-plugin
+          path: plugin/build/libs/*.jar
+
+      - name: Download Paper 1.21.11
+        run: |
+          set -e
+          URL=$(curl -fsSL -H "User-Agent: evotool-ci" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds/latest | jq -r '.downloads["server:default"].url' || true)
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            BUILD=$(curl -fsSL https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds | jq -r '.builds[-1].build')
+            URL="https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/$BUILD/downloads/paper-1.21.11-$BUILD.jar"
+          fi
+          echo "Paper : $URL"
+          mkdir -p paper-server/plugins
+          curl -fsSL -H "User-Agent: evotool-ci" -o paper-server/paper.jar "$URL"
+
+      - name: Plugin self-test on Paper
+        run: |
+          cd paper-server
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\n" > server.properties
+          # premier démarrage : Paper crée ses fichiers de configuration et s'arrête
+          timeout 600 java -jar paper.jar --initSettings --nogui > init.log 2>&1 || true
+          cp ../plugin/build/libs/*.jar plugins/
+          timeout 900 java -Devotool.selftest=true -jar paper.jar --nogui < /dev/null > server.log 2>&1 || true
+          grep -iE "evotool|evo tool|EVOTOOL" server.log | head -200 || true
+          echo "----- résultat -----"
+          cat plugins/EvoTool/selftest.txt || true
+          if grep -nE "Exception|Error" server.log | grep -iE "evotool" ; then
+            echo "Erreurs du plugin dans le log du serveur :"; grep -nE -B2 -A25 "Exception" server.log | head -200; exit 1
+          fi
+          grep -q "EVOTOOL SELFTEST PASSED" plugins/EvoTool/selftest.txt
+
+      - name: Server log on failure
+        if: failure()
+        run: tail -300 paper-server/server.log || true
+
   showcase:
     if: contains(github.event.head_commit.message, '[showcase]')
     runs-on: ubuntu-latest

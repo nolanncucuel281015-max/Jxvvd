@@ -24,8 +24,14 @@ public final class Lang {
 	private Lang() {
 	}
 
+	/** Les textes du mod, puis ceux propres au plugin (qui remplacent ceux qui parlent des touches du mod). */
 	public static void load(ClassLoader loader) {
-		try (InputStream in = loader.getResourceAsStream("pack/assets/evotool/lang/fr_fr.json")) {
+		read(loader, "pack/assets/evotool/lang/fr_fr.json");
+		read(loader, "plugin-lang/fr_fr.json");
+	}
+
+	private static void read(ClassLoader loader, String path) {
+		try (InputStream in = loader.getResourceAsStream(path)) {
 			if (in == null) {
 				return;
 			}

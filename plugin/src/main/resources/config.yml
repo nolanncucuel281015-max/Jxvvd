@@ -1,0 +1,17 @@
+# Evo Tool (plugin Paper) — réglages
+
+resource-pack:
+  # Adresse publique du pack de ressources (evotool-pack.zip, créé dans le dossier du plugin au démarrage).
+  # Vide : le plugin le sert lui-même avec un petit serveur web sur le port ci-dessous (le port doit être ouvert).
+  url: ""
+  port: 8163
+  # Adresse du serveur vue par les joueurs pour télécharger le pack (vide : celle qu'ils ont tapée pour se connecter).
+  host: ""
+  # Obliger les joueurs à accepter le pack (sans lui, les objets du mod ont l'apparence de leur objet de base).
+  required: false
+
+# Le manuel est offert à la première connexion.
+give-manual: true
+
+# Minerais du mod dans le monde normal (évolium, rubis, saphir) et dans l'End (évolite), dans les nouveaux tronçons.
+ores: true

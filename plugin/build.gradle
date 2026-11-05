@@ -32,6 +32,10 @@ processResources {
 	from('../src/main/resources/assets') {
 		into 'pack/assets'
 	}
+	// Les recettes du mod (établi, four, haut fourneau), lues par le plugin au démarrage.
+	from('../src/main/resources/data/evotool/recipe') {
+		into 'recipe'
+	}
 	// La dimension évolutive du mod (relief, biomes, minerais) : le plugin la charge comme pack de données,
 	// ses blocs remplacés par des blocs musicaux (voir CustomBlock).
 	from('../src/main/resources/data/evotool') {

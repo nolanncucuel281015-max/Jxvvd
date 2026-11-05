@@ -99,6 +99,16 @@ public final class Fx {
 		}
 	}
 
+	/** Fait quelque chose (des dégâts) sans relancer les passifs. */
+	public static void applyingBonusRun(Runnable action) {
+		bonusDepth++;
+		try {
+			action.run();
+		} finally {
+			bonusDepth--;
+		}
+	}
+
 	/** Vrai pendant les dégâts d'un pouvoir (les passifs ne se déclenchent pas). */
 	public static boolean applyingBonus() {
 		return bonusDepth > 0;

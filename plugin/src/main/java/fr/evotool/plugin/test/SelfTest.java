@@ -1,0 +1,175 @@
+package fr.evotool.plugin.test;
+
+import fr.evotool.plugin.EvoToolPlugin;
+import fr.evotool.plugin.block.Blocks;
+import fr.evotool.plugin.block.CustomBlock;
+import fr.evotool.plugin.craft.Recipes;
+import fr.evotool.plugin.evo.EvoData;
+import fr.evotool.plugin.evo.EvoKind;
+import fr.evotool.plugin.evo.Power;
+import fr.evotool.plugin.evo.Progression;
+import fr.evotool.plugin.item.EvoItem;
+import fr.evotool.plugin.item.Items;
+import fr.evotool.plugin.mining.MiningListener;
+import fr.evotool.plugin.pack.ResourcePack;
+import fr.evotool.plugin.util.Keys;
+import fr.evotool.plugin.util.Lang;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.inventory.ItemStack;
+
+/**
+ * Auto-test du plugin sur un vrai serveur Paper (lancé par la CI avec -Devotool.selftest=true, ou /evotool selftest).
+ * Écrit le résultat dans plugins/EvoTool/selftest.txt et dans la console.
+ */
+public final class SelfTest {
+	private final List<String> failures = new ArrayList<>();
+	private int checks;
+
+	private SelfTest() {
+	}
+
+	private void check(boolean ok, String what) {
+		checks++;
+		if (!ok) {
+			failures.add(what);
+		}
+	}
+
+	/** Lance tous les contrôles ; renvoie la liste des échecs (vide : tout va bien). */
+	public static List<String> run() {
+		SelfTest test = new SelfTest();
+		test.check(!Boolean.FALSE.equals(fr.evotool.plugin.EvoToolBootstrap.NoteBlocks.running()),
+				"blocs musicaux figés dès le premier démarrage avec le plugin (" + fr.evotool.plugin.EvoToolBootstrap.NoteBlocks.running() + ")");
+		test.items();
+		test.instamine();
+		test.pack();
+		test.recipes();
+		test.blocks();
+		test.evolution();
+		EvoToolPlugin plugin = EvoToolPlugin.instance();
+		String result = test.failures.isEmpty() ? "EVOTOOL SELFTEST PASSED (" + test.checks + " checks)"
+				: "EVOTOOL SELFTEST FAILED (" + test.failures.size() + "/" + test.checks + ")\n - " + String.join("\n - ", test.failures);
+		plugin.getLogger().info(result);
+		try {
+			File out = new File(plugin.getDataFolder(), "selftest.txt");
+			out.getParentFile().mkdirs();
+			Files.writeString(out.toPath(), result + "\n", StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			plugin.getLogger().warning("selftest.txt : " + e);
+		}
+		return test.failures;
+	}
+
+	private void items() {
+		for (EvoItem item : EvoItem.values()) {
+			ItemStack stack = Items.create(item);
+			check(Items.of(stack) == item, "objet reconnu : " + item.id());
+			check(Keys.key(item.id()).equals(stack.getItemMeta().getItemModel()), "modèle de l'objet : " + item.id());
+			check(Lang.has(item.translationKey()), "nom traduit : " + item.translationKey());
+			if (item.kind() != null) {
+				check(Items.kindOf(stack) == item.kind(), "profil d'évolution : " + item.id());
+				check(EvoData.get(stack).level() == 0, "niveau de départ : " + item.id());
+			}
+		}
+	}
+
+	/** La règle du joueur (CLAUDE.md) : au niveau 100, pioche, pelle et hache cassent tout en un coup. */
+	private void instamine() {
+		check(Progression.INSTAMINE_BONUS == 5000.0, "plus de minage instantané : bonus " + Progression.INSTAMINE_BONUS);
+		World world = Bukkit.getWorlds().get(0);
+		Block block = world.getBlockAt(world.getSpawnLocation().getBlockX(), world.getMinHeight() + 2, world.getSpawnLocation().getBlockZ());
+		for (EvoKind kind : new EvoKind[] {EvoKind.PICKAXE, EvoKind.SHOVEL, EvoKind.AXE}) {
+			Integer at = kind.profile().powers().get(Power.INSTAMINE);
+			check(at != null && at == Progression.MAX_LEVEL, "plus de minage instantané : " + kind + " au niveau " + at);
+			ItemStack tool = Items.create(EvoItem.of(kind));
+			new EvoData(Progression.MAX_LEVEL, 0, 0, -1, 0L).write(tool);
+			Progression.refresh(tool, true);
+			check(MiningListener.isInstamine(tool), "plus de minage instantané : " + kind + " niveau 100");
+			for (Material material : new Material[] {Material.STONE, Material.DEEPSLATE, Material.OBSIDIAN, Material.DIAMOND_ORE}) {
+				Material before = block.getType();
+				block.setType(material, false);
+				BlockDamageEvent event = new BlockDamageEvent(null, block, BlockFace.UP, tool, false);
+				new MiningListener().onDamage(event);
+				check(event.getInstaBreak(), "plus de minage instantané : " + kind + " sur " + material);
+				block.setType(before, false);
+			}
+			ItemStack low = Items.create(EvoItem.of(kind));
+			new EvoData(Progression.MAX_LEVEL - 1, 0, 0, -1, 0L).write(low);
+			Progression.refresh(low, true);
+			check(!MiningListener.isInstamine(low), "minage instantané seulement au niveau 100 : " + kind);
+		}
+	}
+
+	private void pack() {
+		byte[] zip = ResourcePack.bytes();
+		check(zip != null && zip.length > 100_000, "pack de ressources construit");
+		if (zip == null) {
+			return;
+		}
+		Set<String> names = new HashSet<>();
+		try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(zip))) {
+			for (ZipEntry e; (e = in.getNextEntry()) != null; ) {
+				names.add(e.getName());
+			}
+		} catch (IOException e) {
+			check(false, "pack lisible : " + e);
+		}
+		check(names.contains("pack.mcmeta"), "pack.mcmeta");
+		check(names.contains("assets/minecraft/blockstates/note_block.json"), "apparence des blocs du mod");
+		check(names.contains("assets/evotool/lang/fr_fr.json") && names.contains("assets/evotool/lang/en_us.json"), "traductions");
+		for (EvoItem item : EvoItem.values()) {
+			check(names.contains("assets/evotool/items/" + item.id() + ".json"), "modèle dans le pack : " + item.id());
+		}
+		check(ResourcePack.resourceFormat() > 0, "format du pack");
+	}
+
+	private void recipes() {
+		check(Recipes.keys().size() >= 50, "recettes chargées : " + Recipes.keys().size());
+		for (var key : Recipes.keys()) {
+			check(Bukkit.getRecipe(key) != null, "recette enregistrée : " + key);
+		}
+		check(Bukkit.getRecipe(Keys.key("evolving_pickaxe")) != null, "recette de la pioche évolutive");
+	}
+
+	private void blocks() {
+		World world = Bukkit.getWorlds().get(0);
+		int x = world.getSpawnLocation().getBlockX();
+		int z = world.getSpawnLocation().getBlockZ();
+		int y = world.getMaxHeight() - 3;
+		Block block = world.getBlockAt(x, y, z);
+		Material before = block.getType();
+		for (CustomBlock custom : CustomBlock.values()) {
+			for (int variant = 0; variant < custom.variants(); variant++) {
+				Blocks.place(block, custom, variant);
+				check(Blocks.at(block) == custom && Blocks.variant(block) == variant, "bloc " + custom + " forme " + variant);
+			}
+			check(!Blocks.drops(block, new ItemStack(Material.NETHERITE_PICKAXE)).isEmpty() || custom.name().contains("PORTAL"),
+					"butin du bloc " + custom);
+		}
+		block.setType(before, false);
+	}
+
+	private void evolution() {
+		ItemStack pickaxe = Items.create(EvoItem.EVOLVING_PICKAXE);
+		int level = Progression.gainXp(pickaxe, 1_000_000, 0);
+		check(level > 0 && level < Progression.MAX_LEVEL, "l'XP fait monter de niveau jusqu'à la forme suivante : " + level);
+		check(Progression.isReadyToEvolve(pickaxe), "objet prêt à évoluer");
+		check(Progression.evolve(pickaxe, null) && EvoData.get(pickaxe).level() == level + 1, "évolution");
+	}
+}
