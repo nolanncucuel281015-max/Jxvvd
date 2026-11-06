@@ -62,6 +62,7 @@ public final class SelfTest {
 		test.recipes();
 		test.blocks();
 		test.evolution();
+		test.machines();
 		test.check(fr.evotool.plugin.manual.Manual.book().pages().size() > 20, "manuel : " + fr.evotool.plugin.manual.Manual.book().pages().size() + " pages");
 		test.check(Bukkit.getWorlds().get(0).getPopulators().stream().anyMatch(p -> p instanceof fr.evotool.plugin.world.OrePopulator),
 				"minerais dans le monde normal");
@@ -163,9 +164,19 @@ public final class SelfTest {
 				check(Blocks.at(block) == custom && Blocks.variant(block) == variant, "bloc " + custom + " forme " + variant);
 			}
 			ItemStack tool = new ItemStack(custom == CustomBlock.EVOLVING_LEAVES ? Material.SHEARS : Material.NETHERITE_PICKAXE);
-			check(!Blocks.drops(block, tool).isEmpty() || custom.name().contains("PORTAL"), "butin du bloc " + custom);
+			check(!Blocks.drops(block, tool).isEmpty() || custom.name().contains("PORTAL")
+					|| custom == CustomBlock.SHIELD_GENERATOR, "butin du bloc " + custom);
 		}
 		block.setType(before, false);
+	}
+
+	private void machines() {
+		World world = Bukkit.getWorlds().get(0);
+		Block at = world.getBlockAt(world.getSpawnLocation().getBlockX() + 3, world.getMaxHeight() - 6, world.getSpawnLocation().getBlockZ());
+		String shield = fr.evotool.plugin.machine.ShieldGenerator.test(at);
+		check(shield == null, "générateur de bouclier : " + shield);
+		String combiner = fr.evotool.plugin.machine.ElementalCombiner.test(at);
+		check(combiner == null, "combineur élémentaire : " + combiner);
 	}
 
 	private void evolution() {

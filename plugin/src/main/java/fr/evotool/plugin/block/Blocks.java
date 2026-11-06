@@ -96,8 +96,8 @@ public final class Blocks {
 	public static List<ItemStack> drops(Block block, ItemStack tool) {
 		List<ItemStack> drops = new ArrayList<>();
 		CustomBlock custom = at(block);
-		if (custom == null || !canHarvest(custom, tool)) {
-			return drops;
+		if (custom == null || !canHarvest(custom, tool) || custom == CustomBlock.SHIELD_GENERATOR) {
+			return drops;   // le générateur se rend lui-même, avec son évolium (voir machine.ShieldGenerator)
 		}
 		EvoItem self = EvoItem.of(custom);
 		switch (custom.drop()) {

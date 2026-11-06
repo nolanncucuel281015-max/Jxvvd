@@ -35,5 +35,9 @@
   "plugin.evotool.help.armor": "L'armure évolue en encaissant des coups ; les 4 pièces ensemble donnent des bonus.",
   "plugin.evotool.help.craft": "Les recettes sont dans le livre de recettes (établi, four, haut fourneau) ; l'évolite et l'abyssite vont à l'enclume.",
   "plugin.evotool.help.pack": "/evotool pack : recevoir à nouveau le pack de ressources (modèles 3D).",
-  "plugin.evotool.help.admin": "Opérateurs : /evotool give <objet> [joueur] [nombre], /evotool catalogue, /upgrade <outil|armure> <niveau>."
+  "plugin.evotool.help.admin": "Opérateurs : /evotool give <objet> [joueur] [nombre], /evotool catalogue, /upgrade <outil|armure> <niveau>.",
+  "plugin.evotool.shield.toggle": "Clic : allumer / éteindre",
+  "plugin.evotool.shield.fuel_slot": "Case de l'évolium →",
+  "plugin.evotool.combiner.take_output": "L'objet élémentaire attend à droite : clic pour le prendre",
+  "plugin.evotool.combiner.output": "Résultat"
 }
