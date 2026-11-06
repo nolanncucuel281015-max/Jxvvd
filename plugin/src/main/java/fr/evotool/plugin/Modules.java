@@ -53,6 +53,8 @@ final class Modules {
 		fr.evotool.plugin.machine.ShieldGenerator.enable();
 		fr.evotool.plugin.machine.ElementalCombiner.enable();
 		fr.evotool.plugin.machine.Machines.enable();
+		fr.evotool.plugin.element.ElementalPowers.enable();
+		fr.evotool.plugin.element.Spells.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
