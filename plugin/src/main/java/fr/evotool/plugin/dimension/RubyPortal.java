@@ -421,7 +421,7 @@ public final class RubyPortal implements Listener {
 			problem = "intérieur non rempli";
 		}
 		Block found = findOrBuild(world, x + 3, y, z + 2);
-		if (problem == null && !found.equals(base)) {
+		if (problem == null && (found.getY() != base.getY() || found.getZ() != base.getZ() || Math.abs(found.getX() - base.getX() - 0.5) > 1)) {
 			problem = "portail existant non trouvé (" + found + ")";
 		}
 		base.getRelative(-1, 0, 0).setType(Material.AIR, false);

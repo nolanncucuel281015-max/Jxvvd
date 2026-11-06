@@ -65,6 +65,8 @@ final class Modules {
 		fr.evotool.plugin.dimension.RubyPortal.enable();
 		fr.evotool.plugin.dimension.SecretLighter.enable();
 		fr.evotool.plugin.dimension.DimensionCommand.enable();
+		fr.evotool.plugin.boss.BellBoss.enable();
+		fr.evotool.plugin.dimension.Sanctuary.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
@@ -81,6 +83,7 @@ final class Modules {
 		fr.evotool.plugin.spider.SpiderGlove.clear();
 		fr.evotool.plugin.machine.Machines.disable();
 		fr.evotool.plugin.armor.Tentacles.clear();
+		fr.evotool.plugin.boss.BellBoss.disable();
 		fr.evotool.plugin.element.Spells.clear();
 		fr.evotool.plugin.upgrade.InfinityWings.clear();
 		ResourcePack.disable();

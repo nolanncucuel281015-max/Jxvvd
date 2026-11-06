@@ -204,6 +204,20 @@ public final class SelfTest {
 		String portal = fr.evotool.plugin.dimension.RubyPortal.test(world, world.getSpawnLocation().getBlockX() + 8,
 				world.getMaxHeight() - 12, world.getSpawnLocation().getBlockZ() + 8);
 		check(portal == null, "portail en rubis : " + portal);
+		// sanctuaire et boss : construit dans le monde normal (au-dessus de tout), l'autel réveille le boss
+		int sx = world.getSpawnLocation().getBlockX() + 200;
+		int sz = world.getSpawnLocation().getBlockZ() + 200;
+		world.getChunkAt(sx >> 4, sz >> 4);
+		Block altar = fr.evotool.plugin.dimension.Sanctuary.buildAt(world, sx, sz);
+		check(Blocks.at(altar) == CustomBlock.SANCTUARY_ALTAR, "autel du sanctuaire");
+		org.bukkit.entity.Ravager boss = fr.evotool.plugin.dimension.Sanctuary.summon(altar, null);
+		check(boss != null && fr.evotool.plugin.boss.BellBoss.isBoss(boss), "l'autel réveille le boss");
+		check(fr.evotool.plugin.dimension.Sanctuary.summon(altar, null) == null, "un seul boss à la fois");
+		if (boss != null) {
+			check(fr.evotool.plugin.boss.BellBoss.evolve(boss) && boss.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue() == 200,
+					"le boss évolue (forme 1 : 200 PV)");
+			boss.remove();
+		}
 	}
 
 	private void evolution() {
