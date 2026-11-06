@@ -14,7 +14,7 @@
   "tooltip.evotool.hint": "F: menu • Sneak + F: evolve • Sneak: single block",
   "tooltip.evotool.armor_hint": "Evolves by taking hits • F (empty hand): set bonuses",
   "message.evotool.unlock.mode": "Mode %s (F: menu)",
-  "armor.evotool.tentacles": "Tentacles (left click with an empty hand; F with an empty hand: travel)",
+  "armor.evotool.tentacles": "Tentacles (left-click bare-handed; sneak + left-click: grab / throw; F with an empty hand: travel)",
   "tooltip.evotool.spider_glove.power": "Sneak + right click: chosen power (F: switch)",
   "message.evotool.tentacles_on": "Tentacles: travel mode (fast, steps up blocks; F to put away)",
   "plugin.evotool.tentacle_hint": "Tentacles: left click with an empty hand = strike; sneak + left click = grab / throw; F = travel",
@@ -32,12 +32,13 @@
   "plugin.evotool.help.menu": "F with an evolving item in hand: its menu (modes, powers). Empty hand: the armor's.",
   "plugin.evotool.help.evolve": "Sneak + F: evolve the ready item (an animation, then the new form).",
   "plugin.evotool.help.power": "Right-click: the weapon's special attack, the spell, the axe laser, the pickaxe trench…",
-  "plugin.evotool.help.armor": "Armor evolves by taking hits; all 4 pieces together give set bonuses.",
+  "plugin.evotool.help.armor": "Armor evolves by taking hits; all 4 pieces together give set bonuses (/evotool armure: its menu).",
   "plugin.evotool.help.craft": "Recipes are in the recipe book (crafting table, furnace, blast furnace); evolite and abyssite go in the anvil.",
   "plugin.evotool.help.pack": "/evotool pack: get the resource pack again (3D models).",
   "plugin.evotool.help.admin": "Operators: /evotool give <item> [player] [count], /evotool catalogue, /upgrade <tool|armor> <level>.",
   "plugin.evotool.shield.toggle": "Click: turn on / off",
   "plugin.evotool.shield.fuel_slot": "Evolium slot →",
   "plugin.evotool.combiner.take_output": "The elemental item waits on the right: click to take it",
-  "plugin.evotool.combiner.output": "Result"
+  "plugin.evotool.combiner.output": "Result",
+  "plugin.evotool.no_armor": "You are not wearing evolving armor."
 }

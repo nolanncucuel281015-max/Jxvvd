@@ -14,7 +14,7 @@
   "tooltip.evotool.hint": "F : menu • Accroupi + F : évoluer • Accroupi : 1 seul bloc",
   "tooltip.evotool.armor_hint": "Évolue en encaissant des coups • F (main vide) : bonus de l'ensemble",
   "message.evotool.unlock.mode": "Mode %s (F : menu)",
-  "armor.evotool.tentacles": "Tentacules (clic gauche à main nue ; F à main vide : déplacement)",
+  "armor.evotool.tentacles": "Tentacules (clic gauche à main nue ; accroupi + clic gauche : attraper / lancer ; F à main vide : déplacement)",
   "tooltip.evotool.spider_glove.power": "Accroupi + clic droit : le pouvoir choisi (F : changer)",
   "message.evotool.tentacles_on": "Tentacules : mode déplacement (rapide, monte les blocs ; F pour ranger)",
   "plugin.evotool.tentacle_hint": "Tentacules : clic gauche à main nue = coup ; accroupi + clic gauche = attraper / lancer ; F = déplacement",
@@ -32,12 +32,13 @@
   "plugin.evotool.help.menu": "F avec un objet évolutif en main : son menu (modes, pouvoirs). Main vide : celui de l'armure.",
   "plugin.evotool.help.evolve": "Accroupi + F : faire évoluer l'objet prêt (une animation, puis la nouvelle forme).",
   "plugin.evotool.help.power": "Clic droit : l'attaque spéciale de l'arme, le sort, le laser de la hache, la tranchée de la pioche…",
-  "plugin.evotool.help.armor": "L'armure évolue en encaissant des coups ; les 4 pièces ensemble donnent des bonus.",
+  "plugin.evotool.help.armor": "L'armure évolue en encaissant des coups ; les 4 pièces ensemble donnent des bonus (/evotool armure : son menu).",
   "plugin.evotool.help.craft": "Les recettes sont dans le livre de recettes (établi, four, haut fourneau) ; l'évolite et l'abyssite vont à l'enclume.",
   "plugin.evotool.help.pack": "/evotool pack : recevoir à nouveau le pack de ressources (modèles 3D).",
   "plugin.evotool.help.admin": "Opérateurs : /evotool give <objet> [joueur] [nombre], /evotool catalogue, /upgrade <outil|armure> <niveau>.",
   "plugin.evotool.shield.toggle": "Clic : allumer / éteindre",
   "plugin.evotool.shield.fuel_slot": "Case de l'évolium →",
   "plugin.evotool.combiner.take_output": "L'objet élémentaire attend à droite : clic pour le prendre",
-  "plugin.evotool.combiner.output": "Résultat"
+  "plugin.evotool.combiner.output": "Résultat",
+  "plugin.evotool.no_armor": "Tu ne portes pas d'armure évolutive."
 }

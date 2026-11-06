@@ -53,6 +53,18 @@ public final class EvoMenu extends Menu {
 		return false;
 	}
 
+	/** Le menu de l'armure portée (commande /evotool armure) ; faux sans armure évolutive. */
+	public static boolean showArmor(Player player) {
+		for (org.bukkit.inventory.EquipmentSlot slot : ArmorSet.SLOTS) {
+			ItemStack worn = ArmorSet.worn(player, slot);
+			if (worn != null) {
+				new EvoMenu(player, worn).open(player);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void draw() {
 		inventory.clear();
 		EvoKind kind = Items.kindOf(stack);

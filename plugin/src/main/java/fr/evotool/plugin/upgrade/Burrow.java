@@ -80,8 +80,29 @@ public final class Burrow implements Listener {
 		return EvoliteUpgrade.has(player.getInventory().getBoots(), EvoliteUpgrade.Upgrade.BURROW);
 	}
 
+	/** D'autres pouvoirs qui creusent (les tentacules en mode déplacement), avec leur vitesse sous terre. */
+	private static final java.util.List<java.util.Map.Entry<java.util.function.Predicate<Player>, Float>> DIGGERS = new java.util.ArrayList<>();
+
+	public static void digger(java.util.function.Predicate<Player> condition, float speed) {
+		DIGGERS.add(java.util.Map.entry(condition, speed));
+	}
+
+	private static Float diggerSpeed(Player player) {
+		for (var digger : DIGGERS) {
+			if (digger.getKey().test(player)) {
+				return digger.getValue();
+			}
+		}
+		return null;
+	}
+
+	private static float speed(Player player) {
+		Float other = diggerSpeed(player);
+		return other != null ? other : SPEED;
+	}
+
 	private static boolean canUse(Player player) {
-		return hasBoots(player) && !player.isDead() && !player.isInsideVehicle();
+		return (hasBoots(player) || diggerSpeed(player) != null) && !player.isDead() && !player.isInsideVehicle();
 	}
 
 	public static void tick(Player player, int tick) {
@@ -101,7 +122,7 @@ public final class Burrow implements Listener {
 			int held = SNEAK.merge(id, 1, Integer::sum);
 			Fx.particle(player.getWorld(), Particle.BLOCK, player.getX(), player.getY() + 0.1, player.getZ(), 6, 0.3, 0.05, 0.3, 0.1,
 					ground.getBlockData());
-			if (held >= DIVE_TICKS) {
+			if (held >= (diggerSpeed(player) != null ? DIVE_TICKS / 2 : DIVE_TICKS)) {
 				SNEAK.remove(id);
 				start(player);
 			}
@@ -123,7 +144,7 @@ public final class Burrow implements Listener {
 		Block ground = player.getLocation().subtract(0, 0.2, 0).getBlock();
 		gameMode(player, GameMode.SPECTATOR);
 		player.setFlying(true);
-		player.setFlySpeed(SPEED);
+		player.setFlySpeed(speed(player));
 		// on s'enfonce d'un bloc dans le sol
 		player.teleport(player.getLocation().add(0, -1.2, 0));
 		Fx.particle(player.getWorld(), Particle.BLOCK, player.getX(), ground.getY() + 1.2, player.getZ(), 40, 0.4, 0.2, 0.4, 0.2,
@@ -150,8 +171,8 @@ public final class Burrow implements Listener {
 			state.safe = player.getLocation();
 			STATES.put(player.getUniqueId(), state);
 		}
-		if (player.getFlySpeed() != SPEED) {
-			player.setFlySpeed(SPEED);
+		if (player.getFlySpeed() != speed(player)) {
+			player.setFlySpeed(speed(player));
 		}
 		World world = player.getWorld();
 		BoundingBox box = player.getBoundingBox();

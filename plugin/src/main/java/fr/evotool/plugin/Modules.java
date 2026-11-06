@@ -28,6 +28,11 @@ final class Modules {
 		ResourcePack.enable(plugin);
 		Recipes.register(plugin);
 		Commands.register(plugin);
+		Commands.add("armure", (sender, args) -> {
+			if (sender instanceof org.bukkit.entity.Player player && !fr.evotool.plugin.menu.EvoMenu.showArmor(player)) {
+				player.sendMessage(fr.evotool.plugin.util.Lang.tr("plugin.evotool.no_armor").color(net.kyori.adventure.text.format.NamedTextColor.GRAY));
+			}
+		});
 		Commands.add("selftest", (sender, args) -> {
 			if (!sender.isOp()) {
 				return;
@@ -55,6 +60,7 @@ final class Modules {
 		fr.evotool.plugin.machine.Machines.enable();
 		fr.evotool.plugin.element.ElementalPowers.enable();
 		fr.evotool.plugin.element.Spells.enable();
+		fr.evotool.plugin.armor.Tentacles.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);
@@ -70,6 +76,8 @@ final class Modules {
 		fr.evotool.plugin.upgrade.Burrow.clear();
 		fr.evotool.plugin.spider.SpiderGlove.clear();
 		fr.evotool.plugin.machine.Machines.disable();
+		fr.evotool.plugin.armor.Tentacles.clear();
+		fr.evotool.plugin.element.Spells.clear();
 		fr.evotool.plugin.upgrade.InfinityWings.clear();
 		ResourcePack.disable();
 		Recipes.unregister();
