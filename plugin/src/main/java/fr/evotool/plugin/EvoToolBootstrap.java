@@ -1,15 +1,24 @@
 package fr.evotool.plugin;
 
+import fr.evotool.plugin.world.Datapack;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import net.kyori.adventure.text.Component;
 
 /**
- * Démarrage du plugin, avant le chargement de la configuration du serveur : les blocs du mod sont portés par des
- * blocs musicaux, qui ne doivent plus changer d'état tout seuls (réglage de Paper « disable-noteblock-updates »).
+ * Démarrage du plugin, avant le chargement des mondes :
+ * <ul>
+ * <li>les blocs du mod sont portés par des blocs musicaux, qui ne doivent plus changer d'état tout seuls (réglage de
+ * Paper « disable-noteblock-updates ») ;</li>
+ * <li>le pack de données de la dimension évolutive est écrit et ajouté au serveur (elle est chargée comme un monde de
+ * plus, « monde_evotool_evolutive »).</li>
+ * </ul>
  */
 public final class EvoToolBootstrap implements PluginBootstrap {
 	@Override
@@ -22,6 +31,24 @@ public final class EvoToolBootstrap implements PluginBootstrap {
 		} catch (IOException e) {
 			context.getLogger().warn("Evo Tool : impossible de régler paper-global.yml (" + e + ")");
 		}
+		Path pack = context.getDataDirectory().resolve("datapack");
+		try {
+			List<String> problems = Datapack.write(context.getPluginSource(), pack);
+			for (String problem : problems) {
+				context.getLogger().warn("Evo Tool : bloc du mod non converti dans le pack de données : " + problem);
+			}
+		} catch (IOException e) {
+			context.getLogger().error("Evo Tool : impossible d'écrire le pack de données de la dimension (" + e + ")");
+			return;
+		}
+		context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY, event -> {
+			try {
+				event.registrar().discoverPack(pack, "dimension", configurer -> configurer.autoEnableOnServerStart(true)
+						.title(Component.text("Evo Tool : dimension évolutive")));
+			} catch (IOException e) {
+				context.getLogger().error("Evo Tool : pack de données refusé (" + e + ")");
+			}
+		});
 	}
 
 	/** Le réglage de Paper qui empêche les blocs musicaux de changer d'état. */

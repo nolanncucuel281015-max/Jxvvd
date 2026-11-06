@@ -61,6 +61,10 @@ final class Modules {
 		fr.evotool.plugin.element.ElementalPowers.enable();
 		fr.evotool.plugin.element.Spells.enable();
 		fr.evotool.plugin.armor.Tentacles.enable();
+		fr.evotool.plugin.dimension.EvoDimension.enable();
+		fr.evotool.plugin.dimension.RubyPortal.enable();
+		fr.evotool.plugin.dimension.SecretLighter.enable();
+		fr.evotool.plugin.dimension.DimensionCommand.enable();
 
 		EvoToolPlugin.ticker(Evolution::tick);
 		EvoToolPlugin.ticker(ArmorListener::tick);

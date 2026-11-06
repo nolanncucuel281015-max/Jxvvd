@@ -63,6 +63,7 @@ public final class SelfTest {
 		test.blocks();
 		test.evolution();
 		test.machines();
+		test.dimension();
 		test.check(fr.evotool.plugin.manual.Manual.book().pages().size() > 20, "manuel : " + fr.evotool.plugin.manual.Manual.book().pages().size() + " pages");
 		test.check(Bukkit.getWorlds().get(0).getPopulators().stream().anyMatch(p -> p instanceof fr.evotool.plugin.world.OrePopulator),
 				"minerais dans le monde normal");
@@ -177,6 +178,32 @@ public final class SelfTest {
 		check(shield == null, "générateur de bouclier : " + shield);
 		String combiner = fr.evotool.plugin.machine.ElementalCombiner.test(at);
 		check(combiner == null, "combineur élémentaire : " + combiner);
+	}
+
+	private void dimension() {
+		World dimension = fr.evotool.plugin.dimension.EvoDimension.world();
+		check(dimension != null, "dimension évolutive chargée (pack de données)");
+		if (dimension != null) {
+			int x = 40;
+			int z = 40;
+			dimension.getChunkAt(x >> 4, z >> 4);
+			int y = dimension.getHighestBlockYAt(x, z);
+			boolean evolving = false;
+			for (int dy = 0; dy < 30 && !evolving; dy++) {
+				evolving = Blocks.at(dimension.getBlockAt(x, y - dy, z)) != null;
+			}
+			check(evolving, "le sol de la dimension est fait de blocs évolutifs (y " + y + " : " + dimension.getBlockAt(x, y, z).getType() + ")");
+			Block block = dimension.getBlockAt(x, dimension.getMaxHeight() - 4, z);
+			Blocks.place(block, CustomBlock.EVOLVING_STONE);
+			fr.evotool.plugin.dimension.EvoDimension.evolveTo(block, 3);
+			check(Blocks.at(block) == CustomBlock.EVOLVING_STONE && CustomBlock.evolutionOf(CustomBlock.EVOLVING_STONE, Blocks.variant(block)) == 3,
+					"un bloc évolutif évolue");
+			block.setType(Material.AIR, false);
+		}
+		World world = Bukkit.getWorlds().get(0);
+		String portal = fr.evotool.plugin.dimension.RubyPortal.test(world, world.getSpawnLocation().getBlockX() + 8,
+				world.getMaxHeight() - 12, world.getSpawnLocation().getBlockZ() + 8);
+		check(portal == null, "portail en rubis : " + portal);
 	}
 
 	private void evolution() {
