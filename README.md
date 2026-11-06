@@ -605,14 +605,26 @@ Les blocs du mod sont portés par des blocs musicaux : le plugin règle Paper po
 
 | Mod | Plugin |
 |---|---|
-| **Y** : menu de l'objet | **F** (échanger de main) avec l'objet en main ; main vide : menu de l'armure |
+| **Y** : menu de l'objet | **F** (échanger de main) avec l'objet en main ; `/evotool armure` : menu de l'armure |
 | **R** : évoluer | **Accroupi + F** |
-| Clic droit (pouvoirs, sorts, laser, tranchée, arc céleste…) | Clic droit, pareil |
+| Clic droit (pouvoirs, sorts, laser, tranchée, arc céleste, grimoire, gant…) | Clic droit, pareil |
+| **G** : pouvoir du gant suivant | **F** avec le gant en main |
+| **J** : tentacules en mode déplacement | **F** à main vide |
+| Clic droit à main nue : une tentacule attrape | **Accroupi + clic gauche** à main nue (le jeu n'envoie pas le clic droit à main nue dans le vide) |
 | Plongée des bottes | Accroupi sur le sol, comme dans le mod (sous terre, le joueur passe en spectateur limité au sous-sol) |
+| Double saut des bottes de vent | Saut en l'air, pareil |
 
-**Commandes** : `/evotool` (aide), `/evotool pack` (renvoyer le pack), `/evotool manuel` ; opérateurs :
+Tout le reste marche comme dans le mod : niveaux et formes, minage instantané au niveau 100, modes de zone,
+armes moddées et magiques, évolite et abyssite à l'enclume, armure et ses bonus, ailes de l'infini, combineur
+élémentaire et grimoire, générateur de bouclier, gant de Spider-Man (toile pour se balancer, murs, pouvoirs),
+tentacules abyssales, minerais (monde normal et End), **dimension évolutive** (portail en rubis allumé au briquet
+d'évolium, phases et ondes d'évolution, sanctuaires), **Slime Cloche** (6 formes, 3 phases de combat) et le manuel,
+offert à la première connexion (en livre).
+
+**Commandes** : `/evotool` (aide), `/evotool pack` (renvoyer le pack), `/evotool manuel`, `/evotool armure` ; opérateurs :
 `/evotool give <objet> [joueur] [nombre]`, `/evotool catalogue` (tous les objets dans un menu),
-`/upgrade <outil|armure> <niveau>`, `/evotool selftest`.
+`/upgrade <outil|armure> <niveau>`, `/dimension tp [sanctuaire] | locate | speed [minutes] | phase <0-5> | spawn [forme] | evolve`,
+`/evotool selftest`.
 
 **Compiler** : `./gradlew -p plugin build` → `plugin/build/libs/EvoTool-plugin-1.0.0.jar`. La CI le compile à chaque
 push (artefact **evotool-plugin**) et le teste sur un vrai serveur Paper 1.21.11 (auto-test, dont le minage instantané).
